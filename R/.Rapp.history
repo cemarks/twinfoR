@@ -1,0 +1,533 @@
+f<-function(fr,x) return(function(x) return(1-exp(-fr/100000*x)))
+plot(f(1,x),xlim=c(0,100))
+plot(f(1,x),xlim=c(0,1000000))
+plot(g(1,x),xlim=c(0,1000000))
+plot(f(1,x),xlim=c(0,1000000),add=T)
+plot(f(1,x),xlim=c(0,1000000))
+plot(g(1,x),xlim=c(0,1000000),add=T)
+plot(g(200,x),xlim=c(0,1000000),col='green',add=T)
+plot(f(200,x),xlim=c(0,1000000),col='green',add=T)
+inti<-f(fr,fo) return(-log((1-exp(-fr/100000*fo))/(1-exp(-fr/10000000*fo))))
+inti<-function(fr,fo) return(-log((1-exp(-fr/100000*fo))/(1-exp(-fr/10000000*fo))))
+plot(function(fo) return(inti(200,fo)),xlim=c(0,1000000))
+inti<-function(fr,fo) return(log((1-exp(-fr/100000*fo))/(1-exp(-fr/10000000*fo))))
+plot(function(fo) return(inti(200,fo)),xlim=c(0,1000000))
+inti<-function(fr,fo) return(log((1-exp(-fr/100000*fo))/(1-exp(-fr/100000000*fo))))
+plot(function(fo) return(inti(200,fo)),xlim=c(0,1000000))
+plot(function(fo) return(inti(20,fo)),xlim=c(0,1000000))
+library('ProjectTemplate')
+db.reader
+library(RODBC)
+install.packages("RODBC")
+q()
+install.packages("RODBC")
+library(RODBC)
+channel=odbcConnectAccess("/private/var/folders/k1/_z_hykbx089frldn69j9g0xm0000gn/C/com.modernstark.zooisland.mac/mds/mdsDirectory.db")
+?odbcConnect
+odbcDataSources(type = c("all", "user", "system"))
+q()
+barplot(c(0.01,0.99),col=('green,red'))
+barplot(c(0.01,0.99),col=('green','red'))
+barplot(c(0.01,0.99),col=c('green','red'))
+barplot(c(0.01,0.99),col=c('green','red'),ylim=c(0,1))
+q()
+ls9)
+ls()
+r
+rm(r)
+rm(x)
+rm(y)
+rm(z)
+f<-function(x) return(1/(1+exp(-x)))
+plot(f,xlim=c(0,100))
+f<-function(x) return(1/(1+exp(-(x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(1/(1+exp((x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(1/(exp((x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(1/(1+exp((x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(10/(1+exp((x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(10/(1+exp((10*x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(10/(1+exp((1/100*x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(10/(1+exp(10*(x-50))))
+plot(f,xlim=c(0,100))
+f<-function(x) return(10/(1+exp(1/100*(x-50))))
+plot(f,xlim=c(0,100))
+plot(f,xlim=c(0,10000))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((1/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((-1/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((-10/x-50))))
+f<-function(x) return(10/(1+exp((-0.011/x-50))))
+f<-function(x) return(10/(1+exp((-10/x-50))))
+f<-function(x) return(10/(1+exp((-1000/x-50))))
+f<-function(x) return(10/(1+exp((1000/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((-1000/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((1000/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((10/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((0.1/x-50))))
+plot(f,xlim=c(0,1000))
+plot(f,xlim=c(0,100))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((0.1/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((0.001/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((0.00000001/x-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((-1/(x+1)-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((-100000/(x+1)-50))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((100000/(x+1)-50))))
+f(0)
+f(1)
+f(2)
+f(100)
+f(100000)
+plot(f,xlim=c(0,1000))
+plot(2/(1+exp(0.01x-1000)))
+f<-function(x) return(10/(1+exp((1/100*x-1000))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(2/(1+exp(1/100*(x-1000))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(2/(1+exp(1/100*(x-100))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((1/100*x-1))))
+plot(f,xlim=c(0,1000))
+f<-function(x) return(10/(1+exp((1/1000*x-1))))
+plot(f,xlim=c(0,1000))
+plot(f,xlim=c(0,100000))
+plot(f,xlim=c(0,10000))
+f<-function(x) return(2/(1+exp((1/1000*x-1))))
+plot(f,xlim=c(0,10000))
+f<-function(x) return(2/(1+exp((1/500*x-1))))
+plot(f,xlim=c(0,10000))
+plot(f,xlim=c(0,2000))
+f<-function(x,y) return(2/(1+exp((1/500*x+1/2000*y-1))))
+plot(function(x)return(f(x,1000)),xlim=c(0,2000))
+plot(function(x)return(f(x,10000)),xlim=c(0,2000))
+plot(function(x)return(f(x,1000)),xlim=c(0,2000))
+plot(function(x)return(f(x,100)),xlim=c(0,2000))
+plot(function(x)return(f(x,00)),xlim=c(0,2000))
+library(tools)
+read_header <- function(fname){#
+  h = list()#
+  fid = file(fname, "rb")#
+  h$filename <- readChar(fid,20,useBytes = T)#
+  h$parent_filename <- readChar(fid,20,useBytes = T)#
+  h$comments1 <- readChar(fid,80,useBytes = T)#
+  h$comments2 <- readChar(fid,80,useBytes = T)#
+  h$energy_type <- readBin(fid,integer(),1,size=2)#
+  h$config_type <- readBin(fid,integer(),1,size=2)#
+  h$file_type <- readBin(fid,integer(),1,size=2)#
+  h$trans_type <- readBin(fid,integer(),1,size=2)#
+  h$scan_type <- readBin(fid,integer(),1,size=2)#
+  h$data_type <- readBin(fid,integer(),1,size=2)#
+  h$date_modified <- readChar(fid,16,useBytes = T)#
+  h$frequency <- readBin(fid,double(),1,size=4)#
+  h$mat_velocity <- readBin(fid,double(),1,size=4)#
+  h$num_pts <- readBin(fid,integer(),1,size=4)#
+  h$num_polarization_channels <- readBin(fid,integer(),1,size=2)#
+  h$spare00 <- readBin(fid,integer(),1,size=2)#
+  h$adc_min_voltage <- readBin(fid,double(),1,size=4)#
+  h$adc_max_voltage <- readBin(fid,double(),1,size=4)#
+  h$band_width <- readBin(fid,double(),1,size=4)#
+  h$spare01 <- readBin(fid,integer(),5,size=2)#
+  h$polarization_type <- readBin(fid,integer(),4,size=2)#
+  h$record_header_size <- readBin(fid,integer(),1,size=2)#
+  h$word_type <- readBin(fid,integer(),1,size=2)#
+  h$word_precision <- readBin(fid,integer(),1,size=2)#
+  h$min_data_value <- readBin(fid,double(),1,size=4)#
+  h$max_data_value <- readBin(fid,double(),1,size=4)#
+  h$avg_data_value <- readBin(fid,double(),1,size=4)#
+  h$data_scale_factor <- readBin(fid,double(),1,size=4)#
+  h$data_units <- readBin(fid,integer(),1,size=2)#
+  h$surf_removal <- readBin(fid,integer(),1,size=2)#
+  h$edge_weighting <- readBin(fid,integer(),1,size=2)#
+  h$x_units <- readBin(fid,integer(),1,size=2)#
+  h$y_units <- readBin(fid,integer(),1,size=2)#
+  h$z_units <- readBin(fid,integer(),1,size=2)#
+  h$t_units <- readBin(fid,integer(),1,size=2)#
+  h$spare02 <- readBin(fid,integer(),1,size=2)#
+  h$x_return_speed <- readBin(fid,double(),1,size=4)#
+  h$y_return_speed <- readBin(fid,double(),1,size=4)#
+  h$z_return_speed <- readBin(fid,double(),1,size=4)#
+  h$scan_orientation <- readBin(fid,integer(),1,size=2)#
+  h$scan_direction <- readBin(fid,integer(),1,size=2)#
+  h$data_storage_order <- readBin(fid,integer(),1,size=2)#
+  h$scanner_type <- readBin(fid,integer(),1,size=2)#
+  h$x_inc <- readBin(fid,double(),1,size=4)#
+  h$y_inc <- readBin(fid,double(),1,size=4)#
+  h$z_inc <- readBin(fid,double(),1,size=4)#
+  h$t_inc <- readBin(fid,double(),1,size=4)#
+  h$num_x_pts <- readBin(fid,integer(),1,size=4)#
+  h$num_y_pts <- readBin(fid,integer(),1,size=4)#
+  h$num_z_pts <- readBin(fid,integer(),1,size=4)#
+  h$num_t_pts <- readBin(fid,integer(),1,size=4)#
+  h$x_speed <- readBin(fid,double(),1,size=4)#
+  h$y_speed <- readBin(fid,double(),1,size=4)#
+  h$z_speed <- readBin(fid,double(),1,size=4)#
+  h$x_acc <- readBin(fid,double(),1,size=4)#
+  h$y_acc <- readBin(fid,double(),1,size=4)#
+  h$z_acc <- readBin(fid,double(),1,size=4)#
+  h$x_motor_res <- readBin(fid,double(),1,size=4)#
+  h$y_motor_res <- readBin(fid,double(),1,size=4)#
+  h$z_motor_res <- readBin(fid,double(),1,size=4)#
+  h$x_encoder_res <- readBin(fid,double(),1,size=4)#
+  h$y_encoder_res <- readBin(fid,double(),1,size=4)#
+  h$z_encoder_res <- readBin(fid,double(),1,size=4)#
+  h$date_processed <- readChar(fid,8,useBytes = T)#
+  h$time_processed <- readChar(fid,8,useBytes = T)#
+  h$depth_recon <- readBin(fid,double(),1,size=4)#
+  h$x_max_travel <- readBin(fid,double(),1,size=4)#
+  h$y_max_travel <- readBin(fid,double(),1,size=4)#
+  h$elevation_offset_angle <- readBin(fid,double(),1,size=4)#
+  h$roll_offset_angle <- readBin(fid,double(),1,size=4)#
+  h$z_max_travel <- readBin(fid,double(),1,size=4)#
+  h$azimuth_offset_angle <- readBin(fid,double(),1,size=4)#
+  h$adc_type <- readBin(fid,integer(),1,size=2)#
+  h$spare06 <- readBin(fid,integer(),1,size=2)#
+  h$scanner_radius <- readBin(fid,double(),1,size=4)#
+  h$x_offset <- readBin(fid,double(),1,size=4)#
+  h$y_offset <- readBin(fid,double(),1,size=4)#
+  h$z_offset <- readBin(fid,double(),1,size=4)#
+  h$t_delay <- readBin(fid,double(),1,size=4)#
+  h$range_gate_start <- readBin(fid,double(),1,size=4)#
+  h$range_gate_end <- readBin(fid,double(),1,size=4)#
+  h$ahis_software_version <- readBin(fid,double(),1,size=4)#
+  h$spare_end <- readBin(fid,double(),10,size=4)#
+  close(fid)#
+  return(h)#
+}#
+## read image data from .aps or .a3daps files#
+## NOTE: for some reason, using sqrt transformation on .aps yields better resolution.#
+### APS files essentially contain 16 512x660 pixel images, or "frames"#
+### The first frame is the frontal view.#
+### The second frame is rotated approximately 22.5 degrees#
+### frame i is rotated (i-1)*22.5 degrees from the frontal view.#
+### A3DAPS files are similar but have 64 evenly spaced rotational frames, and resolution is different.#
+#
+read_data <- function(fname) {#
+  extension <- file_ext(fname)#
+  h = read_header(fname)#
+  nx = h$num_x_pts#
+  ny = h$num_y_pts#
+  nt = h$num_t_pts#
+  fid <- file(fname,"rb")#
+  dummy <- readBin(fid,"raw",512)#
+  if (extension == 'aps'){#
+      if (h$word_type==7) {#
+        data <- sqrt(readBin(fid,double(),nx*ny*nt,size=4))#
+      } else if (h$word_type==4){#
+        data <- sqrt(readBin(fid,integer(),signed=FALSE,nx*ny*nt,size=2))#
+      }#
+      close(fid)#
+      data <- data * h$data_scale_factor#
+      data<-array(data,dim = c(nx,ny,nt))#
+  } else if (extension == 'a3daps'){#
+      if (h$word_type==7) {#
+        data <- readBin(fid,double(),nx*ny*nt,size=4)#
+      } else if (h$word_type==4){#
+        data <- readBin(fid,integer(),signed=FALSE,nx*ny*nt,size=2)#
+      }#
+      close(fid)#
+      data <- data * h$data_scale_factor#
+      data<-array(data,dim = c(nx,ny,nt))#
+  } else if (extension == 'a3d') {#
+      if (h$word_type==7) {#
+        data <- readBin(fid,double(),nx*ny*nt,size=4)#
+      } else if (h$word_type==4){#
+        data <- readBin(fid,integer(),nx*ny*nt,size=2)#
+      }#
+      close(fid)#
+      data <- data * h$data_scale_factor#
+      data<-array(data,dim = c(nx,nt,ny))  #
+  } else if (extension == 'ahi'){#
+      data <- readBin(fid,double(),2*nx*ny*nt,size=4)#
+      close(fid)#
+      data<-array(data,dim = c(2,ny,nx,nt))  #
+      real = data[1,,,]#
+      imag = data[2,,,]#
+  }#
+  if (extension != '.ahi'){#
+      return(data)#
+  } else {#
+      data <- list()#
+      data$real <- real#
+      data$imag <- imag#
+return(data)#
+  }  #
+}
+regions<-data.frame(Region=1,x1=60,y1=384,z1=232,width=156,height=120,depth=120)#
+regions<-rbind(regions,c(2,56,436,170,156,144,168))#
+regions<-rbind(regions,c(3,reflect.row(regions[1,],x_reflect)))#
+regions<-rbind(regions,c(4,reflect.row(regions[2,],x_reflect)))#
+regions<-rbind(regions,c(5,172,354,220,168,108,72))#
+regions<-rbind(regions,c(6,172,274,256-84,256-172,156,2*84))#
+regions<-rbind(regions,c(7,reflect.row(regions[6,],x_reflect)))#
+regions<-rbind(regions,c(8,150,164,256-84,84,144,2*84))#
+regions<-rbind(regions,c(9,208,164,256-84,96,144,2*84))#
+regions<-rbind(regions,c(10,reflect.row(regions[8,],x_reflect)))#
+regions<-rbind(regions,c(11,130,100,256-24,120,84,108))#
+regions<-rbind(regions,c(12,reflect.row(regions[11,],x_reflect)))#
+regions<-rbind(regions,c(13,102,50,256-12,132,72,120))#
+regions<-rbind(regions,c(14,reflect.row(regions[13,],x_reflect)))#
+regions<-rbind(regions,c(15,108,0,256-36,108,60,156))#
+regions<-rbind(regions,c(16,reflect.row(regions[15,],x_reflect)))#
+regions<-rbind(regions,c(17,172,324,312,168,108,72))
+x_reflect<-256#
+reflect.row<-function(dataframerow,x){#
+    d<-as.integer(dataframerow)#
+    x1<-x+(x-(d[2]+d[5]))#
+    return(c(x1,d[3:7]))#
+}#
+plotrow.f1<-function(dataframerow,h){#
+    d<-as.integer(dataframerow)#
+    make_box(d[2],d[3],d[5],d[6],h)#
+}#
+plotrow.f5<-function(dataframerow,h){#
+    d<-as.integer(dataframerow)#
+    make_box(d[4],d[3],d[7],d[6],h)#
+}#
+#
+regions<-data.frame(Region=1,x1=60,y1=384,z1=232,width=156,height=120,depth=120)#
+regions<-rbind(regions,c(2,56,436,170,156,144,168))#
+regions<-rbind(regions,c(3,reflect.row(regions[1,],x_reflect)))#
+regions<-rbind(regions,c(4,reflect.row(regions[2,],x_reflect)))#
+regions<-rbind(regions,c(5,172,354,220,168,108,72))#
+regions<-rbind(regions,c(6,172,274,256-84,256-172,156,2*84))#
+regions<-rbind(regions,c(7,reflect.row(regions[6,],x_reflect)))#
+regions<-rbind(regions,c(8,150,164,256-84,84,144,2*84))#
+regions<-rbind(regions,c(9,208,164,256-84,96,144,2*84))#
+regions<-rbind(regions,c(10,reflect.row(regions[8,],x_reflect)))#
+regions<-rbind(regions,c(11,130,100,256-24,120,84,108))#
+regions<-rbind(regions,c(12,reflect.row(regions[11,],x_reflect)))#
+regions<-rbind(regions,c(13,102,50,256-12,132,72,120))#
+regions<-rbind(regions,c(14,reflect.row(regions[13,],x_reflect)))#
+regions<-rbind(regions,c(15,108,0,256-36,108,60,156))#
+regions<-rbind(regions,c(16,reflect.row(regions[15,],x_reflect)))#
+regions<-rbind(regions,c(17,172,324,312,168,108,72))
+regions
+os.setwd('/Users/cemarks/Document/DHS')#
+#
+regions<-read.csv('regions.csv')
+setwd('/Users/cemarks/Document/DHS')#
+#
+regions<-read.csv('regions.csv')#
+#
+get.box.rotation<-function(frame,region.row){#
+	angle<-get.angle(frame)#
+}#
+#
+get.angle<-function(frame){#
+	return(2*pi/16*(frame-1))#
+}
+regions
+q()
+S <- function(M,N){#
+	sum(sapply(1:N,function(z) return((-1)^(z-1)*(N-z)/N*choose(N,z))))#
+}
+S(6,6)
+S <- function(M,N){#
+	return(sum(sapply(1:N,function(z) return((-1)^(z-1)*(N-z)/N*choose(N,z)))))#
+}
+S(6,6)
+S(7,6)
+S <- function(M,N){#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*(N-z)/N*choose(N,z)))))#
+}
+S(6,6)
+S <- function(M,N){#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*((N-z)/N)^M*choose(N,z)))))#
+}
+S(6,6)
+1-S(50,6)
+1-S(20,6)
+sum(sapply(6:1000,function(z) return(S(z,6))))
+E <- function (N){#
+	return(sum(sapply(1:N),function(z) return(N/z)))#
+}
+E(6)
+E <- function (N){#
+	return(sum(sapply(1:N,function(z) return(N/z))))#
+}
+E(6)
+sum(sapply(5:1000,function(z) return(S(z,6))))
+sum(sapply(1:1000,function(z) return(S(z,6))))
+sum(sapply(0:1000,function(z) return(S(z,6))))
+1-S(20,6)
+S(4,6)
+S(3,6)
+S(0,6)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*((N-z)/N)^M*choose(N,z)))))#
+	}#
+}
+sum(sapply(0:1000,function(z) return(S(z,6))))
+E(6)
+S(2000,840)
+S(2000,6)
+S(2000,7)
+S(2000,8)
+S(2000,2000)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+log(choose(N,z)))))))#
+	}#
+}
+S(6,6)
+S(2000,300)
+S(2000,840)
+S(840,840)
+S(840,2)
+S(340,341)
+S(340,340)
+S(30,6)
+S(50,6)
+S(50,7)
+S(50,8)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+log(choose(N,z)))))))#
+	}#
+}
+S(50,8)
+S(340,340)
+S(1000,340)
+S(341,340)
+S(342,340)
+S(400,340)
+S(340,340)
+S(341,341)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+log(choose(N,z)))))))#
+	}#
+}
+S(341,341)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+sum(log(1:N)-log(1:(N-z))-log(1:z)))))))#
+	}#
+}
+S(341,341)
+warnings()
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+sum(log(1:N))-sum(log(1:(N-z)))-sum(log(1:z))))))))#
+	}#
+}
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+sum(log(1:N))-sum(log(1:(N-z)))-sum(log(1:z)))))))#
+	}#
+}
+S(341,341)
+S(20,6)
+exp(sum(log(1:6)))
+factorial(6)
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*((N-z)/(N))^M*choose(N,z))))))#
+	}#
+}
+S <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*((N-z)/(N))^M*choose(N,z)))))#
+	}#
+}
+S(20,76)
+S(20,6)
+1-S(20,6)
+Slog <- function(M,N){#
+	if(M<N){#
+		return(1)#
+	} else {#
+	return(sum(sapply(1:(N-1),function(z) return((-1)^(z-1)*exp(M*(log(N-z) -log(N))+sum(log(1:N))-sum(log(1:(N-z)))-sum(log(1:z)))))))#
+	}#
+}
+Slog(20,6)
+1-Slog(20,6)
+Slog(340,340)
+q()
+install.packages("Rmpfs")
+install.packages("Rmpfr")
+q()
+install.packages('stringdist')
+library(stringdist)
+q()
+library(pdftools)#
+library(rgdal)#
+library(stringdist)#
+library(ggplot2)#
+library(readxl)#
+library(reshape)
+q()
+library(shiny)
+q()
+setwd("/Users/cemarks/Projects/twinfoR/R")
+dir()
+source("twitter_authentication.R")
+source("api_calls.R")
+source("api_recursives.R")
+load("sysdata.rda")
+auth.vector <- authorize_IT()
+ut <- user_timeline_recursive("zlisto")
+source("api_recursives.R")
+ut <- user_timeline_recursive("zlisto")
+install.packages('bit64')
+ut <- user_timeline_recursive("zlisto")
+ft <- sapply(ut,function(x) return(x$full_text))
+ft[1:100]
+source("api_recursives.R")
+user.ids <- get_followers_ids("realDonaldTrump")
+user.ids <- followers_ids("realDonaldTrump")
+length(user.ids)
+user.ids <- user.ids$ids
+length(user.ids)
+user.ids[1]
+users <- user_lookup_recursive(user_id=user.ids)
+source("api_recursives.R")
+users <- user_lookup_recursive(user_id=user.ids)
+sns <- sapply(users,function(x) return(x$screen_name))
+length(sns)
+length(users)
+uids <- sapply(users,function(x) return(x$id_str))
+setdiff(user.ids,uids)
+show_user(user_id="1070470631450271746")
+ss<-user_show(user_id="1070470631450271746")
+content(ss)
+httr::content(ss)
+length(unique(sns))
+q()
