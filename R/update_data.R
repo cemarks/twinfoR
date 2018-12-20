@@ -1,4 +1,4 @@
-
+#### NEED TO ADD OPTIONS; SENTEIMENT SCORES, IMAGE HASH/ENCODINGS, ETC.
 
 update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){

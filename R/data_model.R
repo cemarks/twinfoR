@@ -1,4 +1,5 @@
 ## Twitter Data Functions
+## To do: review @seealso's.  These should probably reference recursive calls rather than the updates.
 
 #' Create Twitter SQLite Connection
 #'
@@ -202,6 +203,46 @@ twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,quer
   return(con)
 }
 
+#' Upload User Query Table
+#'
+#' Upload a table of users to a Twitter database connection
+#'
+#' The \code{query.users.df} must be a data frame with either a \code{screen_name} column
+#' or a \code{user_id} column containing Twitter screen names or user_ids for collection.
+#' Additional user category columns are optional.  A unique 'id' column will be added if
+#' it is not included.  Additional mandatory columns are \code{friends_collected}, 
+#' \code{followers_collected}, and {since_id}.  These will all be automatically added and
+#' populated if they are not included.
+#' See \code{\link{twitter_database}}.  
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param query.users.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
+#' @param overwrite logical indicating whether to overwrite an existing \code{query_user} table in
+#' the \code{conn} data connection.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_timelines}}
+#' @export
+#' @examples
+#' users <- data.frame(
+#'   screen_name=c(
+#'     "nytimes",
+#'     "latimes",
+#'     "bostonglobe",
+#'     "realDonaldTrump"
+#'   ),
+#'   category = c(
+#'     "media",
+#'     "media",
+#'     "media",
+#'     "politician"
+#'   )
+#' )
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' upload_query_users(conn,users)
+#'
 upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
   count <- count[1,1]
@@ -237,6 +278,45 @@ upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
   }
 }
 
+
+#' Upload Search Text Query Table
+#'
+#' Upload a table of search text to a Twitter database connection
+#'
+#' The \code{query.text.df} must be a data frame with a \code{query_text} column
+#' containing character strings to execute in search queries.
+#' Additional query category columns are optional.  A unique 'id' column will be added if
+#' it is not included, as well as an additional mandatory {since_id} column.
+#' See \code{\link{twitter_database}}.  
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param query.text.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
+#' @param overwrite logical indicating whether to overwrite an existing \code{query_text} table in
+#' the \code{conn} data connection.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{update_search}}
+#' @export
+#' @examples
+#' users <- data.frame(
+#'   screen_name=c(
+#'     "nytimes",
+#'     "latimes",
+#'     "bostonglobe",
+#'     "realDonaldTrump"
+#'   ),
+#'   category = c(
+#'     "media",
+#'     "media",
+#'     "media",
+#'     "politician"
+#'   )
+#' )
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' upload_query_users(conn,users)
+#'
 upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
   count <- count[1,1]
@@ -265,6 +345,51 @@ upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
 }
 
 
+#' Insert Twitter User Objects
+#'
+#' Insert Twitter user objects into Twitter database connection
+#'
+#' This function does *not* add users to the \code{query_users} table.  Rather, it inserts
+#' the Twitter user objects in the the \code{user} table in the data connection.  These 
+#' users will appear in analyses of the data, but will not be automatically updated or 
+#' included in queries of only.  To add users to the query table, see \code{\link{update_users}}.
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param user.list list of Twitter user objects,
+#' @param calc.Rsentiment logical.  If \code{TRUE}, the status text sentiment will be calculated using
+#' the \code{RSentiment} library.
+#' @param calc.syu logical.  If \code{TRUE}, the status text sentiment will be calculated using
+#' the \code{syuzhet} library.
+#' @param status.media.hash logical.  If \code{TRUE}, status image average hash values will be
+#' calculated and inserted into the \code{media} data table.
+#' @param status.media.64bit logical.  If \code{TRUE}, status images will be 64-bit encoded and inserted
+#' into the \code{media} table.  Note: this will significantly increase processing time and sqlite
+#' database file size.
+#' @param profile.img.hash logical.  If \code{TRUE}, the function will attempt to calculate profile 
+#' and profile banner image average hash values and insert them into the \code{user} data table.
+#' @param profile.img.64bit logical.  If \code{TRUE}, the function will attempt to compute profile 
+#' and profile banner image 64-bit encodings and insert them into the \code{user} data table. Note: this
+#' will significantly increase processing time and sqlite database file size.
+#' @param users.per.insert integer.  The maximum number of users per insert statement.
+#' @param insert.statuses logical.  If \code{TRUE}, status objects attached to the user objects
+#' will be inserted into the \code{status} table.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}
+#' @export
+#' @examples
+#' 
+#' ## Not run: Authenticate to Twitter
+#' auth.vector <- authorize_IT()
+#' 
+#' user.objs <- user_lookup(c("nytimes","bostonglobe"))
+#' 
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' 
+#' insert_users(conn,user.objs)
+#'
 insert_users <- function(
   conn,
   user.list,
@@ -346,6 +471,51 @@ insert_users <- function(
   }
 }
 
+#' Insert Twitter Status Objects
+#'
+#' Insert Twitter Status (Tweet) objects into Twitter database connection
+#'
+#' This function inserts
+#' Twitter status objects in the the \code{status} table in the data connection.  
+#' It also inserts applicable records into the \code{media}, \code{hashtag},
+#' \code{user_mention}, and \code{url} tables.  
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param status.list list of Twitter status objects,
+#' @param calc.Rsentiment logical.  If \code{TRUE}, the status text sentiment will be calculated using
+#' the \code{RSentiment} library.
+#' @param calc.syu logical.  If \code{TRUE}, the status text sentiment will be calculated using
+#' the \code{syuzhet} library.
+#' @param status.media.hash logical.  If \code{TRUE}, status image average hash values will be
+#' calculated and inserted into the \code{media} data table.
+#' @param status.media.64bit logical.  If \code{TRUE}, status images will be 64-bit encoded and inserted
+#' into the \code{media} table.  Note: this will significantly increase processing time and sqlite
+#' database file size.
+#' @param profile.img.hash logical.  If \code{TRUE}, the function will attempt to calculate profile 
+#' and profile banner image average hash values and insert them into the \code{user} data table.
+#' @param profile.img.64bit logical.  If \code{TRUE}, the function will attempt to compute profile 
+#' and profile banner image 64-bit encodings and insert them into the \code{user} data table. Note: this
+#' will significantly increase processing time and sqlite database file size.
+#' @param statuses.per.insert integer.  The maximum number of statuses per insert statement.
+#' @param insert.users logical.  If \code{TRUE}, user objects attached to the input status objects
+#' will be inserted into the \code{user} table.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{update_user_timelines}}, \code{\link{update_search}}
+#' @export
+#' @examples
+#' 
+#' ## Not run: Authenticate to Twitter
+#' auth.vector <- authorize_IT()
+#' 
+#' statuses <- user_timeline_recursive("nytimes")
+#' 
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' 
+#' insert_statuses(conn,user.objs)
+#'
 insert_statuses <- function(
   conn,
   status.list,
@@ -571,7 +741,44 @@ insert_statuses <- function(
   }
 }
 
-
+#' Insert Follower Relationships
+#'
+#' Insert Twitter Follower relationships into Twitter database connection
+#'
+#' This function inserts 'follower' relationship information into the
+#' \code{followers} table in the data connection.  It takes a single
+#' friend user_id and multiple follower user_ids.  For each follower user_id,
+#' a follower-friend relationship is entered into the table.
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param friend_id character user_id of Twitter friend.
+#' @param follower_ids character user_ids of Twitter followers.
+#' @param ids.per.insert integer maximum number of relationships per insert query.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{get_all_followers}}
+#' @export
+#' @examples
+#' 
+#' ## Not run: Authenticate to Twitter
+#' auth.vector <- authorize_IT()
+#' 
+#' nyt <- user_show("nytimes")
+#' nyt_followers <- followers_ids(user_id=nyt$id_str)
+#' 
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' 
+#' insert_followers(
+#'   conn,
+#'   nyt$id_str,
+#'   sapply(
+#'     nyt_followers,
+#'     function(x) return(x$id_str)
+#'   )
+#' )
+#'
 insert_followers <- function(
   conn,
   friend.id,
@@ -608,8 +815,44 @@ insert_followers <- function(
 }
 
 
-
-
+#' Insert Friend Relationships
+#'
+#' Insert Twitter Friend relationships into Twitter database connection
+#'
+#' This function inserts 'friend' relationship information into the
+#' \code{followers} table in the data connection.  It takes a single
+#' follower user_id and multiple friend user_ids.  For each friend user_id,
+#' a follower-friend relationship is entered into the table.
+#'
+#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param follower_id character user_id of Twitter follower.
+#' @param friend_ids character user_ids of Twitter friends.
+#' @param ids.per.insert integer maximum number of relationships per insert query.
+#'
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{get_all_friends}}
+#' @export
+#' @examples
+#' 
+#' ## Not run: Authenticate to Twitter
+#' auth.vector <- authorize_IT()
+#' 
+#' nyt <- user_show("nytimes")
+#' nyt_friends <- friends_ids(user_id=nyt$id_str)
+#' 
+#' ## Not run: establish database.
+#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' 
+#' insert_friends(
+#'   conn,
+#'   nyt$id_str,
+#'   sapply(
+#'     nyt_friends,
+#'     function(x) return(x$id_str)
+#'   )
+#' )
+#'
 insert_friends <- function(
   conn,
   follower.id,

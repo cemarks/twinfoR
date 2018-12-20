@@ -39,11 +39,14 @@
 #' (e.g., urls, hashtags, usermentions, media) will be included in the results.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
 #' 140 character compatability.
+#' @param query.row.id integer row \code{id} of the query in the \code{query_text} table.  This
+#' value is inserted into the \code{search_status} table.  Ignored if no \code{data.connection}
+#' provided.  See \code{\link{twitter_database}}.
 #' @param ... other named parameters passed to \code{\link{insert_statuses}}.
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
 #'
-#' @seealso \code{\link{search_tweets}}, \code{\link{insert_statuses}}
+#' @seealso \code{\link{search_tweets}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #' ## Not run: read authentication vector from file.
@@ -218,7 +221,7 @@ search_tweets_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
 #'
-#' @seealso \code{\link{user_timeline}}, \code{\link{insert_statuses}}
+#' @seealso \code{\link{user_timeline}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -388,7 +391,7 @@ user_timeline_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects (lists).
 #'
-#' @seealso \code{\link{user_lookup}}, \code{\link{insert_users}}
+#' @seealso \code{\link{user_lookup}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -523,7 +526,7 @@ user_lookup_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects.
 #'
-#' @seealso \code{\link{status_lookup}}, \code{\link{insert_statuses}}
+#' @seealso \code{\link{status_lookup}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -654,7 +657,7 @@ status_lookup_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
 #'
-#' @seealso \code{\link{user_search}}, \code{\link{insert_users}}
+#' @seealso \code{\link{user_search}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -776,7 +779,7 @@ user_search_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
 #'
-#' @seealso \code{\link{followers_list}}, \code{\link{insert_followers}}, \code{\link{insert_users}}
+#' @seealso \code{\link{followers_list}}, \code{\link{insert_followers}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -920,7 +923,7 @@ followers_list_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
 #'
-#' @seealso \code{\link{friends_list}}, \code{\link{insert_friends}}, \code{\link{insert_users}}
+#' @seealso \code{\link{friends_list}}, \code{\link{insert_friends}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -1058,7 +1061,7 @@ friends_list_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
 #'
-#' @seealso \code{\link{followers_ids}}, \code{\link{insert_followers}}
+#' @seealso \code{\link{followers_ids}}, \code{\link{insert_followers}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
@@ -1179,7 +1182,7 @@ followers_ids_recursive <- function(
 #'
 #' @return \code{NULL} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
 #'
-#' @seealso \code{\link{friends_ids}}, \code{\link{insert_friends}}
+#' @seealso \code{\link{friends_ids}}, \code{\link{insert_friends}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #'
