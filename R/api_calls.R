@@ -2,6 +2,9 @@
 #'
 #' Send an authenticated HTTPS request to a Twitter REST API endpoint.
 #'
+#' This is the workhorse function of this package, as it is called by every 
+#' function that queries the Twitter API.  It is useful for accessing API endpoints
+#' that are not provided in this package.
 #' The authentication vector must be provided.  It can be created using the
 #' \code{\link{authorize_app}} or \code{\link{authorize_IT}} functions, or can be read from
 #' a locally saved location if one has already been created.  This function
@@ -27,9 +30,9 @@
 #' ## Not run: read authentication vector from file.
 #' # auth.vector <- load("auth-vector.RData")
 #'
-#' resource.url <- "https://api.twitter.com/1.1/statuses/user_timeline.json"
-#' params <- list(screen_name="realDonaldTrump",count="200",tweet_mode="extended")
-#' httr.response <- twitter_request(auth.vector,resource.url,params)
+#' # resource.url <- "https://api.twitter.com/1.1/statuses/user_timeline.json"
+#' # params <- list(screen_name="realDonaldTrump",count="200",tweet_mode="extended")
+#' # httr.response <- twitter_request(auth.vector,resource.url,params)
 #'
 twitter_request<-function(auth.vector,base.url,query.param.list=list()){
   consumer.token<-as.character(auth.vector['consumer.token'])
@@ -144,10 +147,10 @@ twitter_request<-function(auth.vector,base.url,query.param.list=list()){
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' search.json <- search_tweets(
-#'   "#myfirsttweet",
-#'   auth.vector
-#' )
+#' # search.json <- search_tweets(
+#' #   "#myfirsttweet",
+#' #   auth.vector
+#' # )
 #'
 #' cat(json.list$statuses[[1]]$full_text)
 #'
@@ -241,12 +244,12 @@ search_tweets <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' user.statuses <- user_timeline(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # user.statuses <- user_timeline(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(user.statuses[[1]]$full_text)
+#' # cat(user.statuses[[1]]$full_text)
 #'
 user_timeline <- function(
   screen_name,
@@ -338,16 +341,16 @@ user_timeline <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' user.list <- user_lookup(
-#'   c(
-#'   "realDonaldTrump",
-#'   "SouthComWatch",
-#'   "Stephenfaller"
-#'   ),
-#'   authentication.vector = auth.vector
-#' )
+#' # user.list <- user_lookup(
+#' #   c(
+#' #   "realDonaldTrump",
+#' #   "SouthComWatch",
+#' #   "Stephenfaller"
+#' #   ),
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(user.list[[1]]$description)
+#' # cat(user.list[[1]]$description)
 #'
 user_lookup <- function(
   screen_name,
@@ -431,12 +434,12 @@ user_lookup <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' potus.obj <- user_show(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # potus.obj <- user_show(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(potus$description)
+#' # cat(potus$description)
 #'
 user_show <- function(
   screen_name,
@@ -524,17 +527,17 @@ user_show <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' status.list <- status_lookup(
-#'   c(
-#'    "1059843699298000897",
-#'    "1059843147906322432",
-#'    "1059842917769068544",
-#'    "1059842858797223937"
-#'   ),
-#'   authentication.vector = auth.vector
-#' )
+#' # status.list <- status_lookup(
+#' #   c(
+#' #    "1059843699298000897",
+#' #    "1059843147906322432",
+#' #    "1059842917769068544",
+#' #    "1059842858797223937"
+#' #   ),
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(status.list[[1]]$full_text)
+#' # cat(status.list[[1]]$full_text)
 #'
 status_lookup <- function(
   status_id,
@@ -625,12 +628,12 @@ status_lookup <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' status.obj <- status_show(
-#'   "1059843699298000897",
-#'   authentication.vector = auth.vector
-#' )
+#' # status.obj <- status_show(
+#' #   "1059843699298000897",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(status.obj$full_text)
+#' # cat(status.obj$full_text)
 #'
 status_show <- function(
   status_id,
@@ -714,12 +717,12 @@ status_show <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' searched.users <- user_search(
-#'   "Donald Trump",
-#'   authentication.vector = auth.vector
-#' )
+#' # searched.users <- user_search(
+#' #   "Donald Trump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(searched.users[[3]]$description)
+#' # cat(searched.users[[3]]$description)
 #'
 user_search <- function(
   q,
@@ -796,12 +799,12 @@ user_search <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' potus.followers <- followers_ids(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # potus.followers <- followers_ids(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(paste(potus.followers$ids[1:20],collapse=","))
+#' # cat(paste(potus.followers$ids[1:20],collapse=","))
 #'
 followers_ids <- function(
   screen_name,
@@ -883,12 +886,12 @@ followers_ids <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' potus.friends <- friends_ids(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # potus.friends <- friends_ids(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(paste(potus.friends$ids[1:20],collapse=","))
+#' # cat(paste(potus.friends$ids[1:20],collapse=","))
 #'
 friends_ids <- function(
   screen_name,
@@ -975,21 +978,21 @@ friends_ids <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' potus.followers <- followers_list(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # potus.followers <- followers_list(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   paste(
-#'     "@",
-#'     sapply(potus.followers$users[1:20],function(x) return(x$screen_name)),
-#'     ": ",
-#'     sapply(potus.followers$users[1:20],function(x) return(x$description)),
-#'     sep="",
-#'     collapse="\n"
-#'   )
-#' )
+#' # cat(
+#' #   paste(
+#' #     "@",
+#' #     sapply(potus.followers$users[1:20],function(x) return(x$screen_name)),
+#' #     ": ",
+#' #     sapply(potus.followers$users[1:20],function(x) return(x$description)),
+#' #     sep="",
+#' #     collapse="\n"
+#' #   )
+#' # )
 #'
 followers_list <- function(
   screen_name,
@@ -1080,21 +1083,21 @@ followers_list <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' potus.friends <- friends_list(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # potus.friends <- friends_list(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   paste(
-#'     "@",
-#'     sapply(potus.friends$users[1:20],function(x) return(x$screen_name)),
-#'     ": ",
-#'     sapply(potus.friends$users[1:20],function(x) return(x$description)),
-#'     sep="",
-#'     collapse="\n"
-#'   )
-#' )
+#' # cat(
+#' #   paste(
+#' #     "@",
+#' #     sapply(potus.friends$users[1:20],function(x) return(x$screen_name)),
+#' #     ": ",
+#' #     sapply(potus.friends$users[1:20],function(x) return(x$description)),
+#' #     sep="",
+#' #     collapse="\n"
+#' #   )
+#' # )
 #'
 friends_list <- function(
   screen_name,

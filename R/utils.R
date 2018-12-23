@@ -1,92 +1,25 @@
 ## Get unique tweets or statuses
 
-open_user <- function(user_id,screen_name){
-  if(missing(user_id)){
-    browseURL(
-      paste(
-        "http://twitter.com/",
-        screen_name,
-        sep=""
-      )
-    )
-  } else {
-    u <- user_show(user_id=user_id)
-    screen_name <- u$screen_name
-    browseURL(
-      paste(
-        "http://twitter.com/",
-        screen_name,
-        sep=""
-      )
-    )
-  }
-}
-
 get_unique <- function(obj.list){
   obj.ids <- sapply(obj.list,function(x) return(x$id_str))
   w <- which(!duplicated(obj.ids))
   return(obj.list[w])
 }
 
-
-status_media <- function(
-  media.table.row,
-  conn,
-  save.to.file = FALSE,
-  file.name = NULL,
-  return.image = FALSE,
-  update.media.b64 = FALSE,
-  hash.size=16,
-  ...
-){
-  media.url <- media.table.row$media_url
-  img.b64 <- media.table.row$img_b64
-  if(is.na(img.b64)){
-    p <- NA
-    try(
-      p <- retrieve_web_image(media.url)
-    )
-    if(is.null(p) || is.na(p)){
-      return(NA)
-    } else {
-      if(update.media.b64){
-        a <- OpenImageR::average_hash(OpenImageR::rgb_2gray(p$image),hash_size=hash.size)
-        query <- sprintf(
-          "UPDATE media SET img_hash='%s',img_b64='%s' WHERE media_id='%s';",
-          a,
-          p$b64,
-          media.table.row$media_id
-        )
-        if(missing(conn)){
-          stop("Data connection not provided")
-        }
-        DBI::dbExecute(conn,query)
-      }
-      if(save.to.file){
-        if(is.null(file.name)){
-          media.url.splt <- strsplit(media.url,"/",fixed=TRUE)[[1]]
-          file.name <- media.url.splt[length(media.url.splt)]
-        }
-        OpenImageR::writeImage(p$image,file.name)
-      }
-      if(return.image){
-        return(p$image)
-      }
-    }
+date_subtitle <- function(start.date,end.date){
+  if(is.null(start.date) && is.null(end.date)){
+    subt <- ""
+  } else if(is.null(start.date)) {
+    subt <- sprintf("Tweets up to %s",end.date)
+  } else if(is.null(end.date)){
+    subt <- sprintf("Tweets since %s",start.date)
   } else {
-    p <- reconstitute_image(img.b64,media.url,showWarnings=showWarnings,...)
-    if(!is.na(p) && save.to.file){
-      if(is.null(file.name)){
-        media.url.splt <- strsplit(media.url,"/",fixed=TRUE)[[1]]
-        file.name <- media.url.splt[length(media.url.splt)]
-      }
-      OpenImageR::writeImage(p,file.name)
-    }
-    if(return.image){
-      return(p)
-    }
+    subt <- sprintf("Period: %s -- %s",start.date,end.date)
   }
+  return(subt)
 }
+
+
 
 reconstitute_image <- function(base64.image,media.url,display.image=TRUE,showWarnings=TRUE){
   if(is.na(base64.image)){
@@ -143,5 +76,122 @@ retrieve_web_image<- function(media.url,display.image=TRUE,showWarnings=TRUE){
       warning("Cannot retrieve image from URL.")
     }
     return(NA)
+  }
+}
+
+
+
+make_top10_excel <- function(
+  top10.df,
+  count.col,
+  footnote,
+  sheet.name="Sheet1",
+  file.name = NULL
+){
+  if(nrow(top10.df) > 1 && var(top10.df[,count.col]) > 0){
+    top10.df <- top10.df[order(top10.df[,count.col], decreasing = TRUE),]
+    top10.df <- top10.df[which(top10.df[,count.col] != min(top10.df[,count.col])),]
+    wb<-createWorkbook(type="xlsx")
+    sheet <- createSheet(wb,sheet.name)
+    rows <- createRow(sheet,1:(nrow(top10.df)+2))
+    cells <- createCell(rows,1:ncol(top10.df))
+    TITLE_STYLE <- CellStyle(wb)+
+      Font(
+        wb,
+        heightInPoints=24,
+        isBold=TRUE,
+        underline=1,
+        color="#FFFFFF"
+      ) +
+      Fill(
+        foregroundColor = 'lightblue',
+        # backgroundColor = '#FFFFFF00',
+        pattern = 'SOLID_FOREGROUND') +
+      Border(
+        color='#000000FF',
+        position=c("BOTTOM","LEFT","TOP","RIGHT")
+      ) +
+      Alignment(
+        horizontal = "ALIGN_CENTER"
+      )
+    CELL_STYLE_LIST <- list()
+    for(j in 1:ncol(top10.df)){
+      if(is.numeric(top10.df[,j])){
+        align <- "ALIGN_CENTER"
+      } else {
+        align <- "ALIGN_CENTER"
+      }
+      CELL_STYLE_LIST[[j]] <- CellStyle(wb) +
+        Font(
+          wb,
+          heightInPoints=24,
+          color="#FFFFFF",
+          isBold=TRUE,
+          underline=0
+        ) +
+        Fill(
+          foregroundColor = '#FFFFFF',
+          backgroundColor = 'lightblue',
+          pattern = 'SOLID_FOREGROUND')+
+        Border(
+          color='#000000FF',
+          position=c("BOTTOM","LEFT","TOP","RIGHT")
+        ) +
+        Alignment(
+          horizontal = align
+        )
+    }
+    CELL_STYLE_FOOT <- CellStyle(wb)+
+      Font(
+        wb,
+        heightInPoints=20,
+        color="#FFFFFF",
+        isBold=FALSE,
+        underline=0
+      ) +
+      Fill(
+        foregroundColor = '#FFFFFF',
+        # backgroundColor = 'lightblue',
+        pattern = 'SOLID_FOREGROUND')+
+      Border(
+        color='#000000FF',
+        position=c("TOP")
+      ) +
+      Alignment(
+        horizontal = "ALIGN_RIGHT"
+      )
+    for(j in 1:ncol(top10.df)){
+      if(is.numeric(top10.df[,j])){
+        setColumnWidth(sheet, colIndex = j, 15)
+      } else {
+        z <- as.character(top10.df[,j])
+        n <- max(nchar(z))
+        if(n > 90){
+          setColumnWidth(sheet, colIndex = j, 100)
+        } else {
+          setColumnWidth(sheet, colIndex = j, n+10)
+        }
+      }
+    }
+    mapply(setCellValue,cells[1,],names(top10.df))
+    for(j in 1:ncol(top10.df)){
+      mapply(setCellValue,cells[2:(nrow(top10.df)+1),j],top10.df[,j])
+    }
+    setCellValue(cells[[nrow(top10.df)+2,1]],footnote)
+    i<-1
+    for(j in 1:ncol(top10.df)){
+      setCellStyle(cells[[i,j]],TITLE_STYLE)
+    }
+    for(i in 2:(nrow(top10.df)+1)){
+      for(j in 1:ncol(top10.df))
+      setCellStyle(cells[[i,j]],CELL_STYLE_LIST[[j]])
+    }
+    setCellStyle(cells[[nrow(top10.df)+2,1]],CELL_STYLE_FOOT)
+    ind<-addMergedRegion(sheet,nrow(top10.df)+2,nrow(top10.df)+2,1,ncol(top10.df))
+    if(is.null(file.name)){
+      return(wb)
+    } else {
+      saveWorkbook(wb,file.name)
+    }
   }
 }

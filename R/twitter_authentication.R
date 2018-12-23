@@ -122,7 +122,7 @@ authorize_app<-function(consumer.token,consumer.secret){
 #' @seealso \code{\link{twitter_request}}, \code{\link{authorize_app}}
 #' @export
 #' @examples
-#' auth.vector <- authorize_IT()
+#' # auth.vector <- authorize_IT()
 #'
 authorize_IT <- function(){
   consumer.token <- as.character(cons.token)

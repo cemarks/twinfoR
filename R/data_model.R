@@ -37,9 +37,11 @@
 #' verified \tab TINYINT(1) \tab Account owner verified TINYINT(1)ean \cr
 #' lang \tab TEXT \tab Account langauage abbreviation \cr
 #' status_id \tab TEXT \tab Account recent/pinned status \cr
-#' profile_img_hash \tab TEXT \tab profile image average hash (optional, requires OpenImageR) \cr
+#' profile_image_url \tab TEXT \tab URL to profile image \cr
+#' profile_banner_url \tab TEXT \tab URL to profile banner image \cr
+#' profile_image_hash \tab TEXT \tab profile image average hash (optional, requires OpenImageR) \cr
 #' profile_banner_hash \tab TEXT \tab profile banner average hash (optional, requires OpenImageR) \cr
-#' profile_img_b64 \tab TEXT \tab profile image 64-bit encoding (optional, requires base64enc) \cr
+#' profile_image_b64 \tab TEXT \tab profile image 64-bit encoding (optional, requires base64enc) \cr
 #' profile_banner_b64 \tab TEXT \tab profile banner 64-bit encoding (optional, requires base64enc)
 #' }
 #'
@@ -187,7 +189,7 @@
 #'
 twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,query.tables.overwrite=FALSE){
   con <- DBI::dbConnect(RSQLite::SQLite(),db.file)
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_img_hash TEXT, profile_banner_hash TEXT, profile_img_b64 TEXT, profile_banner_b64 TEXT);")
+  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_image_url TEXT, profile_banner_url TEXT, profile_image_hash TEXT, profile_banner_hash TEXT, profile_image_b64 TEXT, profile_banner_b64 TEXT);")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id TEXT PRIMARY KEY, created_at DATETIME, user_id TEXT, screen_name TEXT, text TEXT, in_reply_to_status_id TEXT, in_reply_to_user_id TEXT, retweet_count INT, favorite_count INT, lang TEXT, geo_lat FLOAT, geo_long FLOAT, source TEXT, retweet TINYINT(1), retweet_status_id TEXT, sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT(1));")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id TEXT, user_mention_id TEXT, user_mention_screen_name TEXT, user_mention_name TEXT, PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashtag (status_id TEXT, hashtag_text TEXT, PRIMARY KEY (status_id,hashtag_text), FOREIGN KEY (status_id) REFERENCES status(id));")
@@ -241,7 +243,7 @@ twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,quer
 #' )
 #' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
-#' upload_query_users(conn,users)
+#' # upload_query_users(conn,users)
 #'
 upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
@@ -315,7 +317,7 @@ upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
 #' )
 #' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
-#' upload_query_users(conn,users)
+#' # upload_query_users(conn,users)
 #'
 upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
@@ -353,6 +355,8 @@ upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
 #' the Twitter user objects in the the \code{user} table in the data connection.  These 
 #' users will appear in analyses of the data, but will not be automatically updated or 
 #' included in queries of only.  To add users to the query table, see \code{\link{update_users}}.
+#' This method is called by recursive methods that return Twitter user objects, if a
+#' data connection is supplied.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
 #' @param user.list list of Twitter user objects,
@@ -376,19 +380,19 @@ upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{user_lookup_recursive},
+#' \code{\link{user_search_recursive}, \code{\link{update_users}}
 #' @export
 #' @examples
 #' 
 #' ## Not run: Authenticate to Twitter
-#' auth.vector <- authorize_IT()
+#' # auth.vector <- authorize_IT()
 #' 
-#' user.objs <- user_lookup(c("nytimes","bostonglobe"))
+#' # user.objs <- user_lookup(c("nytimes","bostonglobe"))
 #' 
-#' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' insert_users(conn,user.objs)
+#' # insert_users(conn,user.objs)
 #'
 insert_users <- function(
   conn,
@@ -478,7 +482,9 @@ insert_users <- function(
 #' This function inserts
 #' Twitter status objects in the the \code{status} table in the data connection.  
 #' It also inserts applicable records into the \code{media}, \code{hashtag},
-#' \code{user_mention}, and \code{url} tables.  
+#' \code{user_mention}, and \code{url} tables.  This method is called by recursive
+#' functions that obtain status objects through the Twitter API, if a data
+#' connection is supplied.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
 #' @param status.list list of Twitter status objects,
@@ -502,19 +508,20 @@ insert_users <- function(
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{update_user_timelines}}, \code{\link{update_search}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{user_timeline_recursive}},
+#' \code{\link{status_lookup_recursive}}, \code{\link{search_tweets_recursive}},
+#' \code{\link{update_user_timelines}}, \code{\link{update_search}}
 #' @export
 #' @examples
 #' 
 #' ## Not run: Authenticate to Twitter
-#' auth.vector <- authorize_IT()
+#' # auth.vector <- authorize_IT()
 #' 
-#' statuses <- user_timeline_recursive("nytimes")
+#' # statuses <- user_timeline_recursive("nytimes")
 #' 
-#' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' insert_statuses(conn,user.objs)
+#' # insert_statuses(conn,user.objs)
 #'
 insert_statuses <- function(
   conn,
@@ -748,7 +755,9 @@ insert_statuses <- function(
 #' This function inserts 'follower' relationship information into the
 #' \code{followers} table in the data connection.  It takes a single
 #' friend user_id and multiple follower user_ids.  For each follower user_id,
-#' a follower-friend relationship is entered into the table.
+#' a follower-friend relationship is entered into the table.  This method
+#' is called by the \code{\link{followers_ids_recursive}} and 
+#' \code{\link{followers_list_recursive}} functions.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
 #' @param friend_id character user_id of Twitter friend.
@@ -757,27 +766,27 @@ insert_statuses <- function(
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{get_all_followers}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{followers_list_recursive}}
+#' \code{\link{followers_ids_recursive}}, \code{\link{get_all_followers}}
 #' @export
 #' @examples
 #' 
 #' ## Not run: Authenticate to Twitter
-#' auth.vector <- authorize_IT()
+#' # auth.vector <- authorize_IT()
 #' 
-#' nyt <- user_show("nytimes")
-#' nyt_followers <- followers_ids(user_id=nyt$id_str)
+#' # nyt <- user_show("nytimes")
+#' # nyt_followers <- followers_ids(user_id=nyt$id_str)
 #' 
-#' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' insert_followers(
-#'   conn,
-#'   nyt$id_str,
-#'   sapply(
-#'     nyt_followers,
-#'     function(x) return(x$id_str)
-#'   )
-#' )
+#' # insert_followers(
+#' #   conn,
+#' #   nyt$id_str,
+#' #   sapply(
+#' #     nyt_followers,
+#' #     function(x) return(x$id_str)
+#' #   )
+#' # )
 #'
 insert_followers <- function(
   conn,
@@ -822,7 +831,9 @@ insert_followers <- function(
 #' This function inserts 'friend' relationship information into the
 #' \code{followers} table in the data connection.  It takes a single
 #' follower user_id and multiple friend user_ids.  For each friend user_id,
-#' a follower-friend relationship is entered into the table.
+#' a follower-friend relationship is entered into the table.  This method
+#' is called by the \code{\link{friends_ids_recursive}} and 
+#' \code{\link{friends_list_recursive}} functions.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
 #' @param follower_id character user_id of Twitter follower.
@@ -831,27 +842,27 @@ insert_followers <- function(
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{get_all_friends}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{friends_list_recursive}}
+#' \code{\link{friends_ids_recursive}}, \code{\link{get_all_friends}}
 #' @export
 #' @examples
 #' 
 #' ## Not run: Authenticate to Twitter
-#' auth.vector <- authorize_IT()
+#' # auth.vector <- authorize_IT()
 #' 
-#' nyt <- user_show("nytimes")
-#' nyt_friends <- friends_ids(user_id=nyt$id_str)
+#' # nyt <- user_show("nytimes")
+#' # nyt_friends <- friends_ids(user_id=nyt$id_str)
 #' 
-#' ## Not run: establish database.
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' insert_friends(
-#'   conn,
-#'   nyt$id_str,
-#'   sapply(
-#'     nyt_friends,
-#'     function(x) return(x$id_str)
-#'   )
-#' )
+#' # insert_friends(
+#' #   conn,
+#' #   nyt$id_str,
+#' #   sapply(
+#' #     nyt_friends,
+#' #     function(x) return(x$id_str)
+#' #   )
+#' # )
 #'
 insert_friends <- function(
   conn,
@@ -1106,6 +1117,8 @@ user_values <- function(user,avg.hash=TRUE,store.64encode = FALSE){
     write_bool(user$verified),
     write_text(user$lang),
     write_text(status_id),
+    write_text(user$profile_image_url),
+    write_text(user$profile_banner_url),
     get_user_avg_hash(user,avg.hash),
     get_banner_avg_hash(user,avg.hash),
     get_user_media_64(user,store.64encode),

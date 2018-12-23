@@ -1,5 +1,50 @@
 #### NEED TO ADD OPTIONS; SENTEIMENT SCORES, IMAGE HASH/ENCODINGS, ETC.
 
+#' Update Users in Database
+#'
+#' Update User objects and user query table in a Twitter database
+#'
+#' This function queries the Twitter API for user objects for users that
+#' appear in the \code{query_users} table but have not been added to
+#' the \code{user} table.  If a \code{screen_name} or \code{user_id} vector
+#' is supplied, these users will be inserted into the \code{user} table 
+#' and added into the \code{query_users} table, if they do not already appear.
+#' If \code{authentication.vector} is not supplied and no global 
+#' \code{auth.vector} exists, this method returns an error.
+#'
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' @param authentication.vector character vector with Twitter authentication
+#' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
+#' @param user_id character vector of Twitter user_ids.
+#' @param screen_name character vector of Twitter screen_names.  Ignored
+#' if \code{user_id} is supplied.
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{user_lookup_recursive}}, \code{\link{insert_users}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database("test1.sqlite")
+#' # update_users(con,screen_name=c("bostonglobe","nytimes"))
+#' 
+#' # con2 <- twitter_database(
+#' #   "test2.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "bostonglobe",
+#' #       "nytimes"
+#' #     )
+#' #   )
+#' # )
+#' # update_users(con2)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
+#' # DBI::dbDisconnect(con2)
 update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -149,6 +194,49 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
   }
 }
 
+#' Collect and Insert User Timelines
+#'
+#' Collect User Timelines and insert new statuses in a Twitter database
+#'
+#' This function queries the Twitter API for status objects for users 
+#' in the \code{query_users} table that have not been added to
+#' the \code{status} table.  If a \code{screen_name} or \code{user_id} vector
+#' is supplied, then *only* these users' statuses will be collected and 
+#' inserted into the \code{status} table.  These users
+#' will also be added to the \code{query_users} table if they do not already appear there. 
+#' If \code{authentication.vector} is not supplied and no global 
+#' \code{auth.vector} exists, this method returns an error.
+#'
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' @param authentication.vector character vector with Twitter authentication
+#' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
+#' @param user_id character vector of Twitter user_ids.
+#' @param screen_name character vector of Twitter screen_names.  Ignored
+#' if \code{user_id} is supplied.
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{user_timeline_recursive}},
+#' \code{\link{\update_users}}, \code{\link{insert_statuses}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test2.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "bostonglobe",
+#' #       "nytimes"
+#' #     )
+#' #   )
+#' # )
+#' # update_user_timelines(con)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
 update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -214,6 +302,48 @@ update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_
 }
 
 
+#' Search and Insert Tweets
+#' 
+#' Search and insert new statuses in a Twitter database
+#'
+#' This function searches the Twitter API for status objects using 
+#' the keyword search strings in the \code{query_text} table.  Only statuses that
+#' are newer than the most recent status, annotated in the \code{since_id} column,
+#' are searched.  If a \code{query.text} vector
+#' is supplied, then *only* these queries will be collected and 
+#' inserted into the \code{status} table.  Additionally, these search queries
+#' will be added to the \code{query_text} table if they do not already appear there. 
+#' If \code{authentication.vector} is not supplied and no global 
+#' \code{auth.vector} exists, this method returns an error.
+#'
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' @param authentication.vector character vector with Twitter authentication
+#' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
+#' @param query.text character vector of Twitter search query strings.
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{search_tweets_recursive}},
+#' \code{\link{insert_statuses}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test2.sqlite",
+#' #   query.text.df = data.frame(
+#' #     query_text = c(
+#' #       "#throwbackthursday",
+#' #       "#worstfirstdate"
+#' #     )
+#' #   )
+#' # )
+#' # update_search(con)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
 update_search <- function(con,authentication.vector,query.text=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -275,6 +405,58 @@ update_search <- function(con,authentication.vector,query.text=NULL){
 }
 
 
+#' Get users' friends
+#' 
+#' Get all users' friends and insert the relationships into a database.
+#'
+#' This function collects all of the friends for each user in the
+#' \code{query_user} table, if they have not already beeen collected, 
+#'  and inserts the relationships into the \code{followers} table.  
+#' If a \code{user_id} or \code{screen_name} vector is supplied, only 
+#' these users' friends are collected.  Additionally, if the supplied
+#' users are not present in the \code{query_users} table, they are inserted.
+#' The Twitter user object for each friend is also collected and inserted
+#' into the \code{user} table. 
+#' If \code{authentication.vector} is not supplied and no global 
+#' \code{auth.vector} exists, this method returns an error.
+#' 
+#' @section Caution:
+#' Each API friend query takes one minute, due to rate limiting.  For a 
+#' large list of users or even a small list of users with many friends,
+#' this function can take a very long time to execute.  The number of minutes it
+#' takes to get friends for a single user is 
+#' approximately \code{ceil(friends_count/5000)}.
+#'
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' @param authentication.vector character vector with Twitter authentication
+#' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
+#' @param user_id character vector of Twitter user_ids.
+#' @param screen_name character vector of Twitter screen_names.  Ignored
+#' if \code{user_id} is supplied.
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{friends_ids_recursive}},
+#' \code{\link{\insert_friends}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "pb2pv",
+#' #       "zlisto"
+#' #     )
+#' #   )
+#' # )
+#' # get_all_friends(con)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
 get_all_friends <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -419,6 +601,58 @@ get_all_friends <- function(con,authentication.vector,user_id=NULL,screen_name=N
   }
 }
 
+#' Get users' followers
+#' 
+#' Get all users' followers and insert the relationships into a database.
+#'
+#' This function collects all of the followers for each user in the
+#' \code{query_user} table, if they have not already beeen collected, 
+#'  and inserts the relationships into the \code{followers} table.  
+#' If a \code{user_id} or \code{screen_name} vector is supplied, only 
+#' these users' followers are collected.  Additionally, if the supplied
+#' users are not present in the \code{query_users} table, they are inserted.
+#' The Twitter user object for each friend is also collected and inserted
+#' into the \code{user} table. 
+#' If \code{authentication.vector} is not supplied and no global 
+#' \code{auth.vector} exists, this method returns an error.
+#' 
+#' @section Caution:
+#' Each API friend query takes one minute, due to rate limiting.  For a 
+#' large list of users or even a small list of users with many followers,
+#' this function can take a very long time to execute.  The number of minutes it
+#' takes to get followers for a single user is 
+#' approximately \code{ceil(followers_count/5000)}.
+#'
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' @param authentication.vector character vector with Twitter authentication
+#' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
+#' @param user_id character vector of Twitter user_ids.
+#' @param screen_name character vector of Twitter screen_names.  Ignored
+#' if \code{user_id} is supplied.
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{followers_ids_recursive}},
+#' \code{\link{\insert_friends}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "pb2pv",
+#' #       "zlisto"
+#' #     )
+#' #   )
+#' # )
+#' # get_all_followers(con)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
 get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -570,7 +804,48 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
 
 ### Summarize functions
 
-
+#' Get Database Summary Information# 
+#' 
+#' Summary information for a Twitter database.
+#'
+#' Outputs the numbers of records in each table to the screen, as well as the 
+#' database size.
+#' 
+#' @param con Twitter database connection (see \code{\link{twitter_database}}).
+#' 
+#' @return \code{NULL} (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "pb2pv",
+#' #       "zlisto"
+#' #     )
+#' #   ),
+#' #   query.text.df = data.frame(
+#' #     query_text = c(
+#' #       "#throwbackthursday",
+#' #       "#worstfirstdate"
+#' #     )
+#' #   )
+#' # )
+#' 
+#' # get_all_friends(con)
+#' # update_user_timelines(con)
+#' # update_search(con)
+#' 
+#' # summarize_database(con)
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
 summarize_database <- function(con){
   count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
   count <- count[1,1]

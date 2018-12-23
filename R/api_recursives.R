@@ -44,18 +44,19 @@
 #' provided.  See \code{\link{twitter_database}}.
 #' @param ... other named parameters passed to \code{\link{insert_statuses}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
+#' @return character most recent status id collected if \code{data.connection} is supplied,
+#' otherwise a list of status objects (lists).
 #'
 #' @seealso \code{\link{search_tweets}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
 #' ## Not run: read authentication vector from file.
 #' # auth.vector <- load("auth-vector.RData")
-#' query <- "Miami"
-#' statuses <- search_tweets_recursive(
-#'   query,
-#'   authentication.vector = auth.vector
-#' )
+#' # query <- "Miami"
+#' # statuses <- search_tweets_recursive(
+#' #   query,
+#' #   authentication.vector = auth.vector
+#' # )
 #'
 search_tweets_recursive <- function(
   q,
@@ -219,7 +220,8 @@ search_tweets_recursive <- function(
 #' 140 character compatability.
 #' @param ... other named parameters passed to \code{\link{insert_statuses}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
+#' @return character most recent status id if \code{data.connection} is supplied, 
+#' otherwise a list of status objects (lists).
 #'
 #' @seealso \code{\link{user_timeline}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
@@ -228,10 +230,10 @@ search_tweets_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' user.statuses <- user_timeline_recursive(
-#'   "realDonaldTrump",
-#'   authentication.vector = auth.vector
-#' )
+#' # user.statuses <- user_timeline_recursive(
+#' #   "realDonaldTrump",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
 #'
 user_timeline_recursive <- function(
@@ -397,10 +399,10 @@ user_timeline_recursive <- function(
 #'
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
-#' user.ids.response <- get_followers_ids("realDonaldTrump")
-#' user.ids <- user.ids.response$ids
+#' # user.ids.response <- get_followers_ids("realDonaldTrump")
+#' # user.ids <- user.ids.response$ids
 #'
-#' users <- user_lookup_recursive(user_id=user.ids)
+#' # users <- user_lookup_recursive(user_id=user.ids)
 #'
 user_lookup_recursive <- function(
   screen_name,
@@ -533,15 +535,15 @@ user_lookup_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' original.statuses <- user_timeline_recursive("realDonaldTrump")
-#' status.ids <- sapply(original.statuses,function(x) return(x$id_str))
+#' # original.statuses <- user_timeline_recursive("realDonaldTrump")
+#' # status.ids <- sapply(original.statuses,function(x) return(x$id_str))
 #'
-#' new.statuses <- status_lookup_recursive(
-#'   status.ids,
-#'   authentication.vector <- auth.vector
-#' )
+#' # new.statuses <- status_lookup_recursive(
+#' #   status.ids,
+#' #   authentication.vector <- auth.vector
+#' # )
 #'
-#' cat(new.statuses[[1]]$full_text)
+#' # cat(new.statuses[[1]]$full_text)
 #'
 status_lookup_recursive <- function(
   status_id,
@@ -664,13 +666,13 @@ status_lookup_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' searched.users <- user_search_recursive(
-#'   "Trump",
-#'   authentication.vector = auth.vector,
-#'   max_queries = 5
-#' )
+#' # searched.users <- user_search_recursive(
+#' #   "Trump",
+#' #   authentication.vector = auth.vector,
+#' #   max_queries = 5
+#' # )
 #'
-#' cat(searched.users[[3]]$description)
+#' # cat(searched.users[[3]]$description)
 #'
 user_search_recursive <- function(
   q,
@@ -777,7 +779,7 @@ user_search_recursive <- function(
 #' 140 character compatability.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
+#' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a list of user objects.
 #'
 #' @seealso \code{\link{followers_list}}, \code{\link{insert_followers}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
@@ -786,21 +788,21 @@ user_search_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' dma.relief.followers <- followers_list_recursive(
-#'   "dominica_relief",
-#'   authentication.vector = auth.vector
-#' )
+#' # dma.relief.followers <- followers_list_recursive(
+#' #   "dominica_relief",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   paste(
-#'     "@",
-#'     sapply(dma.relief.followers[1:20],function(x) return(x$screen_name)),
-#'     ": ",
-#'     sapply(dma.relief.followers[1:20],function(x) return(x$description)),
-#'     sep="",
-#'     collapse="\n"
-#'   )
-#' )
+#' # cat(
+#' #   paste(
+#' #     "@",
+#' #     sapply(dma.relief.followers[1:20],function(x) return(x$screen_name)),
+#' #     ": ",
+#' #     sapply(dma.relief.followers[1:20],function(x) return(x$description)),
+#' #     sep="",
+#' #     collapse="\n"
+#' #   )
+#' # )
 #'
 followers_list_recursive <- function(
   screen_name,
@@ -921,7 +923,7 @@ followers_list_recursive <- function(
 #' 140 character compatability.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
+#' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a list of user objects.
 #'
 #' @seealso \code{\link{friends_list}}, \code{\link{insert_friends}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 #' @export
@@ -930,21 +932,21 @@ followers_list_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' dma.relief.friends <- followers_list_recursive(
-#'   "dominica_relief",
-#'   authentication.vector = auth.vector
-#' )
+#' # dma.relief.friends <- followers_list_recursive(
+#' #   "dominica_relief",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   paste(
-#'     "@",
-#'     sapply(dma.relief.friends[1:20],function(x) return(x$screen_name)),
-#'     ": ",
-#'     sapply(dma.relief.friends[1:20],function(x) return(x$description)),
-#'     sep="",
-#'     collapse="\n"
-#'   )
-#' )
+#' # cat(
+#' #   paste(
+#' #     "@",
+#' #     sapply(dma.relief.friends[1:20],function(x) return(x$screen_name)),
+#' #     ": ",
+#' #     sapply(dma.relief.friends[1:20],function(x) return(x$description)),
+#' #     s# ep="",
+#' #     collapse="\n"
+#' #   )
+#' # )
 #'
 friends_list_recursive <- function(
   screen_name,
@@ -1052,14 +1054,18 @@ friends_list_recursive <- function(
 #' A user_id or screen_name is required.  If an authentication vector is not
 #' provided and there is no globally defined \code{auth.vector}, an error is returned.  A *one minute* delay
 #' is included for each query in order to avoid exceeding the rate limit.
-#'
+#' If a \code{data.connection} is provided, user objects will also be collected and inserted.
+#' 
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
 #' @param data.connection a DBI connection to an RSQLite \code{\link{twitter_database}}.
 #' @param authentication.vector character vector containing authentication tokens and secrets.
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
+#' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
+#' 140 character compatability.  This parameter has no effect if no \code{data.connection} is provided.
+#' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
+#' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
 #'
 #' @seealso \code{\link{followers_ids}}, \code{\link{insert_followers}}, \code{\link{twitter_database}}
 #' @export
@@ -1068,21 +1074,23 @@ friends_list_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' dma.followers <- followers_ids_recursive(
-#'   "Nature_Island",
-#'   authentication.vector = auth.vector
-#' )
+#' # dma.followers <- followers_ids_recursive(
+#' #   "Nature_Island",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   dma.followers[1:20]
-#' )
+#' # cat(
+#' #   dma.followers[1:20]
+#' # )
 #'
 followers_ids_recursive <- function(
   screen_name,
   user_id,
   data.connection,
   authentication.vector,
-  stringify_ids = TRUE
+  stringify_ids = TRUE,
+  tweet_mode = 'extended',
+  ...
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -1142,6 +1150,13 @@ followers_ids_recursive <- function(
   if(missing(data.connection)){
         users <- c(users,as.character(request.result$ids))
       } else {
+        user_lookup_recursive(
+          user_id = request.result$ids,
+          data.connection = data.connection,
+          authentication.vector = authentication.vector,
+          tweet_mode = tweet_mode,
+          ...
+        )
         insert_followers(
           data.connection,
           user_id,
@@ -1173,14 +1188,18 @@ followers_ids_recursive <- function(
 #' A user_id or screen_name is required.  If an authentication vector is not
 #' provided and there is no globally defined \code{auth.vector}, an error is returned.  A *one minute* delay
 #' is included for each query in order to avoid exceeding the rate limit.
+#' If a \code{data.connection} is provided, user objects will also be collected and inserted.
 #'
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
 #' @param data.connection a DBI connection to an RSQLite \code{\link{twitter_database}}.
 #' @param authentication.vector character vector containing authentication tokens and secrets.
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
+#' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
+#' 140 character compatability. This parameter has no effect if no \code{data.connection} is provided.
+#' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
-#' @return \code{NULL} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
+#' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
 #'
 #' @seealso \code{\link{friends_ids}}, \code{\link{insert_friends}}, \code{\link{twitter_database}}
 #' @export
@@ -1189,21 +1208,23 @@ followers_ids_recursive <- function(
 #' ## Not run: authenticate
 #' # auth.vector <- authorize_IT()
 #'
-#' dma.friends <- friends_ids_recursive(
-#'   "Nature_Island",
-#'   authentication.vector = auth.vector
-#' )
+#' # dma.friends <- friends_ids_recursive(
+#' #   "Nature_Island",
+#' #   authentication.vector = auth.vector
+#' # )
 #'
-#' cat(
-#'   dma.friends[1:20]
-#' )
+#' # cat(
+#' #   dma.friends[1:20]
+#' # )
 #'
 friends_ids_recursive <- function(
   screen_name,
   user_id,
   data.connection,
   authentication.vector,
-  stringify_ids = TRUE
+  stringify_ids = TRUE,
+  tweet_mode = 'extended',
+  ...
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -1263,6 +1284,13 @@ friends_ids_recursive <- function(
   if(missing(data.connection)){
         users <- c(users,as.character(request.result$ids))
       } else {
+        user_lookup_recursive(
+          user_id = request.result$ids,
+          data.connection = data.connection,
+          authentication.vector = authentication.vector,
+          tweet_mode = tweet_mode,
+          ...
+        )
         insert_friends(
           data.connection,
           user_id,

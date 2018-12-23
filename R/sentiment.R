@@ -30,3 +30,21 @@ calculate_sentiment <- function(text,lang='en',calc.RSentiment=TRUE,calc.syuzhet
 }
 
 
+sent_label <- function(val){
+  if(is.na(val)){
+    return("unknown")
+  } else if(val < -1){
+    return("negative")
+  } else if(val < 0){
+    return("slight negative")
+  } else if(val == 0){
+    return("neutral")
+  } else if(val <= 1){
+    return("slight positive")
+  } else if(val > 1){
+    return("positive")
+  } else {
+    return("unknown")
+  }
+}
+
