@@ -67,13 +67,13 @@ sentiment_plots <- function(
     )
     sentiment_barplot(
       sentiment.data,
-      file.name = paste(c(file.name.prefix,"sentiment-barplot.png"),collapse="_")
+      file.name = paste(c(file.name.prefix,"sentiment-barplot.png"),collapse="_"),
       subtitle = subt,
       caption = caption
     )
     sentiment_lineplot(
       sentiment.data,
-      file.name = paste(c(file.name.prefix,"sentiment-lineplot.png"),collapse="_")
+      file.name = paste(c(file.name.prefix,"sentiment-lineplot.png"),collapse="_"),
       subtitle = subt,
       caption = caption
     )
@@ -134,7 +134,6 @@ term_frequencies <- function (
 }
 
 
-#### PLOT FUNCTIONS
 sentiment_barplot <- function(
   sentiment.data,
   file.name = NULL,
@@ -170,6 +169,7 @@ sentiment_barplot <- function(
     print(g)
     dev.off()
   }
+}
 
 sentiment_lineplot <- function(
   sentiment.data,
@@ -210,89 +210,89 @@ sentiment_lineplot <- function(
   }
 }
 
-timeplot <- function(
-  con,
-  start.date=NULL,
-  end.date=NULL,
-  where.criteria = NULL,
-  group.column = NULL,
-  file.name = NULL,
-  caption = ""
-){
-  df <- created_at_df(
-    con,
-    start.date = start.date,
-    end.date = end.date,
-    where.criteria = where.criteria,
-    additional.columns = group.column
-  )
-  if(!is.null(group.column)){
-    group.column.name <- strsplit(group.column,".",fixed=TRUE)[[1]][2]
-  } else {
-    group.column.name <- NULL
-  }
-  subtitle <- date_subtitle(
-    start.date,
-    end.date
-  )
-  tweet_timeplot(
-    df,
-    group.column = group.column.name,
-    file.name = file.name,
-    subtitle = subititle,
-    caption = caption
-  )
-}
+# timeplot <- function(
+#   con,
+#   start.date=NULL,
+#   end.date=NULL,
+#   where.criteria = NULL,
+#   group.column = NULL,
+#   file.name = NULL,
+#   caption = ""
+# ){
+#   df <- created_at_df(
+#     con,
+#     start.date = start.date,
+#     end.date = end.date,
+#     where.criteria = where.criteria,
+#     additional.columns = group.column
+#   )
+#   if(!is.null(group.column)){
+#     group.column.name <- strsplit(group.column,".",fixed=TRUE)[[1]][2]
+#   } else {
+#     group.column.name <- NULL
+#   }
+#   subtitle <- date_subtitle(
+#     start.date,
+#     end.date
+#   )
+#   tweet_timeplot(
+#     df,
+#     group.column = group.column.name,
+#     file.name = file.name,
+#     subtitle = subititle,
+#     caption = caption
+#   )
+# }
 
-tweet_timeplot <- function(
-  created.at.df,
-  group.column = NULL,
-  file.name = NULL,
-  subtitle = "",
-  caption = ""
-){
-  created.at.df<-created.at.df[order(created.at.df$TimeStamp),]
-  if(is.null(group.column)){
-    created.at.df$Tweets <- 1:nrow(created.at.df)
-    g <- ggplot2::ggplot(
-      data = df,
-      mapping = ggplot2::aes(x=created_at,y=Tweets)
-    ) +
-      ggplot2::geom_line() +
-      ggplot2::labs(
-        x = "Date",
-        y = "Cumulative Tweets",
-        title = "Tweet Rate",
-        subtitle = subtitle,
-        caption = caption
-      ) +
-      ggplot2::theme_bw()
-  } else {
-    unique.groups <- unique(created.at.df[,group.column])
-    created.at.df$Tweets <- NA
-    for(u in unique.groups){
-      w <- which(created.at.df[,group.column] == u)
-      created.at.df$Tweets[w] <- 1:length(w)
-    }
-    g <- ggplot2::ggplot(
-      data = df,
-      mapping = ggplot2::aes_string(x="created_at",y="Tweets",group = group.column, color = group.column)
-    ) +
-      ggplot2::geom_line() +
-      ggplot2::labs(
-        x = "Date",
-        y = "Cumulative Tweets",
-        title = "Tweet Rate",
-        subtitle = subtitle,
-        caption = caption
-      ) +
-      ggplot2::theme_bw()
-  }
-  if(is.null(file.name)){
-    print(g)
-  } else {
-    png(file.name,height=600,width=800)
-    print(g)
-    dev.off()
-  }
-}
+# tweet_timeplot <- function(
+#   created.at.df,
+#   group.column = NULL,
+#   file.name = NULL,
+#   subtitle = "",
+#   caption = ""
+# ){
+#   created.at.df<-created.at.df[order(created.at.df$TimeStamp),]
+#   if(is.null(group.column)){
+#     created.at.df$Tweets <- 1:nrow(created.at.df)
+#     g <- ggplot2::ggplot(
+#       data = df,
+#       mapping = ggplot2::aes(x=created_at,y=Tweets)
+#     ) +
+#       ggplot2::geom_line() +
+#       ggplot2::labs(
+#         x = "Date",
+#         y = "Cumulative Tweets",
+#         title = "Tweet Rate",
+#         subtitle = subtitle,
+#         caption = caption
+#       ) +
+#       ggplot2::theme_bw()
+#   } else {
+#     unique.groups <- unique(created.at.df[,group.column])
+#     created.at.df$Tweets <- NA
+#     for(u in unique.groups){
+#       w <- which(created.at.df[,group.column] == u)
+#       created.at.df$Tweets[w] <- 1:length(w)
+#     }
+#     g <- ggplot2::ggplot(
+#       data = df,
+#       mapping = ggplot2::aes_string(x="created_at",y="Tweets",group = group.column, color = group.column)
+#     ) +
+#       ggplot2::geom_line() +
+#       ggplot2::labs(
+#         x = "Date",
+#         y = "Cumulative Tweets",
+#         title = "Tweet Rate",
+#         subtitle = subtitle,
+#         caption = caption
+#       ) +
+#       ggplot2::theme_bw()
+#   }
+#   if(is.null(file.name)){
+#     print(g)
+#   } else {
+#     png(file.name,height=600,width=800)
+#     print(g)
+#     dev.off()
+#   }
+# }

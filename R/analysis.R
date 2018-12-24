@@ -185,6 +185,7 @@ top_hashtags <- function(
       sheet.name="Sheet1",
       file.name = file.name
     )
+  }
   return(results)
 }
 
