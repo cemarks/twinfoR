@@ -170,7 +170,7 @@ search_tweets <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -265,7 +265,7 @@ user_timeline <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -361,7 +361,7 @@ user_lookup <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -450,7 +450,7 @@ user_show <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -551,7 +551,7 @@ status_lookup <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -647,7 +647,7 @@ status_show <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -734,7 +734,7 @@ user_search <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -816,7 +816,7 @@ followers_ids <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -903,7 +903,7 @@ friends_ids <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -1006,7 +1006,7 @@ followers_list <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector
@@ -1111,7 +1111,7 @@ friends_list <- function(
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
-      cat(ls())
+      # cat(ls())
       stop("No authentication tokens found!")
     } else {
       authentication.vector <- auth.vector

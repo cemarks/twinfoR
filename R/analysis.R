@@ -1,28 +1,111 @@
 ### Analysis functions
 
-open_user <- function(user_id,screen_name){
-  if(missing(user_id)){
-    browseURL(
-      paste(
-        "http://twitter.com/",
-        screen_name,
-        sep=""
+#' Open Twitter User Page
+#'
+#' View a Twitter user timeline in a browser
+#'
+#' This function opens a browser window on the specified user's Twitter page.  If only a \code{user_id}
+#' is provided (i.e., no \code{screen_name}), authentication tokens must also be provided in one
+#'  of two ways: either explicitly, by 
+#' including them in the \code{authentication.vector}, or by storing them in a global variable
+#' named \code{auth.vector}.  See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
+#'
+#' @param user_id character Twitter user ID. Ignored if screen_name is provided.
+#' @param screen_name character Twitter user screen name.  
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{user_show}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#'
+#' open_user(screen_name="realDonaldTrump")
+#'
+open_user <- function(
+  user_id,
+  screen_name,
+  authentication.vector
+){
+  if(missing(screen_name)){
+    if(missing(user_id)){
+      stop("A user_id or screen_name must be provided to open_user.")
+    } else {
+      if(missing(authentication.vector)){
+        if(!exists('auth.vector')){
+          # cat(ls())
+          stop("No authentication tokens found!")
+        } else {
+          authentication.vector <- auth.vector
+        }
+      }
+      u <- user_show(
+        user_id=user_id,
+        authentication.vector = authentication.vector
       )
+      screen_name <- u$screen_name
+    }
+  browseURL(
+    paste(
+      "http://twitter.com/",
+      screen_name,
+      sep=""
     )
-  } else {
-    u <- user_show(user_id=user_id)
-    screen_name <- u$screen_name
-    browseURL(
-      paste(
-        "http://twitter.com/",
-        screen_name,
-        sep=""
-      )
-    )
-  }
+  )
 }
 
 
+#' Access Tweet Media
+#'
+#' Function to access and store images attached to Tweets
+#'
+#' This function provides capability to download Tweet media or, if a 64-bit encoding
+#' is available in the data connection, to convert it back to an image.  The image
+#' can be saved to a file, encoded and written into the database, and/or rendered on
+#' the screen.
+#'
+#' @param media.table.row data.frame row of the \code{media} table in the Twitter data connection.
+#' The row must contain the \code{media_url} and \code{img_b64} columns.
+#' @param conn DBI twitter database object.
+#' @param screen_name save.to.file logical indicating whether to save the image to a file.
+#' @param file.name character name of file to save.  Ignored if \code{save.to.file} is \code{FALSE}.
+#' @param return.image logical indicating whether to return the \code{image} object to the user.
+#' @param update.media.b64 logical.  If \code{TRUE}, the 64-bit encoded image and average hash value
+#' will be updated in the \code{media} table in the Twitter database connection.
+#' @param hash.size numeric hash table dimension for average hash algorithm.  See \code{media} table
+#' description in \code{\link{twitter_database}}.
+#' @param display.image logical.  If \code{TRUE} the image will be rendered on the screen.
+#' @param showWarnings logical.  If \code{FALSE}, warnings will be suppressed.
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{reconstitute_image}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database("throwback.sqlite")
+#' # tbt <- search_tweets_recursive(
+#'   "throwbackthursday",
+#'   data.connection = con
+#' )
+#' 
+#' # query <- "SELECT *,COUNT(media_id) AS n FROM media GROUP_BY media_id ORDER BY n DESC LIMIT 1;"
+#' # media.df <- DBI::dbGetQuery(con,query)
+#' # status_media(
+#'   media.df[1,],
+#'   con,
+#'   save.to.file = FALSE,
+#'   file.name = NULL,
+#'   return.image = NULL,
+#'   update.media.b64 = TRUE,
+#'   hash.size = 16
+#' )
+#'
 status_media <- function(
   media.table.row,
   conn,
@@ -31,7 +114,8 @@ status_media <- function(
   return.image = FALSE,
   update.media.b64 = FALSE,
   hash.size=16,
-  ...
+  display.image = FALSE,
+  showWarnings = TRUE
 ){
   media.url <- media.table.row$media_url
   img.b64 <- media.table.row$img_b64
@@ -40,35 +124,8 @@ status_media <- function(
     try(
       p <- retrieve_web_image(media.url)
     )
-    if(is.null(p) || is.na(p)){
-      return(NA)
-    } else {
-      if(update.media.b64){
-        a <- OpenImageR::average_hash(OpenImageR::rgb_2gray(p$image),hash_size=hash.size)
-        query <- sprintf(
-          "UPDATE media SET img_hash='%s',img_b64='%s' WHERE media_id='%s';",
-          a,
-          p$b64,
-          media.table.row$media_id
-        )
-        if(missing(conn)){
-          stop("Data connection not provided")
-        }
-        DBI::dbExecute(conn,query)
-      }
-      if(save.to.file){
-        if(is.null(file.name)){
-          media.url.splt <- strsplit(media.url,"/",fixed=TRUE)[[1]]
-          file.name <- media.url.splt[length(media.url.splt)]
-        }
-        OpenImageR::writeImage(p$image,file.name)
-      }
-      if(return.image){
-        return(p$image)
-      }
-    }
   } else {
-    p <- reconstitute_image(img.b64,media.url,showWarnings=showWarnings,...)
+    p <- reconstitute_image(img.b64,media.url,display.image = FALSE,showWarnings=showWarnings)
     if(!is.na(p) && save.to.file){
       if(is.null(file.name)){
         media.url.splt <- strsplit(media.url,"/",fixed=TRUE)[[1]]
@@ -78,6 +135,33 @@ status_media <- function(
     }
     if(return.image){
       return(p)
+    }
+  }
+  if(is.null(p) || is.na(p)){
+    return(NA)
+  } else {
+    if(update.media.b64){
+      a <- OpenImageR::average_hash(OpenImageR::rgb_2gray(p$image),hash_size=hash.size)
+      query <- sprintf(
+        "UPDATE media SET img_hash='%s',img_b64='%s' WHERE media_id='%s';",
+        a,
+        p$b64,
+        media.table.row$media_id
+      )
+      if(missing(conn)){
+        stop("Data connection not provided")
+      }
+      DBI::dbExecute(conn,query)
+    }
+    if(save.to.file){
+      if(is.null(file.name)){
+        media.url.splt <- strsplit(media.url,"/",fixed=TRUE)[[1]]
+        file.name <- media.url.splt[length(media.url.splt)]
+      }
+      OpenImageR::writeImage(p$image,file.name)
+    }
+    if(return.image){
+      return(p$image)
     }
   }
 }
@@ -618,7 +702,7 @@ text_sentiment_dataframe <- function(
     additional.columns = c("status.retweet", "status.screen_name",additional.columns)
   )
   results <- dbGetQuery(con, query)
-  results$TimeStamp <- as.POSIXct(results$created_at) # , format = "%a %b %d %H:%M:%S +0000 %Y")#, origin = "1970-01-01")
+  results$TimeStamp <- as.POSIXct(results$created_at) # format = "%a %b %d %H:%M:%S +0000 %Y")  #, origin = "1970-01-01")
   results$date <- as.Date(results$TimeStamp, format = '%Y-%m-%d')
   results$sent_result <- results$nrc_sentiment_positive - results$nrc_sentiment_negative
   results$sent_label <- sapply(
