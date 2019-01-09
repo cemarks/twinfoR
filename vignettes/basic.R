@@ -68,9 +68,10 @@ tweet.text <- paste(
   ),
   collapse = " "
 )
+tweet.text <- tolower(tweet.text)
+tweet.text <- gsub('fargo','',tweet.text,i)
 
-wc <- wordcloud(tweet.text)
-plot(wc)
+wc <- wordcloud(tweet.text,max.words=100)
 
 ### Users
 
@@ -91,7 +92,7 @@ unique.users <- users[unique.user_id.indices]
 
 followers.counts <- sapply(
   users,
-  function(x) return(x$friends_count)
+  function(x) return(x$followers_count)
 )
 
 hist(
@@ -102,7 +103,7 @@ hist(
 )
 
 
-### Status counts
+### User status counts
 
 status.counts <- sapply(
   users,
@@ -110,8 +111,8 @@ status.counts <- sapply(
 )
 
 hist(
-  breaks = 0:ceiling(max(log10(status.counts+1))),
   log10(status.counts+1),
+  breaks = 0:ceiling(max(log10(status.counts+1))),
   main = "Distribution of number of statuses (log)",
   xlab = "Log number of statuses (base 10)"
 )
@@ -172,22 +173,29 @@ tweeter.table <- table(tweeters)
 names(tweeter.table) <- paste("@",names(tweeter.table),sep="")
 sort(tweeter.table,decreasing=TRUE)[1:3]
 
+
+
+
 ## User Timelines
 
-### Get some users.
+### Get some new users.
 
 users <- user_search("Fargo ND")
+
+### Just use up to the first five screen names.
 user.screen_names <- sapply(
-  users,
+  users[1:min(c(5,length(users)))],
   function(x) return(x$screen_name)
 )
+
+### Collect their timelines
 
 user.timelines <- list()
 for(i in 1:length(user.screen_names)){
   user.timelines[[user.screen_names[i]]] <- user_timeline_recursive(screen_name = user.screen_names[i])
 }
 
-### First User
+### A look at the first user
 
 screen.name <- user.screen_names[1]
 timeline <- user.timelines[[screen.name]]
@@ -201,10 +209,10 @@ status.text <- paste(
   collapse=" "
 )
 
-wc <- wordcloud(status.text)
-plot(wc)
+wc <- wordcloud(status.text,max.words = 100)
 
 ### Most-used hashtags
+
 hashtags <- unlist(
   lapply(
     timeline,
@@ -279,8 +287,7 @@ status.text <- paste(
   collapse = " "
 )
 
-wc <- wordcloud(status.text)
-plot(wc)
+wc <- wordcloud(status.text,max.words = 100)
 
 ### Most-used hashtags
 hashtags <- unlist(
@@ -340,7 +347,7 @@ usermentions <- unlist(
 usermention.table <- sort(table(tolower(usermentions)),decreasing = TRUE)
 for(i in 1:10){
   if(i==1){
-    cat("User             Count\n")
+    cat("User Count\n")
   }
   cat(
     "@",

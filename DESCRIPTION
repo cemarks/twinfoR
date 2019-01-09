@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: person("Christopher", "Marks", email = "christopher.e.marks.mil@mail.mil", role = c("aut", "cre"))
 Description: Collect, store, and analyze data using the Twitter REST APIs.  .
 Depends: R (>= 3.5.1)
-Imports: httr, rjson, RSQLite, DBI, RSentiment, syuzhet, wordcloud2, ggplot2, base64enc, OpenImageR, utils
+Imports: httr, rjson, RSQLite, DBI, RSentiment, syuzhet, wordcloud, ggplot2, base64enc, OpenImageR, utils
 Suggests: xlsx
 License: file LICENSE
 Encoding: UTF-8

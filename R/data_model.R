@@ -187,7 +187,12 @@
 #'
 #' \notrun{con <- twitter_database("tweet_collection.sqlite")}
 #'
-twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,query.tables.overwrite=FALSE){
+twitter_database <- function(
+  db.file,
+  query.users.df=NULL,
+  query.text.df=NULL,
+  query.tables.overwrite=FALSE
+){
   con <- DBI::dbConnect(RSQLite::SQLite(),db.file)
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_image_url TEXT, profile_banner_url TEXT, profile_image_hash TEXT, profile_banner_hash TEXT, profile_image_b64 TEXT, profile_banner_b64 TEXT);")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id TEXT PRIMARY KEY, created_at DATETIME, user_id TEXT, screen_name TEXT, text TEXT, in_reply_to_status_id TEXT, in_reply_to_user_id TEXT, retweet_count INT, favorite_count INT, lang TEXT, geo_lat FLOAT, geo_long FLOAT, source TEXT, retweet TINYINT(1), retweet_status_id TEXT, sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT(1));")
@@ -217,7 +222,7 @@ twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,quer
 #' populated if they are not included.
 #' See \code{\link{twitter_database}}.  
 #'
-#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param con a Twitter database connection.  See \code{twitter_database}.
 #' @param query.users.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
 #' @param overwrite logical indicating whether to overwrite an existing \code{query_user} table in
 #' the \code{conn} data connection.
@@ -245,8 +250,8 @@ twitter_database <- function(db.file,query.users.df=NULL,query.text.df=NULL,quer
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' # upload_query_users(conn,users)
 #'
-upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
-  count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+upload_query_users <- function(con,query.users.df,overwrite = FALSE){
+  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
   count <- count[1,1]
   if(count==1 && !overwrite){
     stop("Table query_users exists!  Use overwrite = TRUE to overwrite")
@@ -291,7 +296,7 @@ upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
 #' it is not included, as well as an additional mandatory {since_id} column.
 #' See \code{\link{twitter_database}}.  
 #'
-#' @param conn a Twitter database connection.  See \code{twitter_database}.
+#' @param con a Twitter database connection.  See \code{twitter_database}.
 #' @param query.text.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
 #' @param overwrite logical indicating whether to overwrite an existing \code{query_text} table in
 #' the \code{conn} data connection.
@@ -319,8 +324,8 @@ upload_query_users <- function(conn,query.users.df,overwrite = FALSE){
 #' # conn <- twitter_database("tweetanalysis.sqlite")
 #' # upload_query_users(conn,users)
 #'
-upload_query_text <- function(conn,query.text.df,overwrite = FALSE){
-  count <- DBI::dbGetQuery(conn,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+upload_query_text <- function(con,query.text.df,overwrite = FALSE){
+  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
   count <- count[1,1]
   if(count==1 && !overwrite){
     stop("Table query_text exists!  Use overwrite = TRUE to overwrite")

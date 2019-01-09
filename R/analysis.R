@@ -47,6 +47,7 @@ open_user <- function(
       )
       screen_name <- u$screen_name
     }
+  }
   browseURL(
     paste(
       "http://twitter.com/",
@@ -237,6 +238,68 @@ user_profile_image <- function(
 # tweet rate plot
 
 
+#' Top Hashtags
+#'
+#' Get top hashtags from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing most frequent hashtags.
+#'
+#' @seealso \code{\link{user_show}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' ## Not run: authenticate
+#' # auth.vector <- authorize_IT()
+#'
+#' # con <- twitter_database(
+#' #   "test.sqlite",
+#' #   query.user.df = data.frame(
+#' #     screen_name = c(
+#' #       "pb2pv",
+#' #       "zlisto"
+#' #     )
+#' #   ),
+#' #   query.text.df = data.frame(
+#' #     query_text = c(
+#' #       "#throwbackthursday",
+#' #       "#worstfirstdate"
+#' #     )
+#' #   )
+#' # )
+#' 
+#' # update_user_timelines(con)
+#' # update_search(con)
+#' 
+#' # top.hashtags <- top_hashtags(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' # DBI::dbDisonnect(con)
+#'
 top_hashtags <- function(
   con,
   start.date=NULL,

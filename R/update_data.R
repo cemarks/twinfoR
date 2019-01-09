@@ -18,6 +18,7 @@
 #' @param user_id character vector of Twitter user_ids.
 #' @param screen_name character vector of Twitter screen_names.  Ignored
 #' if \code{user_id} is supplied.
+#' @param ... additional named parameters passed to \code{\link{user_lookup_recursive}}.
 #' 
 #' @return \code{NULL} (Invisible).
 #'
@@ -45,7 +46,13 @@
 #' 
 #' # DBI::dbDisonnect(con)
 #' # DBI::dbDisconnect(con2)
-update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
+update_users <- function(
+  con,
+  authentication.vector,
+  user_id=NULL,
+  screen_name=NULL,
+  ...
+){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -78,7 +85,8 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
           user_lookup_recursive(
             user_id = user.df$user_id,
             data.connection = con,
-            authentication.vector = authentication.vector
+            authentication.vector = authentication.vector,
+            ...
           )
         )
       }
@@ -99,7 +107,8 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
           user_lookup_recursive(
             screen_name = user.df$screen_name,
             data.connection = con,
-            authentication.vector = authentication.vector
+            authentication.vector = authentication.vector,
+            ...
           )
         )
       }
@@ -110,7 +119,8 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
         user_lookup_recursive(
           screen_name = screen_name,
           data.connection = con,
-          authentication.vector = authentication.vector
+          authentication.vector = authentication.vector,
+          ...
         )
       )
       user.df <- DBI::dbGetQuery(
@@ -125,7 +135,8 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
         user_lookup_recursive(
           user_id = user_id,
           data.connection = con,
-          authentication.vector = authentication.vector
+          authentication.vector = authentication.vector,
+          ...
         )
       )
       user.df <- DBI::dbGetQuery(
@@ -213,6 +224,7 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
 #' @param user_id character vector of Twitter user_ids.
 #' @param screen_name character vector of Twitter screen_names.  Ignored
 #' if \code{user_id} is supplied.
+#' @param ... additional named parameters sent to \code{\link{user_timeline_recursive}}.
 #' 
 #' @return \code{NULL} (Invisible).
 #'
@@ -237,7 +249,13 @@ update_users <- function(con,authentication.vector,user_id=NULL,screen_name=NULL
 #' 
 #' 
 #' # DBI::dbDisonnect(con)
-update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
+update_user_timelines <- function(
+  con,
+  authentication.vector,
+  user_id=NULL,
+  screen_name=NULL,
+  ...
+){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -288,9 +306,20 @@ update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_
     for(i in w){
       try({
         if(is.na(user.df$since_id[i])){
-          s <- user_timeline_recursive(user_id = user.df$user_id[i],data.connection = con, authentication.vector = authentication.vector)
+          s <- user_timeline_recursive(
+            user_id = user.df$user_id[i],
+            data.connection = con, 
+            authentication.vector = authentication.vector,
+            ...
+          )
         } else {
-          s <- user_timeline_recursive(user_id = user.df$user_id[i],data.connection = con, authentication.vector = authentication.vector, since_id = user.df$since_id[i])
+          s <- user_timeline_recursive(
+            user_id = user.df$user_id[i],
+            data.connection = con, 
+            authentication.vector = authentication.vector, 
+            since_id = user.df$since_id[i],
+            ...
+          )
         }
         if(!is.na(s)){
           query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
@@ -320,6 +349,7 @@ update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_
 #' @param authentication.vector character vector with Twitter authentication
 #' keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.
 #' @param query.text character vector of Twitter search query strings.
+#' @param ... additional named parameters passed to \code{\link{search_tweets_recursive}}.
 #' 
 #' @return \code{NULL} (Invisible).
 #'
@@ -344,7 +374,12 @@ update_user_timelines <- function(con,authentication.vector,user_id=NULL,screen_
 #' 
 #' 
 #' # DBI::dbDisonnect(con)
-update_search <- function(con,authentication.vector,query.text=NULL){
+update_search <- function(
+  con,
+  authentication.vector,
+  query.text=NULL,
+  ...
+){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -392,9 +427,21 @@ update_search <- function(con,authentication.vector,query.text=NULL){
   if(!is.null(nrow(query.df)) && nrow(query.df) > 0){
     for(i in 1:nrow(query.df)){
       if(is.na(query.df$since_id[i])){
-        s <- search_tweets_recursive(q = query.df$query_text[i],data.connection = con, authentication.vector = authentication.vector, query.row.id = query.df$row_id[i])
+        s <- search_tweets_recursive(
+          q = query.df$query_text[i],
+          data.connection = con, 
+          authentication.vector = authentication.vector, 
+          query.row.id = query.df$row_id[i],
+          ...
+        )
       } else {
-        s <- search_tweets_recursive(q = query.df$query_text[i],data.connection = con, authentication.vector = authentication.vector, since_id = query.df$since_id[i], query.row.id = query.df$row_id[i])
+        s <- search_tweets_recursive(q = query.df$query_text[i],
+          data.connection = con, 
+          authentication.vector = authentication.vector, 
+          since_id = query.df$since_id[i], 
+          query.row.id = query.df$row_id[i],
+          ...
+        )
       }
       if(!is.na(s)){
         query <- sprintf("UPDATE query_text SET since_id = '%s' WHERE id = '%s';",s,query.df$row_id[i])
