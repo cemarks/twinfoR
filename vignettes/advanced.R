@@ -6,6 +6,7 @@
 library(twinfoR)
 library(httr)
 # devtools::load_all("/home/cemarks/Projects/twinfoR")
+# devtools::load_all("/Users/cemarks/Projects/twinfoR")
 
 dir.create("~/twitter_politics",showWarnings=FALSE)
 setwd("~/twitter_politics")
@@ -295,6 +296,7 @@ topmedia.dem <- top_media(
   t.con,
   start.date = as.Date(Sys.time())-7,
   where.criteria = "query_users.party = 'democrat'",
+  media.file.prefix = "DEM"
 )
 
 
@@ -303,6 +305,7 @@ topmedia.rep <- top_media(
   t.con,
   start.date = as.Date(Sys.time())-7,
   where.criteria = "query_users.party = 'republican'",
+  media.file.prefix = "REP"
 )
 
 

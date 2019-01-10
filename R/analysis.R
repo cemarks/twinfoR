@@ -123,7 +123,7 @@ status_media <- function(
   if(is.na(img.b64)){
     p <- NA
     try(
-      p <- retrieve_web_image(media.url)
+      p <- retrieve_web_image(media.url,display.image=display.image)
     )
   } else {
     p <- reconstitute_image(img.b64,media.url,display.image = FALSE,showWarnings=showWarnings)
@@ -317,7 +317,7 @@ top_hashtags <- function(
     where.criteria = where.criteria,
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -358,7 +358,7 @@ top_usermentions <- function(
     ),
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -395,7 +395,7 @@ top_urls <- function(
     where.criteria = where.criteria,
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -437,7 +437,7 @@ top_media <- function(
     where.criteria = where.criteria,
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -492,7 +492,7 @@ top_tweeters <- function(
     ),
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -536,7 +536,7 @@ most_liked <- function(
     ),
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -581,7 +581,7 @@ most_retweeted <- function(
     ),
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -626,7 +626,7 @@ most_popular_RT_in_sample <- function(
     ),
     limit=limit
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
     footnote <- create_footnote(start.date,end.date)
@@ -714,7 +714,7 @@ most_reach <- function(
     ";",
     sep=""
   )
-  results <- dbGetQuery(con,query)
+  results <- DBI::dbGetQuery(con,query)
   new.query.select <- paste(
     "SELECT status.id as status_id, user.screen_name,user.name,user.location,user.description,status.text,status.created_at"
   )
@@ -764,7 +764,7 @@ text_sentiment_dataframe <- function(
     where.criteria = where.criteria, 
     additional.columns = c("status.retweet", "status.screen_name",additional.columns)
   )
-  results <- dbGetQuery(con, query)
+  results <- DBI::dbGetQuery(con, query)
   results$TimeStamp <- as.POSIXct(results$created_at) # format = "%a %b %d %H:%M:%S +0000 %Y")  #, origin = "1970-01-01")
   results$date <- as.Date(results$TimeStamp, format = '%Y-%m-%d')
   results$sent_result <- results$nrc_sentiment_positive - results$nrc_sentiment_negative
@@ -800,7 +800,7 @@ created_at_df <- function(
     ";",
     sep=" "
   )
-  results <- dbGetQuery(con, query)
+  results <- DBI::dbGetQuery(con, query)
   results$TimeStamp <- as.POSIXct(results$created_at) # , format = "%a %b %d %H:%M:%S +0000 %Y")#, origin = "1970-01-01")
   results$date <- as.Date(results$TimeStamp, format = '%Y-%m-%d')
   return(results)

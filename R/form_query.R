@@ -6,7 +6,7 @@ join_table <- function(con){
   } else {
     user.join <- 'screen_name'
   }
-  joint.table <- list(
+  join.table <- list(
     query_users=c(status = 'user_id',query_users = user.join),
     query_text = c(search_status = 'query_id',query_text = 'id'),
     search_status = c(status = 'id', search_status = 'status_id'),
