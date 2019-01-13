@@ -2,9 +2,9 @@
 
 wordcloud_plot <- function(
   con,
-  start.date,
-  end.date,
-  where.criteria,
+  start.date = NULL,
+  end.date = NULL,
+  where.criteria = NULL,
   caption="",
   max.words = 50,
   stopword.langs = c('english','spanish'),
@@ -36,10 +36,10 @@ wordcloud_plot <- function(
     stopword.langs = stopword.langs,
     additional.stopwords = additional.stopwords
   )
-  if(nrow(w2)>10){
+  if(nrow(word.df)>10){
     wordcloud::wordcloud(
-      words=w2$word,
-      freq = w2$freq,
+      words=word.df$word,
+      freq = word.df$freq,
       max.words = max.words,
       colors = c("green","red")
     )
@@ -82,9 +82,9 @@ sentiment_plots <- function(
 
 term_frequencies <- function (
   con,
-  start.date,
-  end.date,
-  where.criteria,
+  start.date = NULL,
+  end.date = NULL,
+  where.criteria = NULL,
   stopword.langs = c('english','spanish'),
   additional.stopwords = c(
     'que',
@@ -117,13 +117,13 @@ term_frequencies <- function (
   ActivityData <- paste(text.data$text,collapse="\n")
   review_source <- tm::VectorSource(ActivityData)                        # jams the vector of data into a table.
   corpus <- tm::Corpus(review_source)                                    # load the uncleaned data into a table to be cleaned.
-  corpus <- tm::tm_map(corpus, removePunctuation)                       # tm_map code produces insignificant error messages since it is looking for a dataframe vice vector
-  corpus <- tm::tm_map(corpus, stripWhitespace)
+  corpus <- tm::tm_map(corpus, tm::removePunctuation)                       # tm_map code produces insignificant error messages since it is looking for a dataframe vice vector
+  corpus <- tm::tm_map(corpus, tm::stripWhitespace)
   for(lang in stopword.langs){
-    corpus <- tm::tm_map(corpus, removeWords, tm::stopwords(lang))
+    corpus <- tm::tm_map(corpus, tm::removeWords, tm::stopwords(lang))
   }
-  corpus <- tm::tm_map(corpus, removeWords, c('que','las','del','con','para','una','esta'))
-  corpus <- tm::tm_map(corpus, removeWords, c('the','https','like','can','will','also','best','must','says','amp'))
+  corpus <- tm::tm_map(corpus, tm::removeWords, c('que','las','del','con','para','una','esta'))
+  corpus <- tm::tm_map(corpus, tm::removeWords, c('the','https','like','can','will','also','best','must','says','amp'))
   ## corpus cleaning complete now build term matrix
   tdm <- as.matrix(tm::TermDocumentMatrix(corpus))  
   w <- rowSums(tdm)
@@ -179,8 +179,10 @@ sentiment_lineplot <- function(
 ){
   #png("sentiment_lineplot.png",height=600,width=800)  
   set.table <- table(sentiment.data$date,sentiment.data$sent_label)
-  sent.df <- reshape::melt(100*set.table/sum(set.table),varnames = c("Date","Sentiment"))
-  g <- ggplot2::ggplot(sent.df, ggplot2::aes(x = Date, y = value)) +
+  set.table <- apply(set.table,1,function(x) return(x/sum(x)))
+  sent.df <- reshape::melt(100*set.table)
+  names(sent.df) <- c("Sentiment","Date","Percentage")
+  g <- ggplot2::ggplot(sent.df, ggplot2::aes(x = Date, y = Percentage)) +
         ggplot2::geom_line(ggplot2::aes(col=Sentiment,group=Sentiment), size = 4) +
         ggplot2::labs(
           x = "Date", 
@@ -210,89 +212,91 @@ sentiment_lineplot <- function(
   }
 }
 
-# timeplot <- function(
-#   con,
-#   start.date=NULL,
-#   end.date=NULL,
-#   where.criteria = NULL,
-#   group.column = NULL,
-#   file.name = NULL,
-#   caption = ""
-# ){
-#   df <- created_at_df(
-#     con,
-#     start.date = start.date,
-#     end.date = end.date,
-#     where.criteria = where.criteria,
-#     additional.columns = group.column
-#   )
-#   if(!is.null(group.column)){
-#     group.column.name <- strsplit(group.column,".",fixed=TRUE)[[1]][2]
-#   } else {
-#     group.column.name <- NULL
-#   }
-#   subtitle <- date_subtitle(
-#     start.date,
-#     end.date
-#   )
-#   tweet_timeplot(
-#     df,
-#     group.column = group.column.name,
-#     file.name = file.name,
-#     subtitle = subititle,
-#     caption = caption
-#   )
-# }
+timeplot <- function(
+  con,
+  start.date=NULL,
+  end.date=NULL,
+  where.criteria = NULL,
+  group.column = NULL,
+  file.name = NULL,
+  caption = ""
+){
+  df <- created_at_df(
+    con,
+    start.date = start.date,
+    end.date = end.date,
+    where.criteria = where.criteria,
+    additional.columns = group.column
+  )
+  if(!is.null(group.column)){
+    group.column.name <- strsplit(group.column,".",fixed=TRUE)[[1]][2]
+  } else {
+    group.column.name <- NULL
+  }
+  subtitle <- date_subtitle(
+    start.date,
+    end.date
+  )
+  tweet_timeplot(
+    df,
+    group.column = group.column.name,
+    file.name = file.name,
+    subtitle = subtitle,
+    caption = caption
+  )
+}
 
-# tweet_timeplot <- function(
-#   created.at.df,
-#   group.column = NULL,
-#   file.name = NULL,
-#   subtitle = "",
-#   caption = ""
-# ){
-#   created.at.df<-created.at.df[order(created.at.df$TimeStamp),]
-#   if(is.null(group.column)){
-#     created.at.df$Tweets <- 1:nrow(created.at.df)
-#     g <- ggplot2::ggplot(
-#       data = df,
-#       mapping = ggplot2::aes(x=created_at,y=Tweets)
-#     ) +
-#       ggplot2::geom_line() +
-#       ggplot2::labs(
-#         x = "Date",
-#         y = "Cumulative Tweets",
-#         title = "Tweet Rate",
-#         subtitle = subtitle,
-#         caption = caption
-#       ) +
-#       ggplot2::theme_bw()
-#   } else {
-#     unique.groups <- unique(created.at.df[,group.column])
-#     created.at.df$Tweets <- NA
-#     for(u in unique.groups){
-#       w <- which(created.at.df[,group.column] == u)
-#       created.at.df$Tweets[w] <- 1:length(w)
-#     }
-#     g <- ggplot2::ggplot(
-#       data = df,
-#       mapping = ggplot2::aes_string(x="created_at",y="Tweets",group = group.column, color = group.column)
-#     ) +
-#       ggplot2::geom_line() +
-#       ggplot2::labs(
-#         x = "Date",
-#         y = "Cumulative Tweets",
-#         title = "Tweet Rate",
-#         subtitle = subtitle,
-#         caption = caption
-#       ) +
-#       ggplot2::theme_bw()
-#   }
-#   if(is.null(file.name)){
-#     print(g)
-#   } else {
-#     png(file.name,height=600,width=800)
-#     print(g)
-#     dev.off()
-#   }
-# }
+tweet_timeplot <- function(
+  created.at.df,
+  group.column = NULL,
+  file.name = NULL,
+  subtitle = "",
+  caption = ""
+){
+  # created.at.df<-created.at.df[order(created.at.df$TimeStamp),]
+  if(is.null(group.column)){
+    created.at.df$Tweets <- 1:nrow(created.at.df)
+    g <- ggplot2::ggplot(
+      data = created.at.df,
+      mapping = ggplot2::aes(x=TimeStamp,y=Tweets)
+    ) +
+      ggplot2::geom_line() +
+      ggplot2::labs(
+        x = "Date",
+        y = "Cumulative Tweets",
+        title = "Tweet Rate",
+        subtitle = subtitle,
+        caption = caption
+      ) +
+      # ggplot2::scale_x_continuous(labels = created.at.df$date) +
+      ggplot2::theme_bw()
+  } else {
+    unique.groups <- unique(created.at.df[,group.column])
+    created.at.df$Tweets <- NA
+    for(u in unique.groups){
+      w <- which(created.at.df[,group.column] == u)
+      created.at.df$Tweets[w] <- 1:length(w)
+    }
+    g <- ggplot2::ggplot(
+      data = created.at.df,
+      mapping = ggplot2::aes_string(x="TimeStamp",y="Tweets",group = group.column, color = group.column)
+    ) +
+      ggplot2::geom_line() +
+      ggplot2::labs(
+        x = "Date",
+        y = "Cumulative Tweets",
+        title = "Tweet Rate",
+        subtitle = subtitle,
+        caption = caption
+      ) +
+      # ggplot2::scale_x_continuous(labels = created.at.df$date) +
+      ggplot2::theme_bw()
+  }
+  if(is.null(file.name)){
+    print(g)
+  } else {
+    png(file.name,height=600,width=800)
+    print(g)
+    dev.off()
+  }
+}

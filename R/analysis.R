@@ -320,7 +320,7 @@ top_hashtags <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("hashtag_text","n")]
     names(df)<-c("Hashtag","Count")
     df$Hashtag <- as.character(df$Hashtag)
@@ -361,7 +361,7 @@ top_usermentions <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("user_mention_screen_name","n")]
     names(df)<-c("User","Count")
     df$User <- as.character(df$User)
@@ -398,7 +398,7 @@ top_urls <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("extended_url","n")]
     names(df)<-c("URL","Count")
     make_top10_excel(
@@ -440,7 +440,7 @@ top_media <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("media_url","n")]
     names(df)<-c("Media URL","Count")
     make_top10_excel(
@@ -495,7 +495,7 @@ top_tweeters <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("screen_name","n")]
     names(df)<-c("User","Tweets")
     df$User <- as.character(df$User)
@@ -539,8 +539,8 @@ most_liked <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
-    df <- results[,c("screen_name","created_at","n","text")]
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
+    df <- results[,c("screen_name","created_at","favorite_count","text")]
     names(df)<-c("User","Time","Likes","Text")
     df$User <- as.character(df$User)
     df$User <- paste("@",df$User,sep="")
@@ -565,6 +565,11 @@ most_retweeted <- function(
   excel.export.file = NULL,
   excel.file.footnote = "auto"
 ){
+  if(is.null(where.criteria) || where.criteria == ""){
+    where.criteria <- "status.retweet = 0"
+  } else {
+    where.criteria <- paste(paste("(",where.criteria,")",sep=""),"status.retweet = 0",sep = " AND ")
+  }
   query <- top_value_query(
     con,
     "status.retweet_count",
@@ -584,8 +589,8 @@ most_retweeted <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
-    df <- results[,c("screen_name","created_at","n","text")]
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
+    df <- results[,c("screen_name","created_at","retweet_count","text")]
     names(df)<-c("User","Time","Total Retweets","Text")
     df$User <- as.character(df$User)
     df$User <- paste("@",df$User,sep="")
@@ -629,7 +634,7 @@ most_popular_RT_in_sample <- function(
   results <- DBI::dbGetQuery(con,query)
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- results[,c("screen_name","created_at","n","text")]
     names(df)<-c("User","Time","Retweets","Text")
     df$User <- as.character(df$User)
@@ -718,22 +723,23 @@ most_reach <- function(
   new.query.select <- paste(
     "SELECT status.id as status_id, user.screen_name,user.name,user.location,user.description,status.text,status.created_at"
   )
-  new.query.where <- paste("status.id IN (",results$status_id,")",sep="",collapse=",")
+  new.query.where <- paste("status.id IN (",paste(results$status_id,collapse=","),")",sep="")
   new.query.join <- make_join_statement(con,paste(new.query.select,new.query.where,sep=" "))
   new.query <- paste(
     new.query.select,
-    "FROM",
+    " FROM ",
     new.query.join,
+    " ",
     make_where_clause(where.criteria = new.query.where),
     ";",
     sep=""
   )
   new.result <- DBI::dbGetQuery(con,new.query)
-  output <- merge(result,new.result,by="status_id")
+  output <- merge(results,new.result,by="status_id")
   output <- output[order(output$n,decreasing=TRUE),]
   if(!is.null(excel.export.file) && is.character(excel.export.file)){
     file.name <- create_excel_filename(excel.export.file)
-    footnote <- create_footnote(start.date,end.date)
+    footnote <- create_footnote(excel.file.footnote,start.date,end.date)
     df <- output[,c("screen_name","created_at","n","text")]
     names(df)<-c("User","Time","Reach","Text")
     df$User <- as.character(df$User)
@@ -758,7 +764,6 @@ text_sentiment_dataframe <- function(
 ){
   query <- text_sentiment_query(
     con,
-    where.criteria = where.criteria, 
     start.date = start.date, 
     end.date = end.date, 
     where.criteria = where.criteria, 
@@ -790,25 +795,26 @@ created_at_df <- function(
     end.date = end.date,
     where.criteria = where.criteria
   )
-  join.clause <- make_join_statement(paste(select.clause,where.clause,sep=" "))
+  join.clause <- make_join_statement(con,paste(select.clause,where.clause,sep=" "))
   query <- paste(
     "SELECT",
     select.clause,
     "FROM",
     join.clause,
     where.clause,
+    "ORDER BY status.created_at",
     ";",
     sep=" "
   )
   results <- DBI::dbGetQuery(con, query)
-  results$TimeStamp <- as.POSIXct(results$created_at) # , format = "%a %b %d %H:%M:%S +0000 %Y")#, origin = "1970-01-01")
+  results$TimeStamp <- as.POSIXct(results$created_at, format = "%Y-%m-%d %H:%M:%S")#, origin = "1970-01-01")
   results$date <- as.Date(results$TimeStamp, format = '%Y-%m-%d')
   return(results)
 }
 
 
 
-create_footnote <- function(excel.file.footnote){
+create_footnote <- function(excel.file.footnote,start.date,end.date){
   if(!is.null(excel.file.footnote) && (excel.file.footnote == "auto" || excel.file.footnote)){
     footnote <- date_subtitle(
       start.date = start.date,

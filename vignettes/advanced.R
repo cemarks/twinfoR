@@ -3,6 +3,10 @@
 ## Somebody already keeps lists of republican and democrat politician
 ## Twitter accounts.  We take advantage of those lists in this vignette.
 
+## RJava settings
+
+options(java.parameters = "-Xmx4096m")
+
 library(twinfoR)
 library(httr)
 # devtools::load_all("/home/cemarks/Projects/twinfoR")
@@ -13,7 +17,9 @@ setwd("~/twitter_politics")
 
 ### Authenticate!
 
-auth.vector <- authorize_IT()
+# auth.vector <- authorize_IT()
+# save(auth.vector,file="auth_vector.RData")
+load("auth_vector.RData")
 
 ### Collect list members.  See https://developer.twitter.com/en/docs/accounts-and-users/create-manage-lists/api-reference/get-lists-members
 
@@ -266,29 +272,39 @@ summarize_database(t.con)
 tophashtags.dem <- top_hashtags(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'democrat'"
+  where.criteria = "query_users.party = 'democrat'",
+  excel.export.file = "thtd.xlsx"
 )
 
 tophashtags.rep <- top_hashtags(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'republican'"
+  where.criteria = "query_users.party = 'republican'",
+  excel.export.file = "thtr.xlsx"
 )
 
+tophashtags.dem
+tophashtags.rep
 
 ### Top usermentions from democrats and republicans in the last week
 
 topusermentions.dem <- top_usermentions(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'democrat'"
+  where.criteria = "query_users.party = 'democrat'",
+  excel.export.file = "tumd.xlsx"
 )
+
 
 topusermentions.rep <- top_usermentions(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'republican'"
+  where.criteria = "query_users.party = 'republican'",
+  excel.export.file = "tumr.xlsx"
 )
+
+topusermentions.dem
+topusermentions.rep
 
 ### Top media from democrats and republicans in the last week
 
@@ -296,7 +312,8 @@ topmedia.dem <- top_media(
   t.con,
   start.date = as.Date(Sys.time())-7,
   where.criteria = "query_users.party = 'democrat'",
-  media.file.prefix = "DEM"
+  media.file.prefix = "DEM",
+  excel.export.file = "tmd.xlsx"
 )
 
 
@@ -305,8 +322,12 @@ topmedia.rep <- top_media(
   t.con,
   start.date = as.Date(Sys.time())-7,
   where.criteria = "query_users.party = 'republican'",
-  media.file.prefix = "REP"
+  media.file.prefix = "REP",
+  excel.export.file = "tmr.xlsx"
 )
+
+topmedia.dem
+topmedia.rep
 
 
 ### Top tweeters democrats and republicans in the last week
@@ -323,21 +344,27 @@ toptweeters.rep <- top_tweeters(
   where.criteria = "query_users.party = 'republican'"
 )
 
+toptweeters.dem
+toptweeters.rep
 
 ### Most liked tweets democrats and republicans in the last week
 
 mostliked.dem <- most_liked(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'democrat'"
+  where.criteria = "query_users.party = 'democrat'",
+  excel.export.file = "mld.xlsx"
 )
 
 mostliked.rep <- most_liked(
   t.con,
   start.date = as.Date(Sys.time())-7,
-  where.criteria = "query_users.party = 'republican'"
+  where.criteria = "query_users.party = 'republican'",
+  excel.export.file = "mlr.xlsx"
 )
 
+mostliked.dem
+mostliked.rep
 
 
 ### Most retweeted tweets democrats and republicans in the last week
@@ -351,5 +378,106 @@ mostretweeted.dem <- most_retweeted(
 mostretweeted.rep <- most_retweeted(
   t.con,
   start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'republican'",
+  excel.export.file = "mrr.xlsx"
+)
+
+mostretweeted.dem
+mostretweeted.rep
+
+
+## Most popular retweet in sample
+
+mostpopRT.dem <- most_popular_RT_in_sample(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'democrat'",
+
+)
+
+mostpopRT.rep <- most_popular_RT_in_sample(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
   where.criteria = "query_users.party = 'republican'"
 )
+
+mostpopRT.dem
+mostpopRT.rep
+
+
+### Most reach -- this metric is of dubious value.
+
+mostreach.dem <- most_reach(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'democrat'"
+)
+
+mostreach.rep <- most_reach(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'republican'"
+)
+
+mostreach.dem
+mostreach.rep
+
+
+# ### Text Sentiment 
+
+# sentiment.dem <- text_sentiment_dataframe(
+#   t.con,
+#   start.date = as.Date(Sys.time())-7,
+#   where.criteria = "query_users.party = 'democrat'"
+# )
+
+# sentiment.rep <- text_sentiment_dataframe(
+#   t.con,
+#   start.date = as.Date(Sys.time())-7,
+#   where.criteria = "query_users.party = 'republican'"
+# )
+
+# sentiment.dem
+# sentiment.rep
+
+### Word clouds 
+
+wordcloud_plot(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'democrat'"
+)
+
+wordcloud_plot(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'republican'"
+)
+
+### Sentiment plots
+
+sentiment_plots(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'democrat'",
+  file.name.prefix = "Dem",
+  caption = "Democrats"
+)
+
+sentiment_plots(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'republican'",
+  file.name.prefix = "Rep",
+  caption = "Republicans"
+)
+
+### Tweet timeplot
+
+timeplot(
+  t.con,
+  start.date = as.Date(Sys.time())-7,
+  where.criteria = "query_users.party = 'republican' OR query_users.party = 'democrat'",
+  group.column = "query_users.party"
+)
+
