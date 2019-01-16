@@ -1,0 +1,32 @@
+---
+title: "Vignette Title"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# PART II: Collect Timelines
+
+This is the second part of a two-part vignette designed to collect and analyze Twitter posts from members of the US Congress and the US President. This part of the vignette carries out the database initialization and initial status collections. This part of the vignette consists of two sub-parts: (a) updating the twitter database with new posts, and (b) analysis.  These two sub-parts can be run together or independently, as often as required.
+
+**Very Important Note:** As with the first part of this vignette, Twitter data collection can take a very long time.  In this part of the vignette, collection is carried out using the `update_user_timelines` function.  If the Twitter database has been kept up to date, i.e., if this function has been called recently on the Twitter data connection, then there will not be many new statuses and the method will run in a few minutes.  However, if this function has not been called for a longer period of time, then there will be more new statuses to collect and the function will take longer to complete.
+
+For an abbreviated version of this vignette, see the *US Politics--Small* vignette which goes through exactly the same process, but uses samples a smaller number of politicians.  
+
+
+
+# Set Java Options
+
+Sentiment Analysis...
+

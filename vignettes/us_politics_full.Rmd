@@ -1,7 +1,7 @@
 ---
-title: "US Politics--Large"
+title: "US Politics (Full) Part I"
 author: "Christopher Marks"
-date: "2019-01-15"
+date: "`{r} Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{US Politics--Large}
@@ -16,22 +16,18 @@ knitr::opts_chunk$set(
 )
 ```
 
-# US Politics--Large
-
-This vignette creates a Twitter database containing user accounts of the members of the US Congress and the US President. It then collects their Tweets and performs some basic analysis. This vignette divides into three parts:
-
-1. Database configuration and initialization
-1. Status Collection
-1. Analysis
+This is the first part of a two-part vignette designed to collect and analyze Twitter posts from members of the US Congress and the US President. This part of the vignette carries out the database initialization and initial status collections.
 
 **Very Important Note:** Because this vignette collects the relationships and timelines of over 500 politicians, and because
 politicians tend to be prolific Tweeters, the initial calls to
 the collection functions can take a *very* long time to complete.
-In particular, collecting all of the 500+ users' friends will take approximately 15-20 hours.  Collection of all of the users' timelines, and performing sentiment analysis on them, will likely take several days.  
+In particular, collecting all of the 500+ users' friends will take approximately **15-20 hours**.  Collection of all of the users' timelines, and performing sentiment analysis on them, will likely take **several days**.  
+
+After runnint this part of the vignette, the analysis in the second part of the vignette will take considerably less time.
 
 For an abbreviated version of this vignette, see the *US Politics--Small* vignette which goes through exactly the same process, but randomly samples only a small number of politicians for the analysis.  
 
-## Package Import
+# Package Import
 
 Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
 ```{r eval=FALSE}
@@ -43,11 +39,9 @@ library(twinfoR)
 devtools::load_all("~/Projects/twinfoR")
 ```
 
-# PART I: Database Initialization
+# Some important initializations
 
-## Some important initializations
-
-### Initialize database
+## Initialize database
 
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the politician database.
 
@@ -63,7 +57,7 @@ con <- twitter_database(
 )
 ```
 
-### Authenticate to Twitter API
+## Authenticate to Twitter API
 
 We'll use the [INFORM-Tutorial](http://zlisto.scripts.mit.edu/informs_tutorial/tutorial.html) Twitter Application.  Alternatively, you can supply your own application credentials using the `authorize_app` function.
 
@@ -87,7 +81,7 @@ save(auth.vector,"auth_vector.RData")
 load("~/USPol_large/auth_vector.RData")
 ```
 
-## Creation of User data.frame
+# Creation of User data.frame
 
 In practice, construction of the list of Twitter Users for collection and analysis would normally occur without using the functions in this package.  In this case, however, we are going to analyze the content produced by US Politicians.  Fortunately, we do not have to spend time manually looking up the Twitter Accounts of the individual members of Congress; the US political parties keep these accounts in Twitter lists.  These lists might not be up-to-date, but we are going to assume they are accurate enough for our purposes.  These lists are
 
@@ -278,7 +272,7 @@ While we could upload the Twitter user objects we already collected, we'll just 
 update_users(con)
 ```
 
-## Get Relationships
+# Get Relationships
 
 Now that we have initialized a Twitter database with a list of US Politician Twitter accounts, we can collect their connections.  Because politicians often have many followers, we are not going to bother collecting these.  Rather, we are interested in whom the politicians are following, as each of these 'friends' represents a concious choice on the part of the politician.
 
@@ -289,7 +283,7 @@ Now that we have initialized a Twitter database with a list of US Politician Twi
 get_all_friends(con)
 ```
 
-## Summarize the database
+# Summarize the database
 
 To wrap up part I, we can view a summary of what is in our Twitter database.
 
@@ -307,12 +301,4 @@ Finally, to conclude this part of the vignette, we close the data connection.
 ```{r}
 DBI::dbDisconnect(con)
 ```
-
-# PART II: Collect Timelines
-
-This part of the vignette can be run periodically on the Twitter database initialized in Part I.  We start by opening the data connection and reading the authentication vector.  This part assumes the authentication vector was saved in an R data file as suggested in Part I.
-
-## Set Java Options
-
-Sentiment Analysis...
 
