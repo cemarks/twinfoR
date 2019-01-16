@@ -5,7 +5,7 @@ Authors@R: person("Christopher", "Marks", email = "christopher.e.marks.mil@mail.
 Description: Collect, store, and analyze data using the Twitter REST APIs.  .
 Depends: R (>= 3.5.1)
 Imports: httr, rjson, RSQLite, DBI, RSentiment, syuzhet, wordcloud, ggplot2, base64enc, OpenImageR, utils
-Suggests: xlsx
+Suggests: xlsx, igraph
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true

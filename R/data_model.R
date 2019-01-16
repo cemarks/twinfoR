@@ -232,6 +232,7 @@ twitter_database <- function(
 #' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_timelines}}
 #' @export
 #' @examples
+#' \dontrun{
 #' users <- data.frame(
 #'   screen_name=c(
 #'     "nytimes",
@@ -246,10 +247,10 @@ twitter_database <- function(
 #'     "politician"
 #'   )
 #' )
-#' ## Not run: establish database.
-#' # conn <- twitter_database("tweetanalysis.sqlite")
-#' # upload_query_users(conn,users)
-#'
+#' 
+#' conn <- twitter_database("tweetanalysis.sqlite")
+#' upload_query_users(conn,users)
+#' }
 upload_query_users <- function(con,query.users.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
   count <- count[1,1]
@@ -306,6 +307,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
 #' @seealso \code{\link{twitter_database}}, \code{\link{update_search}}
 #' @export
 #' @examples
+#' \dontrun{
 #' users <- data.frame(
 #'   screen_name=c(
 #'     "nytimes",
@@ -320,10 +322,9 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
 #'     "politician"
 #'   )
 #' )
-#' ## Not run: establish database.
-#' # conn <- twitter_database("tweetanalysis.sqlite")
-#' # upload_query_users(conn,users)
-#'
+#' conn <- twitter_database("tweetanalysis.sqlite")
+#' upload_query_users(conn,users)
+#' }
 upload_query_text <- function(con,query.text.df,overwrite = FALSE){
   count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
   count <- count[1,1]
@@ -390,15 +391,15 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
 #' @export
 #' @examples
 #' 
-#' ## Not run: Authenticate to Twitter
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #' 
-#' # user.objs <- user_lookup(c("nytimes","bostonglobe"))
+#' user.objs <- user_lookup(c("nytimes","bostonglobe"))
 #' 
-#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' # insert_users(conn,user.objs)
-#'
+#' insert_users(conn,user.objs)
+#' }
 insert_users <- function(
   conn,
   user.list,
@@ -519,15 +520,15 @@ insert_users <- function(
 #' @export
 #' @examples
 #' 
-#' ## Not run: Authenticate to Twitter
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #' 
-#' # statuses <- user_timeline_recursive("nytimes")
+#' statuses <- user_timeline_recursive("nytimes")
 #' 
-#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' # insert_statuses(conn,user.objs)
-#'
+#' insert_statuses(conn,user.objs)
+#' }
 insert_statuses <- function(
   conn,
   status.list,
@@ -776,23 +777,23 @@ insert_statuses <- function(
 #' @export
 #' @examples
 #' 
-#' ## Not run: Authenticate to Twitter
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #' 
-#' # nyt <- user_show("nytimes")
-#' # nyt_followers <- followers_ids(user_id=nyt$id_str)
+#' nyt <- user_show("nytimes")
+#' nyt_followers <- followers_ids(user_id=nyt$id_str)
 #' 
-#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' # insert_followers(
-#' #   conn,
-#' #   nyt$id_str,
-#' #   sapply(
-#' #     nyt_followers,
-#' #     function(x) return(x$id_str)
-#' #   )
-#' # )
-#'
+#' insert_followers(
+#'   conn,
+#'   nyt$id_str,
+#'   sapply(
+#'     nyt_followers,
+#'     function(x) return(x$id_str)
+#'   )
+#' )
+#' }
 insert_followers <- function(
   conn,
   friend.id,
@@ -852,23 +853,23 @@ insert_followers <- function(
 #' @export
 #' @examples
 #' 
-#' ## Not run: Authenticate to Twitter
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #' 
-#' # nyt <- user_show("nytimes")
-#' # nyt_friends <- friends_ids(user_id=nyt$id_str)
+#' nyt <- user_show("nytimes")
+#' nyt_friends <- friends_ids(user_id=nyt$id_str)
 #' 
-#' # conn <- twitter_database("tweetanalysis.sqlite")
+#' conn <- twitter_database("tweetanalysis.sqlite")
 #' 
-#' # insert_friends(
-#' #   conn,
-#' #   nyt$id_str,
-#' #   sapply(
-#' #     nyt_friends,
-#' #     function(x) return(x$id_str)
-#' #   )
-#' # )
-#'
+#' insert_friends(
+#'   conn,
+#'   nyt$id_str,
+#'   sapply(
+#'     nyt_friends,
+#'     function(x) return(x$id_str)
+#'   )
+#' )
+#' }
 insert_friends <- function(
   conn,
   follower.id,

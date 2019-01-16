@@ -1,5 +1,63 @@
-#### THIS SCRIPT LOADS 17 DIFFERENT FUNCTIONS THAT PRODUCE PLOTS OR EXCEL SPREADSHEETS 
+# Plot function
 
+#' Word Cloud of Tweet Text
+#'
+#' Create a word cloud of the combined text from tweets.
+#'
+#' This function requires the word cloud and tm packages.  It generates a word cloud
+#' from status text in the Twitter data connection.
+#' 
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax. 
+#' @param caption character caption to include on the plot.
+#' @param max.words integer maximum number of words to plot.
+#' @param stopword.langs character language librarys from the \code{tm} package to include.
+#' @param additional.stopwords character additional stop words to remove from the text.
+#' @param file.name character name of file to save the word cloud.  If \code{NULL}, the
+#' word cloud is plotted on the screen.
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' wordcloud_plot(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'",
+#'   caption = "@zlisto"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 wordcloud_plot <- function(
   con,
   start.date = NULL,
@@ -26,7 +84,8 @@ wordcloud_plot <- function(
     'must',
     'says',
     'amp'
-  )
+  ),
+  file.name = NULL
 ){
   word.df <- term_frequencies(
     con,
@@ -37,15 +96,79 @@ wordcloud_plot <- function(
     additional.stopwords = additional.stopwords
   )
   if(nrow(word.df)>10){
+    if(!is.null(file.name)){
+      png(file.name,width=600,height=600)
+    }
     wordcloud::wordcloud(
       words=word.df$word,
       freq = word.df$freq,
       max.words = max.words,
       colors = c("green","red")
     )
+    if(!is.null(file.name)){
+      dev.off()
+    }
   }
 }
 
+#' Sentiment Plots of Tweets
+#'
+#' Plot NRC sentiment of Tweets over time.
+#'
+#' This function uses the NRC sentiment values for each status assigned
+#' by the \code{syuzhet} package.  This sentiment classification must be
+#' present in the Twitter data connection for this function to be useful.  
+#' The function produces two plots: (1) a bar plot showing absolute sentiment
+#' quantities over time, and (2) a line plot showing relative sentiment values 
+#' over time.  Sentiments are categorized into a Likert-like scale.
+#' 
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.
+#' @param file.name.prefix character string prepended to file names of plots.
+#' @param caption character caption to include on the plot.
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}},
+#' \code{\link{insert_statuses}}
+#' @export
+#' @examples
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' sentiment_plots(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'",
+#'   caption = "@zlisto"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 sentiment_plots <- function(
   con,
   start.date=NULL,
@@ -212,6 +335,68 @@ sentiment_lineplot <- function(
   }
 }
 
+#' Cummulative Tweet Time Plot
+#'
+#' Plot the cummulative number of tweets over time.
+#'
+#' Use the \code{group.column} for comparing the Tweet rates of different
+#' groups.  
+#' 
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.
+#' @param file.name character name of file to save the word cloud.  If \code{NULL}, the
+#' time plot is displayed on the screen.
+#' @param caption character caption to include on the plot.
+#' @param log.scale logical indicating whether to plot the Tweet counts on a log scale.
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}},
+#' \code{\link{insert_statuses}}
+#' @export
+#' @examples
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' ## All tweets together (not very informative in this example)
+#' timeplot(
+#'   con,
+#' )
+#' 
+#' 
+#' timeplot(
+#'   con,
+#'   start.date = Sys.Date() - 7,
+#'   where.criteria = "query_text.id = 1 OR query_text.id = 2",
+#'   group.column = "query_text.queryt_text",
+#'   log.scale = TRUE
+#' )
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 timeplot <- function(
   con,
   start.date=NULL,
@@ -219,7 +404,8 @@ timeplot <- function(
   where.criteria = NULL,
   group.column = NULL,
   file.name = NULL,
-  caption = ""
+  caption = "",
+  log.scale = FALSE
 ){
   df <- created_at_df(
     con,
@@ -242,7 +428,8 @@ timeplot <- function(
     group.column = group.column.name,
     file.name = file.name,
     subtitle = subtitle,
-    caption = caption
+    caption = caption,
+    log.scale = log.scale
   )
 }
 
@@ -251,7 +438,8 @@ tweet_timeplot <- function(
   group.column = NULL,
   file.name = NULL,
   subtitle = "",
-  caption = ""
+  caption = "",
+  log.scale = FALSE
 ){
   # created.at.df<-created.at.df[order(created.at.df$TimeStamp),]
   if(is.null(group.column)){
@@ -270,6 +458,9 @@ tweet_timeplot <- function(
       ) +
       # ggplot2::scale_x_continuous(labels = created.at.df$date) +
       ggplot2::theme_bw()
+      if(log.scale){
+        g <- g + ggplot2::scale_y_continuous(trans='log10')
+      }
   } else {
     unique.groups <- unique(created.at.df[,group.column])
     created.at.df$Tweets <- NA
@@ -291,6 +482,9 @@ tweet_timeplot <- function(
       ) +
       # ggplot2::scale_x_continuous(labels = created.at.df$date) +
       ggplot2::theme_bw()
+      if(log.scale){
+        g <- g + ggplot2::scale_y_continuous(trans='log10')
+      }
   }
   if(is.null(file.name)){
     print(g)

@@ -26,26 +26,26 @@
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database("test1.sqlite")
-#' # update_users(con,screen_name=c("bostonglobe","nytimes"))
+#' con <- twitter_database("test1.sqlite")
+#' update_users(con,screen_name=c("bostonglobe","nytimes"))
 #' 
-#' # con2 <- twitter_database(
-#' #   "test2.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "bostonglobe",
-#' #       "nytimes"
-#' #     )
-#' #   )
-#' # )
-#' # update_users(con2)
+#' con2 <- twitter_database(
+#'   "test2.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "bostonglobe",
+#'       "nytimes"
+#'     )
+#'   )
+#' )
+#' update_users(con2)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
-#' # DBI::dbDisconnect(con2)
+#' DBI::dbDisonnect(con)
+#' DBI::dbDisconnect(con2)
+#' }
 update_users <- function(
   con,
   authentication.vector,
@@ -79,11 +79,11 @@ update_users <- function(
           sep=""
         )
       )
-      user.df <- user.df[which(!(user.df$user_id) %in% already.collected$user_id),]
-      if(!is.null(nrow(user.df)) && nrow(user.df) > 0){
+      collect.ids <- user.df$user_id[which(!(user.df$user_id) %in% already.collected$user_id)]
+      if(length(collect.ids) > 0){
         try(
           user_lookup_recursive(
-            user_id = user.df$user_id,
+            user_id = collect.ids,
             data.connection = con,
             authentication.vector = authentication.vector,
             ...
@@ -101,11 +101,11 @@ update_users <- function(
           sep=""
         )
       )
-      user.df <- user.df[which(!(tolower(user.df$screen_name)) %in% tolower(already.collected$screen_name)),]
-      if(!is.null(nrow(user.df)) && nrow(user.df) > 0){
+      collect.sns <- user.df$screen_name[which(!(tolower(user.df$screen_name)) %in% tolower(already.collected$screen_name))]
+      if(length(collect.sns) > 0){
         try(
           user_lookup_recursive(
-            screen_name = user.df$screen_name,
+            screen_name = collect.sns,
             data.connection = con,
             authentication.vector = authentication.vector,
             ...
@@ -233,22 +233,22 @@ update_users <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test2.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "bostonglobe",
-#' #       "nytimes"
-#' #     )
-#' #   )
-#' # )
-#' # update_user_timelines(con)
+#' con <- twitter_database(
+#'   "test2.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "bostonglobe",
+#'       "nytimes"
+#'     )
+#'   )
+#' )
+#' update_user_timelines(con)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
+#' DBI::dbDisonnect(con)
+#' }
 update_user_timelines <- function(
   con,
   authentication.vector,
@@ -274,10 +274,21 @@ update_user_timelines <- function(
   if('user_id' %in% n){
     if(is.null(user_id) && is.null(screen_name)){
       query <- "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON query_users.user_id = user.id;"
-    } else if(is.null(user_id)){
+    } else if(is.null(user_id)){ ## This will break if screen names are not included in the database
+      if(!('screen_name' %in% n)){
+        user_id <- NULL
+        try({
+          new.users <- user_lookup_recursive(
+            screen_name = screen_name,
+            authentication.vector = authentication.vector,
+            ...
+          )
+          user_id <- sapply(new.users,function(x) return(x$id_str))
+        })
+      }
       query <- sprintf(
-        "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON query_users.user_id = user.id WHERE LOWER(user.screen_name) IN (%s);",
-        paste("'",screen_name,"'",sep="",collapse=",")
+        "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON query_users.user_id = user.id WHERE LOWER(user.user_id) IN (%s);",
+        paste("'",user_id,"'",sep="",collapse=",")
       )
     } else {
       query <- sprintf(
@@ -287,16 +298,27 @@ update_user_timelines <- function(
     }
   } else {
     if(is.null(user_id) && is.null(screen_name)){
-      query <- "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name);"
+      query <- "SELECT query_users.id as row_id,query_users.screen_name as screen_name,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name);"
     } else if(is.null(user_id)){
       query <- sprintf(
-        "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name) WHERE LOWER(user.screen_name) IN (%s);",
+        "SELECT query_users.id as row_id,query_users.screen_name as screen_name,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name) WHERE LOWER(user.screen_name) IN (%s);",
         paste("'",screen_name,"'",sep="",collapse=",")
       )
-    } else {
+    } else {  ## This will fail every time
+      if(!('user_id' %in% n)){
+        screen_name <- NULL
+        try({
+          new.users <- user_lookup_recursive(
+            user_id = user_id,
+            authentication.vector = authentication.vector,
+            ...
+          )
+          screen_name <- sapply(new.users,function(x) return(x$screen_name))
+        })
+      }
       query <- sprintf(
-        "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name) WHERE LOWER(user.id) IN (%s);",
-        paste("'",user_id,"'",sep="",collapse=",")
+        "SELECT query_users.id as row_id,query_users.screen_name as screen_name,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON query_users.user_id = user.id WHERE LOWER(user.screen_name) IN (%s);",
+        paste("'",screen_name,"'",sep="",collapse=",")
       )
     }
   }
@@ -304,28 +326,53 @@ update_user_timelines <- function(
   if(!is.null(nrow(user.df)) && nrow(user.df)> 0){
     w <- which(!as.logical(user.df$protected))
     for(i in w){
-      try({
-        if(is.na(user.df$since_id[i])){
-          s <- user_timeline_recursive(
-            user_id = user.df$user_id[i],
-            data.connection = con, 
-            authentication.vector = authentication.vector,
-            ...
-          )
-        } else {
-          s <- user_timeline_recursive(
-            user_id = user.df$user_id[i],
-            data.connection = con, 
-            authentication.vector = authentication.vector, 
-            since_id = user.df$since_id[i],
-            ...
-          )
-        }
-        if(!is.na(s)){
-          query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
-          DBI::dbExecute(con,query)
-        }
-      })
+      if("user_id" %in% names(user.df)){
+        try({
+          if(is.na(user.df$since_id[i])){
+            s <- user_timeline_recursive(
+              user_id = user.df$user_id[i],
+              data.connection = con, 
+              authentication.vector = authentication.vector,
+              ...
+            )
+          } else {
+            s <- user_timeline_recursive(
+              user_id = user.df$user_id[i],
+              data.connection = con, 
+              authentication.vector = authentication.vector, 
+              since_id = user.df$since_id[i],
+              ...
+            )
+          }
+          if(!is.na(s)){
+            query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
+            DBI::dbExecute(con,query)
+          }
+        })
+      } else {
+        try({
+          if(is.na(user.df$since_id[i])){
+            s <- user_timeline_recursive(
+              screen_name = user.df$screen_name[i],
+              data.connection = con, 
+              authentication.vector = authentication.vector,
+              ...
+            )
+          } else {
+            s <- user_timeline_recursive(
+              screen_name = user.df$screen_name[i],
+              data.connection = con, 
+              authentication.vector = authentication.vector, 
+              since_id = user.df$since_id[i],
+              ...
+            )
+          }
+          if(!is.na(s)){
+            query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
+            DBI::dbExecute(con,query)
+          }
+        })
+      }
     }
   }
 }
@@ -358,22 +405,22 @@ update_user_timelines <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test2.sqlite",
-#' #   query.text.df = data.frame(
-#' #     query_text = c(
-#' #       "#throwbackthursday",
-#' #       "#worstfirstdate"
-#' #     )
-#' #   )
-#' # )
-#' # update_search(con)
+#' con <- twitter_database(
+#'   "test2.sqlite",
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' update_search(con)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
+#' DBI::dbDisonnect(con)
+#' }
 update_search <- function(
   con,
   authentication.vector,
@@ -488,23 +535,27 @@ update_search <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "pb2pv",
-#' #       "zlisto"
-#' #     )
-#' #   )
-#' # )
-#' # get_all_friends(con)
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   )
+#' )
+#' get_all_friends(con)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
-get_all_friends <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
+#' DBI::dbDisonnect(con)
+#' }
+get_all_friends <- function(con,
+  authentication.vector,
+  user_id=NULL,
+  screen_name=NULL
+){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -596,7 +647,7 @@ get_all_friends <- function(con,authentication.vector,user_id=NULL,screen_name=N
     for(i in 1:nrow(user.df)){
       query <- sprintf(
         "UPDATE query_users SET friends_collected = 1 WHERE id = %i",
-        user.df$row_id
+        user.df$row_id[i]
       )
       if(!as.logical(user.df$protected[i])){
         if(user.df$friends_count[i] < 200){
@@ -684,22 +735,22 @@ get_all_friends <- function(con,authentication.vector,user_id=NULL,screen_name=N
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "pb2pv",
-#' #       "zlisto"
-#' #     )
-#' #   )
-#' # )
-#' # get_all_followers(con)
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   )
+#' )
+#' get_all_followers(con)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
+#' DBI::dbDisonnect(con)
+#' }
 get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -792,7 +843,7 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
     for(i in 1:nrow(user.df)){
       query <- sprintf(
         "UPDATE query_users SET followers_collected = 1 WHERE id = %i",
-        user.df$row_id
+        user.df$row_id[i]
       )
       if(as.logical(user.df$protected[i])){
         DBI::dbExecute(
@@ -866,33 +917,33 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "pb2pv",
-#' #       "zlisto"
-#' #     )
-#' #   ),
-#' #   query.text.df = data.frame(
-#' #     query_text = c(
-#' #       "#throwbackthursday",
-#' #       "#worstfirstdate"
-#' #     )
-#' #   )
-#' # )
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
 #' 
-#' # get_all_friends(con)
-#' # update_user_timelines(con)
-#' # update_search(con)
+#' get_all_friends(con)
+#' update_user_timelines(con)
+#' update_search(con)
 #' 
-#' # summarize_database(con)
+#' summarize_database(con)
 #' 
-#' 
-#' # DBI::dbDisonnect(con)
+#' DBI::dbDisonnect(con)
+#' }
 summarize_database <- function(con){
   count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
   count <- count[1,1]

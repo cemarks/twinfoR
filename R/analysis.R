@@ -1,5 +1,3 @@
-### Analysis functions
-
 #' Open Twitter User Page
 #'
 #' View a Twitter user timeline in a browser
@@ -17,7 +15,7 @@
 #' 
 #' @return NULL (Invisible).
 #'
-#' @seealso \code{\link{user_show}}, \code{\link{authorize_app}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
 #' @export
 #' @examples
 #'
@@ -86,18 +84,17 @@ open_user <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database("throwback.sqlite")
-#' # tbt <- search_tweets_recursive(
+#' con <- twitter_database("throwback.sqlite")
+#' tbt <- search_tweets_recursive(
 #'   "throwbackthursday",
 #'   data.connection = con
 #' )
 #' 
-#' # query <- "SELECT *,COUNT(media_id) AS n FROM media GROUP_BY media_id ORDER BY n DESC LIMIT 1;"
-#' # media.df <- DBI::dbGetQuery(con,query)
-#' # status_media(
+#' query <- "SELECT *,COUNT(media_id) AS n FROM media GROUP_BY media_id ORDER BY n DESC LIMIT 1;"
+#' media.df <- DBI::dbGetQuery(con,query)
+#' status_media(
 #'   media.df[1,],
 #'   con,
 #'   save.to.file = FALSE,
@@ -229,15 +226,6 @@ user_profile_image <- function(
 
 
 
-# daily_sentiment_plot(con, where.criteria,start.date,end.date,"Esmeraldas")
-# wordcloud_plot(con, where.criteria,start.date,end.date, "Esmeraldas")
-# top_hashtags_List(con,where.criteria,start.date,end.date,11)
-# top_usermentions_List(con,where.criteria,start.date,end.date,11)
-# most_liked_List(con,where.criteria,start.date,end.date,11)
-# top_tweeters_List(con,where.criteria,start.date,end.date,11)
-# tweet rate plot
-
-
 #' Top Hashtags
 #'
 #' Get top hashtags from a Twitter database
@@ -265,40 +253,39 @@ user_profile_image <- function(
 #' 
 #' @return data frame containing most frequent hashtags.
 #'
-#' @seealso \code{\link{user_show}}, \code{\link{authorize_app}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' auth.vector <- authorize_IT()
 #'
-#' # con <- twitter_database(
-#' #   "test.sqlite",
-#' #   query.user.df = data.frame(
-#' #     screen_name = c(
-#' #       "pb2pv",
-#' #       "zlisto"
-#' #     )
-#' #   ),
-#' #   query.text.df = data.frame(
-#' #     query_text = c(
-#' #       "#throwbackthursday",
-#' #       "#worstfirstdate"
-#' #     )
-#' #   )
-#' # )
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
 #' 
-#' # update_user_timelines(con)
-#' # update_search(con)
+#' update_user_timelines(con)
+#' update_search(con)
 #' 
-#' # top.hashtags <- top_hashtags(
+#' top.hashtags <- top_hashtags(
 #'   con,
 #'   start.date = as.Date(Sys.time())-7,
 #'   where.criteria = "user.screen_name = 'zlisto'"
 #' )
 #' 
 #' 
-#' # DBI::dbDisonnect(con)
+#' DBI::dbDisonnect(con)
 #'
 top_hashtags <- function(
   con,
@@ -337,6 +324,68 @@ top_hashtags <- function(
 }
 
 
+
+#' Top User Mentions
+#'
+#' Get the most frequent user mentions from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing most frequent user mentions.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' top.hashtags <- top_usermentions(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#'
 top_usermentions <- function(
   con,
   start.date=NULL,
@@ -378,6 +427,67 @@ top_usermentions <- function(
 }
 
 
+#' Top URLs
+#'
+#' Get most frequent URLs from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing most frequently posted URLs.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' top.urls <- top_urls(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#'
 top_urls <- function(
   con,
   start.date=NULL,
@@ -413,6 +523,72 @@ top_urls <- function(
 }
 
 
+#' Top Images
+#'
+#' Get most frequently appearing images from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' @param get.media logical indicating whether to download the image.  If the image is already
+#' in the database (64-bit encoded), it will be reconstructed.
+#' @param media.file.prefix character prefix that will be prepended to the file name of image
+#' when it is saved.
+#' 
+#' @return data frame containing most frequent media.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}},
+#' \code{\link{status_media}}
+#' @export
+#' @examples
+#'
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' top.media <- top_media(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 top_media <- function(
   con,
   start.date=NULL,
@@ -469,6 +645,68 @@ top_media <- function(
 }
 
 
+#' Top Tweeters
+#'
+#' Get most frequent Tweeters from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing the users with the most tweets that meet the filter criteria.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' top.tweeters <- top_tweeters(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 top_tweeters <- function(
   con,
   start.date=NULL,
@@ -511,6 +749,69 @@ top_tweeters <- function(
   return(results)
 }
 
+#' Most Popular Tweets
+#'
+#' Get the most 'liked' Tweets from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing Tweets with the highest numbers of 'likes' meeting the filtering
+#' criteria.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#' 
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' most.liked <- most_liked(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 most_liked <- function(
   con,
   start.date=NULL,
@@ -556,6 +857,79 @@ most_liked <- function(
 }
 
 
+
+#' Most Retweeted
+#'
+#' Get the most retweeted Tweets from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#'
+#' This method is different from \code{\link{most_popular_RT_in_sample}} because it uses
+#' the total number of retweets, which is attached as meta-data to the Tweet
+#' when it is collected.  The \code{\link{most_popular_RT_in_sample}}
+#' method only counts retweets in the database meeting the supplied filter criteria.
+#' 
+#' Note that retweet counts are obtained at the time of collection, and are not maintained
+#' in real time.  Therefore, this metric is prone to time-of-collection bias and should
+#' be used with care.
+#' 
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing most 'retweeted' Tweets meeting the filter criteria.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}, 
+#' \code{\link{most_popular_RT_in_sample}}
+#' @export
+#' @examples
+#'
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' most.retweeted <- most_retweeted(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 most_retweeted <- function(
   con,
   start.date=NULL,
@@ -605,6 +979,73 @@ most_retweeted <- function(
   return(results)
 }
 
+#' Most Retweeted Within Sample
+#'
+#' Get the most frequently occurring Retweet
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#' 
+#' This method is different from \code{\link{most_retweeted}} because it only counts
+#' retweets in the database meeting the supplied filter criteria.  The \code{\link{most_retweeted}}
+#' method uses the total number of retweets, which is attached as meta-data to the Tweet
+#' when it is collected.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing most frequently occuring Retweet.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#' 
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' most.popular.retweets <- most_popular_RT_in_sample(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "user.screen_name = 'zlisto'"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 most_popular_RT_in_sample <- function(
   con,
   start.date = NULL,
@@ -651,6 +1092,74 @@ most_popular_RT_in_sample <- function(
 }
 
 
+#' Most Reach
+#'
+#' Get Tweets that have reached the most people from a Twitter database
+#'
+#' Provide filter criteria in the \code{start.date}, \code{end.date}, and 
+#' \code{where.criteria} parameters.  The results will include statuses created
+#' at times greater than or equal to the \code{start.date}, but strictly less
+#' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
+#' reference tables and columns in the database (see \code{\link{twitter_database}}).
+#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Returns the most frequent hashtags 
+#' in the tweets meeting the filter criteria.
+#' 
+#' Note that this method only includes reach that is measurable within the database.  If
+#' retweets that have not been collected will not counted.  Therefore, this method
+#' is most accurate when run on results that have been obtained from search queries, and
+#' less useful on results obtained from user timeline queries.
+#'
+#' @param con SQLite data connection to Twitter database (see \code{\link{twitter_database}}).
+#' @param start.date character date (or datetime) of earliest statuses queried.
+#' @param end.date character date.  Results will include statuses 
+#' with creation times or dates strictly less than this parameter.
+#' @param where.criteria character additional criteria to filter the status results, in 
+#' SQLite syntax.  See details.
+#' @param limit integer number of results to return.
+#' @param excel.export.file character name of file to write results in Excel format.  If 
+#' \code{NULL} no file is written.
+#' @param excel.file.footnote character table footnote to include in Excel file.  if 
+#' \code{"auto"} the date range will be written.
+#' 
+#' @return data frame containing Tweets that have been tweeted or retweeted to the
+#' most followers in the Twitter database.
+#'
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @export
+#' @examples
+#'
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#'
+#' con <- twitter_database(
+#'   "test.sqlite",
+#'   query.users.df = data.frame(
+#'     screen_name = c(
+#'       "pb2pv",
+#'       "zlisto"
+#'     )
+#'   ),
+#'   query.text.df = data.frame(
+#'     query_text = c(
+#'       "#throwbackthursday",
+#'       "#worstfirstdate"
+#'     )
+#'   )
+#' )
+#' 
+#' update_user_timelines(con)
+#' update_search(con)
+#' 
+#' most.reach <- most_reach(
+#'   con,
+#'   start.date = as.Date(Sys.time())-7,
+#'   where.criteria = "query_text.id = 1"
+#' )
+#' 
+#' 
+#' DBI::dbDisonnect(con)
+#' }
 most_reach <- function(
   con,
   start.date=NULL,

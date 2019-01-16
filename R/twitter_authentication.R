@@ -35,13 +35,12 @@
 #' @seealso \code{\link{twitter_request}}, \code{\link{authorize_IT}}
 #' @export
 #' @examples
-#' ## Not Run.
+#' \dontrun{
 #' ## Consumer token and consumer secret are fake.
-#'
-#' # consumer.token <- "ArP09ecJ8ismgszHGuxis5p2tie6zLiLiWhgsWPbZxw3qpLSds"
-#' # consumer.secret <- "7N2e5hh1fYzFYfYib4OvRGv1zYAOpBGg2d2SK81qygnIYdtjnohehg2gx11HTInmCFF4uC9puLl"
-#' # auth.vector <- authorize_app(consumer.token,consumer.secret)
-#'
+#' consumer.token <- "ArP09ecJ8ismgszHGuxis5p2tie6zLiLiWhgsWPbZxw3qpLSds"
+#' consumer.secret <- "7N2e5hh1fYzFYfYib4OvRGv1zYAOpBGg2d2SK81qygnIYdtjnohehg2gx11HTInmCFF4uC9puLl"
+#' auth.vector <- authorize_app(consumer.token,consumer.secret)
+#' }
 authorize_app<-function(consumer.token,consumer.secret){
   consumer.token <- as.character(consumer.token)
   consumer.secret <- as.character(consumer.secret)
@@ -121,9 +120,10 @@ authorize_app<-function(consumer.token,consumer.secret){
 #'
 #' @seealso \code{\link{twitter_request}}, \code{\link{authorize_app}}
 #' @export
-#' @examples
-#' # auth.vector <- authorize_IT()
-#'
+#' @example
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#' }
 authorize_IT <- function(){
   consumer.token <- as.character(cons.token)
   consumer.secret <- as.character(cons.secret)

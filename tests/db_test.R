@@ -1,7 +1,5 @@
-# auth.vector <- authorize_IT()
-# save(auth.vector,file="/home/cemarks/.twitter_auth_vector.RData")
-load("/home/cemarks/.twitter_auth_vector.RData")
 
+auth.vector <- authorize_IT()
 
 
 con <- twitter_database("/home/cemarks/Projects/twinfoR/ignore/test1.sqlite")

@@ -50,14 +50,15 @@
 #' @seealso \code{\link{search_tweets}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 #' @export
 #' @examples
-#' ## Not run: read authentication vector from file.
-#' # auth.vector <- load("auth-vector.RData")
-#' # query <- "Miami"
-#' # statuses <- search_tweets_recursive(
-#' #   query,
-#' #   authentication.vector = auth.vector
-#' # )
-#'
+#' 
+#' \dontrun{
+#' auth.vector <- load("auth-vector.RData")
+#' query <- "Miami"
+#' statuses <- search_tweets_recursive(
+#'   query,
+#'   authentication.vector = auth.vector
+#' )
+#' }
 search_tweets_recursive <- function(
   q,
   data.connection,
@@ -227,15 +228,14 @@ search_tweets_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # user.statuses <- user_timeline_recursive(
-#' #   "realDonaldTrump",
-#' #   authentication.vector = auth.vector
-#' # )
-#'
-#'
+#' user.statuses <- user_timeline_recursive(
+#'   "realDonaldTrump",
+#'   authentication.vector = auth.vector
+#' )
+#' }
 user_timeline_recursive <- function(
   screen_name,
   user_id,
@@ -397,13 +397,13 @@ user_timeline_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
-#' # user.ids.response <- get_followers_ids("realDonaldTrump")
-#' # user.ids <- user.ids.response$ids
+#' \dontrun{
+#' auth.vector <- authorize_IT()
+#' user.ids.response <- get_followers_ids("realDonaldTrump")
+#' user.ids <- user.ids.response$ids
 #'
-#' # users <- user_lookup_recursive(user_id=user.ids)
-#'
+#' users <- user_lookup_recursive(user_id=user.ids)
+#' }
 user_lookup_recursive <- function(
   screen_name,
   user_id,
@@ -532,19 +532,19 @@ user_lookup_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # original.statuses <- user_timeline_recursive("realDonaldTrump")
-#' # status.ids <- sapply(original.statuses,function(x) return(x$id_str))
+#' original.statuses <- user_timeline_recursive("realDonaldTrump")
+#' status.ids <- sapply(original.statuses,function(x) return(x$id_str))
 #'
-#' # new.statuses <- status_lookup_recursive(
-#' #   status.ids,
-#' #   authentication.vector <- auth.vector
-#' # )
+#' new.statuses <- status_lookup_recursive(
+#'   status.ids,
+#'   authentication.vector <- auth.vector
+#' )
 #'
-#' # cat(new.statuses[[1]]$full_text)
-#'
+#' cat(new.statuses[[1]]$full_text)
+#' }
 status_lookup_recursive <- function(
   status_id,
   data.connection,
@@ -663,17 +663,17 @@ status_lookup_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # searched.users <- user_search_recursive(
-#' #   "Trump",
-#' #   authentication.vector = auth.vector,
-#' #   max_queries = 5
-#' # )
+#' searched.users <- user_search_recursive(
+#'   "Trump",
+#'   authentication.vector = auth.vector,
+#'   max_queries = 5
+#' )
 #'
-#' # cat(searched.users[[3]]$description)
-#'
+#' cat(searched.users[[3]]$description)
+#' }
 user_search_recursive <- function(
   q,
   data.connection,
@@ -785,25 +785,25 @@ user_search_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # dma.relief.followers <- followers_list_recursive(
-#' #   "dominica_relief",
-#' #   authentication.vector = auth.vector
-#' # )
+#' dma.relief.followers <- followers_list_recursive(
+#'   "dominica_relief",
+#'   authentication.vector = auth.vector
+#' )
 #'
-#' # cat(
-#' #   paste(
-#' #     "@",
-#' #     sapply(dma.relief.followers[1:20],function(x) return(x$screen_name)),
-#' #     ": ",
-#' #     sapply(dma.relief.followers[1:20],function(x) return(x$description)),
-#' #     sep="",
-#' #     collapse="\n"
-#' #   )
-#' # )
-#'
+#' cat(
+#'   paste(
+#'     "@",
+#'     sapply(dma.relief.followers[1:20],function(x) return(x$screen_name)),
+#'     ": ",
+#'     sapply(dma.relief.followers[1:20],function(x) return(x$description)),
+#'     sep="",
+#'     collapse="\n"
+#'   )
+#' )
+#' }
 followers_list_recursive <- function(
   screen_name,
   user_id,
@@ -835,67 +835,83 @@ followers_list_recursive <- function(
     )
     user_id <- user.request$id_str
   }
-  repeat{
-    Sys.sleep(
-      max(
-        c(
-          0,
-          60-as.numeric(
-            difftime(
-              as.POSIXct(
-                Sys.time()
-              ),
-              last.query.time,
-              units = 'secs'
+  if(!user.request$protected && (user.request$followers_count > 0)){
+    repeat{
+      Sys.sleep(
+        max(
+          c(
+            0,
+            60-as.numeric(
+              difftime(
+                as.POSIXct(
+                  Sys.time()
+                ),
+                last.query.time,
+                units = 'secs'
+              )
             )
           )
         )
       )
-    )
-    request.result <- followers_list(
-      user_id = user_id[1],
-      authentication.vector = authentication.vector,
-      cursor=cursor,
-      count=200,
-      skip_status = NULL,
-      include_user_entities = NULL,
-      tweet_mode = tweet_mode
-    )
-    last.query.time <- as.POSIXct(Sys.time())
-    if(class(request.result) == "response"){
-      fails <- fails + 1
-      if(fails < 3){
-        warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+      request.result <- followers_list(
+        user_id = user_id[1],
+        authentication.vector = authentication.vector,
+        cursor=cursor,
+        count=200,
+        skip_status = NULL,
+        include_user_entities = NULL,
+        tweet_mode = tweet_mode
+      )
+      last.query.time <- as.POSIXct(Sys.time())
+      if(class(request.result) == "response"){
+        fails <- fails + 1
+        if(fails < 3){
+          warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        } else {
+          stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        }
       } else {
-        stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
-      }
-    } else {
-      fails <- 0
-  if(missing(data.connection)){
-        users <- c(users,request.result$users)
-      } else {
-        insert_users(
-          data.connection,
-          request.result$users,
-          ...
-        )
-        followers.ids <- sapply(request.result$users,function(x) return(x$id_str))
-        insert_followers(
-          data.connection,
-          user_id,
-          followers.ids
-        )
-      }
-      cursor <- request.result$next_cursor_str
-      if(cursor=="0"){
-        break
+        fails <- 0
+    if(missing(data.connection)){
+          users <- c(users,request.result$users)
+        } else {
+          if(length(request.result$users)>0){
+            insert_users(
+              data.connection,
+              request.result$users,
+              ...
+            )
+            followers.ids <- sapply(request.result$users,function(x) return(x$id_str))
+            insert_followers(
+              data.connection,
+              user_id,
+              followers.ids
+            )
+          }
+        }
+        cursor <- request.result$next_cursor_str
+        if(cursor=="0"){
+          break
+        }
       }
     }
-  }
-  if(missing(data.connection)){
-    return(users)
+    if(missing(data.connection)){
+      return(users)
+    } else {
+      return(user_id)
+    }
   } else {
-    return(user_id)
+    if(user.request$protected){
+      cat(sprintf("@%s account is protected.\n",user.request$screen_name))
+    }
+    if(user.request$followers_count==0){
+      cat(sprintf("@%s has no followers"))
+    }
+    if(missing(data.connection)){
+      return(NULL)
+    } else {
+      return(user_id)
+    }
   }
 }
 
@@ -929,25 +945,25 @@ followers_list_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # dma.relief.friends <- followers_list_recursive(
-#' #   "dominica_relief",
-#' #   authentication.vector = auth.vector
-#' # )
+#' dma.relief.friends <- followers_list_recursive(
+#'   "dominica_relief",
+#'   authentication.vector = auth.vector
+#' )
 #'
-#' # cat(
-#' #   paste(
-#' #     "@",
-#' #     sapply(dma.relief.friends[1:20],function(x) return(x$screen_name)),
-#' #     ": ",
-#' #     sapply(dma.relief.friends[1:20],function(x) return(x$description)),
-#' #     s# ep="",
-#' #     collapse="\n"
-#' #   )
-#' # )
-#'
+#' cat(
+#'   paste(
+#'     "@",
+#'     sapply(dma.relief.friends[1:20],function(x) return(x$screen_name)),
+#'     ": ",
+#'     sapply(dma.relief.friends[1:20],function(x) return(x$description)),
+#'     s# ep="",
+#'     collapse="\n"
+#'   )
+#' )
+#' }
 friends_list_recursive <- function(
   screen_name,
   user_id,
@@ -979,67 +995,83 @@ friends_list_recursive <- function(
     )
     user_id <- user.request$id_str
   }
-  repeat{
-    Sys.sleep(
-      max(
-        c(
-          0,
-          60-as.numeric(
-            difftime(
-              as.POSIXct(
-                Sys.time()
-              ),
-              last.query.time,
-              units = 'secs'
+  if(!user.request$protected && (user.request$friends_count > 0)){
+    repeat{
+      Sys.sleep(
+        max(
+          c(
+            0,
+            60-as.numeric(
+              difftime(
+                as.POSIXct(
+                  Sys.time()
+                ),
+                last.query.time,
+                units = 'secs'
+              )
             )
           )
         )
       )
-    )
-    request.result <- friends_list(
-      user_id = user_id[1],
-      authentication.vector = authentication.vector,
-      cursor=cursor,
-      count=200,
-      skip_status = NULL,
-      include_user_entities = NULL,
-      tweet_mode = tweet_mode
-    )
-    last.query.time <- as.POSIXct(Sys.time())
-    if(class(request.result) == "response"){
-      fails <- fails + 1
-      if(fails < 3){
-        warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+      request.result <- friends_list(
+        user_id = user_id[1],
+        authentication.vector = authentication.vector,
+        cursor=cursor,
+        count=200,
+        skip_status = NULL,
+        include_user_entities = NULL,
+        tweet_mode = tweet_mode
+      )
+      last.query.time <- as.POSIXct(Sys.time())
+      if(class(request.result) == "response"){
+        fails <- fails + 1
+        if(fails < 3){
+          warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        } else {
+          stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        }
       } else {
-        stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
-      }
-    } else {
-      fails <- 0
-  if(missing(data.connection)){
-        users <- c(users,request.result$users)
-      } else {
-        insert_users(
-          data.connection,
-          request.result$users,
-          ...
-        )
-        friends.ids <- sapply(request.result$users,function(x) return(x$id_str))
-        insert_friends(
-          data.connection,
-          user_id,
-          friends.ids
-        )
-      }
-      cursor <- request.result$next_cursor_str
-      if(cursor=="0"){
-        break
+        fails <- 0
+        if(missing(data.connection)){
+          users <- c(users,request.result$users)
+        } else {
+          if(length(request.result$users)>0){
+            insert_users(
+              data.connection,
+              request.result$users,
+              ...
+            )
+            friends.ids <- sapply(request.result$users,function(x) return(x$id_str))
+            insert_friends(
+              data.connection,
+              user_id,
+              friends.ids
+            )
+          }
+        }
+        cursor <- request.result$next_cursor_str
+        if(cursor=="0"){
+          break
+        }
       }
     }
-  }
-  if(missing(data.connection)){
-    return(users)
+    if(missing(data.connection)){
+      return(users)
+    } else {
+      return(user_id)
+    }
   } else {
-    return(user_id)
+    if(user.request$protected){
+      cat(sprintf("@%s account is protected.\n",user.request$screen_name))
+    }
+    if(user.request$friends_count==0){
+      cat(sprintf("@%s has no friends"))
+    }
+    if(missing(data.connection)){
+      return(NULL)
+    } else {
+      return(user_id)
+    }
   }
 }
 
@@ -1071,18 +1103,18 @@ friends_list_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # dma.followers <- followers_ids_recursive(
-#' #   "Nature_Island",
-#' #   authentication.vector = auth.vector
-#' # )
+#' dma.followers <- followers_ids_recursive(
+#'   "Nature_Island",
+#'   authentication.vector = auth.vector
+#' )
 #'
-#' # cat(
-#' #   dma.followers[1:20]
-#' # )
-#'
+#' cat(
+#'   dma.followers[1:20]
+#' )
+#' }
 followers_ids_recursive <- function(
   screen_name,
   user_id,
@@ -1113,66 +1145,82 @@ followers_ids_recursive <- function(
     )
     user_id <- user.request$id_str
   }
-  repeat{
-    Sys.sleep(
-      max(
-        c(
-          0,
-          60-as.numeric(
-            difftime(
-              as.POSIXct(
-                Sys.time()
-              ),
-              last.query.time,
-              units = 'secs'
+  if(!user.request$protected && (user.request$followers_count > 0)){
+    repeat{
+      Sys.sleep(
+        max(
+          c(
+            0,
+            60-as.numeric(
+              difftime(
+                as.POSIXct(
+                  Sys.time()
+                ),
+                last.query.time,
+                units = 'secs'
+              )
             )
           )
         )
       )
-    )
-    request.result <- followers_ids(
-      user_id = user_id[1],
-      authentication.vector = authentication.vector,
-      cursor = cursor,
-      stringify_ids = stringify_ids,
-      count = 5000
-    )
-    last.query.time <- as.POSIXct(Sys.time())
-    if(class(request.result) == "response"){
-      fails <- fails + 1
-      if(fails < 3){
-        warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+      request.result <- followers_ids(
+        user_id = user_id[1],
+        authentication.vector = authentication.vector,
+        cursor = cursor,
+        stringify_ids = stringify_ids,
+        count = 5000
+      )
+      last.query.time <- as.POSIXct(Sys.time())
+      if(class(request.result) == "response"){
+        fails <- fails + 1
+        if(fails < 3){
+          warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        } else {
+          stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        }
       } else {
-        stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
-      }
-    } else {
-      fails <- 0
-  if(missing(data.connection)){
-        users <- c(users,as.character(request.result$ids))
-      } else {
-        user_lookup_recursive(
-          user_id = request.result$ids,
-          data.connection = data.connection,
-          authentication.vector = authentication.vector,
-          tweet_mode = tweet_mode,
-          ...
-        )
-        insert_followers(
-          data.connection,
-          user_id,
-          request.result$ids
-        )
-      }
-      cursor <- request.result$next_cursor_str
-      if(cursor=="0"){
-        break
+        fails <- 0
+    if(missing(data.connection)){
+          users <- c(users,as.character(request.result$ids))
+        } else {
+          if(length(request.result$ids)>0){
+            user_lookup_recursive(
+              user_id = request.result$ids,
+              data.connection = data.connection,
+              authentication.vector = authentication.vector,
+              tweet_mode = tweet_mode,
+              ...
+            )
+            insert_followers(
+              data.connection,
+              user_id,
+              request.result$ids
+            )
+          }
+        }
+        cursor <- request.result$next_cursor_str
+        if(cursor=="0"){
+          break
+        }
       }
     }
-  }
-  if(missing(data.connection)){
-    return(users)
+    if(missing(data.connection)){
+      return(users)
+    } else {
+      return(user_id)
+    }
   } else {
-    return(user_id)
+    if(user.request$protected){
+      cat(sprintf("@%s account is protected.\n",user.request$screen_name))
+    }
+    if(user.request$followers_count==0){
+      cat(sprintf("@%s has no followers"))
+    }
+    if(missing(data.connection)){
+      return(NULL)
+    } else {
+      return(user_id)
+    }
   }
 }
 
@@ -1205,18 +1253,18 @@ followers_ids_recursive <- function(
 #' @export
 #' @examples
 #'
-#' ## Not run: authenticate
-#' # auth.vector <- authorize_IT()
+#' \dontrun{
+#' auth.vector <- authorize_IT()
 #'
-#' # dma.friends <- friends_ids_recursive(
-#' #   "Nature_Island",
-#' #   authentication.vector = auth.vector
-#' # )
+#' dma.friends <- friends_ids_recursive(
+#'   "Nature_Island",
+#'   authentication.vector = auth.vector
+#' )
 #'
-#' # cat(
-#' #   dma.friends[1:20]
-#' # )
-#'
+#' cat(
+#'   dma.friends[1:20]
+#' )
+#' }
 friends_ids_recursive <- function(
   screen_name,
   user_id,
@@ -1247,65 +1295,81 @@ friends_ids_recursive <- function(
     )
     user_id <- user.request$id_str
   }
-  repeat{
-    Sys.sleep(
-      max(
-        c(
-          0,
-          60-as.numeric(
-            difftime(
-              as.POSIXct(
-                Sys.time()
-              ),
-              last.query.time,
-              units = 'secs'
+  if(!user.request$protected && (user.request$friends_count > 0)){
+    repeat{
+      Sys.sleep(
+        max(
+          c(
+            0,
+            60-as.numeric(
+              difftime(
+                as.POSIXct(
+                  Sys.time()
+                ),
+                last.query.time,
+                units = 'secs'
+              )
             )
           )
         )
       )
-    )
-    request.result <- friends_ids(
-      user_id = user_id[1],
-      authentication.vector = authentication.vector,
-      cursor = cursor,
-      stringify_ids = stringify_ids,
-      count = 5000
-    )
-    last.query.time <- as.POSIXct(Sys.time())
-    if(class(request.result) == "response"){
-      fails <- fails + 1
-      if(fails < 3){
-        warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+      request.result <- friends_ids(
+        user_id = user_id[1],
+        authentication.vector = authentication.vector,
+        cursor = cursor,
+        stringify_ids = stringify_ids,
+        count = 5000
+      )
+      last.query.time <- as.POSIXct(Sys.time())
+      if(class(request.result) == "response"){
+        fails <- fails + 1
+        if(fails < 3){
+          warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        } else {
+          stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+        }
       } else {
-        stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
-      }
-    } else {
-      fails <- 0
-  if(missing(data.connection)){
-        users <- c(users,as.character(request.result$ids))
-      } else {
-        user_lookup_recursive(
-          user_id = request.result$ids,
-          data.connection = data.connection,
-          authentication.vector = authentication.vector,
-          tweet_mode = tweet_mode,
-          ...
-        )
-        insert_friends(
-          data.connection,
-          user_id,
-          request.result$ids
-        )
-      }
-      cursor <- request.result$next_cursor_str
-      if(cursor=="0"){
-        break
+        fails <- 0
+    if(missing(data.connection)){
+          users <- c(users,as.character(request.result$ids))
+        } else {
+          if(length(request.result$ids) > 0){
+            user_lookup_recursive(
+              user_id = request.result$ids,
+              data.connection = data.connection,
+              authentication.vector = authentication.vector,
+              tweet_mode = tweet_mode,
+              ...
+            )
+            insert_friends(
+              data.connection,
+              user_id,
+              request.result$ids
+            )
+          }
+        }
+        cursor <- request.result$next_cursor_str
+        if(cursor=="0"){
+          break
+        }
       }
     }
-  }
-  if(missing(data.connection)){
-    return(users)
+    if(missing(data.connection)){
+      return(users)
+    } else {
+      return(user_id)
+    }
   } else {
-    return(user_id)
+    if(user.request$protected){
+      cat(sprintf("@%s account is protected.\n",user.request$screen_name))
+    }
+    if(user.request$friends_count==0){
+      cat(sprintf("@%s has no friends"))
+    }
+    if(missing(data.connection)){
+      return(NULL)
+    } else {
+      return(user_id)
+    }
   }
 }
