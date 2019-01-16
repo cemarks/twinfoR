@@ -54,7 +54,7 @@ response <- twitter_request(
 cat(response$status,"\n",sep="")
 
 house.reps.obj <- httr::content(response)
-house.reps <- house.reps.obj$users,3
+house.reps <- house.reps.obj$users
 
 ### Check number of reps.  Should be close to number of house republicans
 cat(length(house.reps),"\n",sep="")
@@ -222,12 +222,12 @@ user.df <- rbind(
 
 ### Initialize the database
 
-t.con <- twitter_database(
+con <- twitter_database(
   "pol.sqlite",
   query.users.df = user.df
 )
 
-update_users(t.con)
+update_users(con)
 
 ### Get friends of each user
 ### THIS PROCESS WILL TAKE A ***LONG*** TIME.  
@@ -237,13 +237,13 @@ update_users(t.con)
 ### in ***roughly*** 10 hours.  This approximation assumes one query (<= 5000 friends) per user, with
 ### few exceptions.
 
-get_all_friends(t.con)
+get_all_friends(con)
 
 
 ### Database summary
 
-summarize_database(t.con)
+summarize_database(con)
 
 ### Disconnect from database
 
-DBI::dbDisconnect(t.con)
+DBI::dbDisconnect(con)

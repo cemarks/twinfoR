@@ -1,0 +1,317 @@
+---
+title: "US Politics--Large"
+author: "Christopher Marks"
+date: "2019-01-15"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{US Politics--Large}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+# US Politics--Large
+
+This vignette creates a Twitter database containing user accounts of the members of the US Congress and the US President. It then collects their Tweets and performs some basic analysis. This vignette divides into three parts:
+
+1. Database configuration and initialization
+1. Status Collection
+1. Analysis
+
+**Very Important Note:** Because this vignette collects the relationships and timelines of over 500 politicians, and because
+politicians tend to be prolific Tweeters, the initial calls to
+the collection functions can take a *very* long time to complete.
+In particular, collecting all of the 500+ users' friends will take approximately 15-20 hours.  Collection of all of the users' timelines, and performing sentiment analysis on them, will likely take several days.  
+
+For an abbreviated version of this vignette, see the *US Politics--Small* vignette which goes through exactly the same process, but randomly samples only a small number of politicians for the analysis.  
+
+## Package Import
+
+Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
+
+```r
+# install.packages("twinfoR.zip",repos=NULL,type="binary")
+library(twinfoR)
+```
+
+
+
+# PART I: Database Initialization
+
+## Some important initializations
+
+### Initialize database
+
+We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the politician database.
+
+
+
+
+```r
+dir.create("~/USPol_large",showWarnings=FALSE)
+setwd("~/USPol_large")
+con <- twitter_database(
+  "USPol_large.sqlite"
+)
+```
+
+### Authenticate to Twitter API
+
+We'll use the [INFORM-Tutorial](http://zlisto.scripts.mit.edu/informs_tutorial/tutorial.html) Twitter Application.  Alternatively, you can supply your own application credentials using the `authorize_app` function.
+
+*You will need a Twitter Account to continue!*  If you don't have one, you can easily create one on the [Twitter](https://twitter.com) website.  If you do not have a Twitter account and do not wish to make one, *this package will be of very limited use to you*.  
+
+I recommend logging onto Twitter in your Browser before running this line.  Either way, be careful not to hit <Enter> immediately after running it, for example by copying and pasting the whole line with the 'newline' character into an R console. 
+
+
+```r
+auth.vector <- authorize_IT()
+```
+
+Run this line, log into Twitter, and get the authentication PIN.  If you get an error message from Twitter saying the URL is expired, the probable cause is that you hit <Enter> before entering the PIN, possibly when you copied and pasted the command.
+
+It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
+
+
+```r
+save(auth.vector,"auth_vector.RData")
+```
+
+
+
+## Creation of User data.frame
+
+In practice, construction of the list of Twitter Users for collection and analysis would normally occur without using the functions in this package.  In this case, however, we are going to analyze the content produced by US Politicians.  Fortunately, we do not have to spend time manually looking up the Twitter Accounts of the individual members of Congress; the US political parties keep these accounts in Twitter lists.  These lists might not be up-to-date, but we are going to assume they are accurate enough for our purposes.  These lists are
+
+* [House Democrats](https://twitter.com/HouseDemocrats/lists/house-democrats) hosted by @HouseDemocrats
+* [Senate Democrats](https://twitter.com/SenateDems/lists/senatedemocrats) hosted by @SenateDems
+* [House Republicans](https://twitter.com/HouseGOP/lists/house-republicans) hosted by @HouseGOP
+* [Senate Republicans](https://twitter.com/SenateGOP/lists/senaterepublicans) hosted by @SenateGOP
+
+This is a good opportunity to show the workhorse function of the `twinfoR` package: `twitter_request`.  While typical use of this package will not require direct calls to `twitter_request`, this function is called by all of the functions provided by this package that access the Twitter API.
+
+We want to get the members of an existing Twitter list.  This package does not provide a specific method for that purpose, but there is a [Twitter API endpoint](https://developer.twitter.com/en/docs/accounts-and-users/create-manage-lists/api-reference/get-lists-members) that provides this service. Therefore, we use the general `twitter_request` function.
+
+Note: to best understand the code below, you should read the documentation for the `twitter_request` function *and* the `get-lists-members` [Twitter API endpoint](https://developer.twitter.com/en/docs/accounts-and-users/create-manage-lists/api-reference/get-lists-members) documentation.  At then end we should have four lists of Twitter user objects: `house.dems`, `senate.dems`, `house.reps`, `senate.reps`, as well as the official user account of the US President (@POTUS).
+
+
+```r
+# Set the URL and count
+url <- 'https://api.twitter.com/1.1/lists/members.json'
+count <- 5000
+
+
+# House Democrats
+slug <- 'house-democrats'
+owner_screen_name <- 'HouseDemocrats'
+response <- twitter_request(
+  auth.vector,
+  url,
+  query.param.list = list(
+    slug = slug,
+    owner_screen_name = owner_screen_name,
+    count=count
+  )
+)
+# Check for 200 status
+if(response$status==200){
+  house.dems.obj <- httr::content(response)
+  house.dems <- house.dems.obj$users
+} else {
+  cat(paste("API request failed; status ",response$status,"\n",sep=""))
+}
+
+
+# Senate Democrats
+slug <- 'SenateDemocrats'
+owner_screen_name <- 'SenateDems'
+response <- twitter_request(
+  auth.vector,
+  url,
+  query.param.list = list(
+    slug = slug,
+    owner_screen_name = owner_screen_name,
+    count=count
+  )
+)
+if(response$status==200){
+  senate.dems.obj <- httr::content(response)
+  senate.dems <- senate.dems.obj$users
+} else {
+  cat(paste("API request failed; status ",response$status,"\n",sep=""))
+}
+
+
+# House Republicans
+slug <- 'house-republicans'
+owner_screen_name <- 'houseGOP'
+response <- twitter_request(
+  auth.vector,
+  url,
+  query.param.list = list(
+    slug = slug,
+    owner_screen_name = owner_screen_name,
+    count=count
+  )
+)
+if(response$status==200){
+  house.reps.obj <- httr::content(response)
+  house.reps <- house.reps.obj$users
+} else {
+  cat(paste("API request failed; status ",response$status,"\n",sep=""))
+}
+
+
+# Senate Republicans
+slug <- 'SenateRepublicans'
+owner_screen_name <- 'SenateGOP'
+response <- twitter_request(
+  auth.vector,
+  url,
+  query.param.list = list(
+    slug = slug,
+    owner_screen_name = owner_screen_name,
+    count=count
+  )
+)
+
+if(response$status==200){
+  senate.reps.obj <- httr::content(response)
+  senate.reps <- senate.reps.obj$users
+} else {
+  cat(paste("API request failed; status ",response$status,"\n",sep=""))
+}
+
+
+# President
+pres <- user_show('potus')
+```
+
+Now that we have the lists, we can put them into a `query_user` data.frame structured as described in the `twitter_database` function documentation.  Then, we add this table to the Twitter database connection (`con`).
+
+
+```r
+house.reps.df <- data.frame(
+  user_id = sapply(
+    house.reps,
+    function(x) return(x$id_str)
+  ),
+  screen_name = sapply(
+    house.reps,
+    function(x) return(x$screen_name)
+  ),
+  party = rep('republican',length(house.reps)),
+  body = rep('house',length(house.reps)),
+  stringsAsFactors = FALSE
+)
+senate.reps.df <- data.frame(
+  user_id = sapply(
+    senate.reps,
+    function(x) return(x$id_str)
+  ),
+  screen_name = sapply(
+    senate.reps,
+    function(x) return(x$screen_name)
+  ),
+  party = rep('republican',length(senate.reps)),
+  body = rep('senate',length(senate.reps)),
+  stringsAsFactors = FALSE
+)
+house.dems.df <- data.frame(
+  user_id = sapply(
+    house.dems,
+    function(x) return(x$id_str)
+  ),
+  screen_name = sapply(
+    house.dems,
+    function(x) return(x$screen_name)
+  ),
+  party = rep('democrat',length(house.dems)),
+  body = rep('house',length(house.dems)),
+  stringsAsFactors = FALSE
+)
+senate.dems.df <- data.frame(
+  user_id = sapply(
+    senate.dems,
+    function(x) return(x$id_str)
+  ),
+  screen_name = sapply(
+    senate.dems,
+    function(x) return(x$screen_name)
+  ),
+  party = rep('democrat',length(senate.dems)),
+  body = rep('senate',length(senate.dems)),
+  stringsAsFactors = FALSE
+)
+
+pres.df <- data.frame(
+  user_id = pres$id_str,
+  screen_name = pres$screen_name,
+  party = 'republican', # For now!!!
+  body = 'whitehouse',
+  stringsAsFactors = FALSE
+)
+
+user.df <- rbind(
+  house.reps.df,
+  senate.reps.df,
+  house.dems.df,
+  senate.dems.df,
+  pres.df
+)
+
+# Upload this user data.frame to the Twitter Database
+
+upload_query_users(con,user.df)
+#> [1] 561
+```
+
+While we could upload the Twitter user objects we already collected, we'll just use the `update_users` function to go through the `query_users` table in the database and collect each user profile from the Twitter API to insert into the `user` table of the database.
+
+
+```r
+update_users(con)
+```
+
+## Get Relationships
+
+Now that we have initialized a Twitter database with a list of US Politician Twitter accounts, we can collect their connections.  Because politicians often have many followers, we are not going to bother collecting these.  Rather, we are interested in whom the politicians are following, as each of these 'friends' represents a concious choice on the part of the politician.
+
+**Note: this code takes a long time to execute.** Expect a 15-20 hour run time.  This prolonged collection time results from query limits imposed by Twitter on the REST API.  The functions in this package include delays between queries to ensure these rate limits are not exceeded.  However, attempts to run multiple collection functions in parallel processes using the same authentication credentials runs a high risk of violating the API rate limits, which *will* result in HTTP errors.
+
+
+```r
+# THIS TAKES A LONG TIME.  You have been warned.
+get_all_friends(con)
+```
+
+## Summarize the database
+
+To wrap up part I, we can view a summary of what is in our Twitter database.
+
+
+
+
+```r
+summarize_database(con)
+#> Query users: 558
+#> User categories:
+#> party
+#> body
+#> since_id
+#> friends_collected
+#> followers_collected
+#> No query text table.
+#> Users: 558
+#> Statuses: 0
+#> Unique user mentions: 0
+#> Unique hashtags: 0
+#> Unique URLs: 0
+#> Total Images: 0
+#> Unique Images: 0
+#> Total relationships: 1095918
+#> Database file size: 62MB
+```
+
+
