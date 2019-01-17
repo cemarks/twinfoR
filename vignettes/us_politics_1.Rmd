@@ -1,10 +1,10 @@
 ---
-title: "US Politics (Full) Part I"
+title: "US Politics Part I"
 author: "Christopher Marks"
 date: "`{r} Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{US Politics--Large}
+  %\VignetteIndexEntry{US Politics Part I}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,16 +16,23 @@ knitr::opts_chunk$set(
 )
 ```
 
+# PART I: Initialize and Collect User Timelines & Friends
+
 This is the first part of a two-part vignette designed to collect and analyze Twitter posts from members of the US Congress and the US President. This part of the vignette carries out the database initialization and initial status collections.
 
-**Very Important Note:** Because this vignette collects the relationships and timelines of over 500 politicians, and because
-politicians tend to be prolific Tweeters, the initial calls to
-the collection functions can take a *very* long time to complete.
-In particular, collecting all of the 500+ users' friends will take approximately **15-20 hours**.  Collection of all of the users' timelines, and performing sentiment analysis on them, will likely take **several days**.  
+**Very Important Note:** This vignette is set up to collect the relationships and timelines of over 500 politicians.  Because people in this profession tend to be prolific Tweeters, the initial calls to the collection functions can take a *very* long time to complete. In particular, collecting all of the 500+ users' friends will take approximately **15-20 hours**.  Collection of all of the users' timelines, and performing sentiment analysis on them, will likely take **several days**.  
 
-After runnint this part of the vignette, the analysis in the second part of the vignette will take considerably less time.
+For an abbreviated version of this vignette, you can perform the same collection and analysis on a small sample of the politicians.  Code to perform this sampling is included in this vignette, but is commented out.
 
-For an abbreviated version of this vignette, see the *US Politics--Small* vignette which goes through exactly the same process, but randomly samples only a small number of politicians for the analysis.  
+The second part of this vignette performs updates the database and analyzes the results.  
+
+## Set Java Options
+
+The sentiment analysis we conduct during Twitter collection tends to require more Java heap space than the default.  Therefore, we start by allocating more space.
+
+```{r}
+options(java.parameters = "-Xmx1024m")
+````
 
 # Package Import
 
@@ -46,14 +53,14 @@ devtools::load_all("~/Projects/twinfoR")
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the politician database.
 
 ```{r echo=FALSE, results="hide"}
-file.remove("~/USPol_large/USPol_large.sqlite")
+file.remove("~/USPol/USPol.sqlite")
 ```
 
 ```{r}
-dir.create("~/USPol_large",showWarnings=FALSE)
-setwd("~/USPol_large")
+dir.create("~/USPol",showWarnings=FALSE)
+setwd("~/USPol")
 con <- twitter_database(
-  "USPol_large.sqlite"
+  "USPol.sqlite"
 )
 ```
 
@@ -78,7 +85,7 @@ save(auth.vector,"auth_vector.RData")
 ```
 
 ```{r echo=FALSE}
-load("~/USPol_large/auth_vector.RData")
+load("~/USPol/auth_vector.RData")
 ```
 
 # Creation of User data.frame
@@ -188,62 +195,64 @@ if(response$status==200){
 pres <- user_show('potus')
 ```
 
-Now that we have the lists, we can put them into a `query_user` data.frame structured as described in the `twitter_database` function documentation.  Then, we add this table to the Twitter database connection (`con`).
+## Sampling
+
+If you want this script to run in a short amount of time, take a small sample from the results.  Sampling three from each set collected, and including the President (13 politicians in all) will keep the total collection time to about an hour. 
+
+**If you want to reduce collection time, sample using code similar to the following**
+
+```{r eval=FALSE}
+# Not run
+sample.size <- 3
+house.dems <- sample(house.dems,sample.size)
+senate.dems <- sample(senate.dems,sample.size)
+house.reps <- sample(house.reps,sample.size)
+senate.reps <- sample(senate.reps,sample.size)
+```
+
+Now that we have the finalized lists of politicians we are going to collect, we can put them into a `query_user` data.frame structured as described in the `twitter_database` function documentation.  Then, we add this table to the Twitter database connection (`con`).
 
 ```{r}
+with(
+house.reps,
 house.reps.df <- data.frame(
-  user_id = sapply(
-    house.reps,
-    function(x) return(x$id_str)
-  ),
-  screen_name = sapply(
-    house.reps,
-    function(x) return(x$screen_name)
-  ),
-  party = rep('republican',length(house.reps)),
-  body = rep('house',length(house.reps)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('republican',length(house.reps)),
+   body = rep('house',length(house.reps)),
+   stringsAsFactors = FALSE
+  )
 )
+with(
+senate.reps,
 senate.reps.df <- data.frame(
-  user_id = sapply(
-    senate.reps,
-    function(x) return(x$id_str)
-  ),
-  screen_name = sapply(
-    senate.reps,
-    function(x) return(x$screen_name)
-  ),
-  party = rep('republican',length(senate.reps)),
-  body = rep('senate',length(senate.reps)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('republican',length(senate.reps)),
+   body = rep('senate',length(senate.reps)),
+   stringsAsFactors = FALSE
+  )
 )
+with(
+house.dems,
 house.dems.df <- data.frame(
-  user_id = sapply(
-    house.dems,
-    function(x) return(x$id_str)
-  ),
-  screen_name = sapply(
-    house.dems,
-    function(x) return(x$screen_name)
-  ),
-  party = rep('democrat',length(house.dems)),
-  body = rep('house',length(house.dems)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('democrat',length(house.dems)),
+   body = rep('house',length(house.dems)),
+   stringsAsFactors = FALSE
+  )
 )
+with(
+senate.dems,
 senate.dems.df <- data.frame(
-  user_id = sapply(
-    senate.dems,
-    function(x) return(x$id_str)
-  ),
-  screen_name = sapply(
-    senate.dems,
-    function(x) return(x$screen_name)
-  ),
-  party = rep('democrat',length(senate.dems)),
-  body = rep('senate',length(senate.dems)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('democrat',length(senate.dems)),
+   body = rep('senate',length(senate.dems)),
+   stringsAsFactors = FALSE
+  )
 )
-
 pres.df <- data.frame(
   user_id = pres$id_str,
   screen_name = pres$screen_name,
@@ -276,20 +285,33 @@ update_users(con)
 
 Now that we have initialized a Twitter database with a list of US Politician Twitter accounts, we can collect their connections.  Because politicians often have many followers, we are not going to bother collecting these.  Rather, we are interested in whom the politicians are following, as each of these 'friends' represents a concious choice on the part of the politician.
 
-**Note: this code takes a long time to execute.** Expect a 15-20 hour run time.  This prolonged collection time results from query limits imposed by Twitter on the REST API.  The functions in this package include delays between queries to ensure these rate limits are not exceeded.  However, attempts to run multiple collection functions in parallel processes using the same authentication credentials runs a high risk of violating the API rate limits, which *will* result in HTTP errors.
+**Note: this code takes a long time to execute.** Expect a 15-20 hour run time on the full U.S. Congress.  If you only kept a small sample, this time will be considerably shorter (typically 1.5-2 minutes per user).  The prolonged collection times result from query limits imposed by Twitter on the REST API.  The functions in this package include delays between queries to ensure these rate limits are not exceeded.  However, attempts to run multiple collection functions in parallel processes using the same authentication credentials runs a high risk of violating the API rate limits, which *will* result in HTTP errors.
 
 ```{r eval=FALSE}
-# THIS TAKES A LONG TIME.  You have been warned.
+# THIS TAKES A LONG TIME (15-20 hours) ON THE FULL SET.  You have been warned.
 get_all_friends(con)
+```
+
+# Get Statuses
+
+Next, we collect all of the posts from each politician, going back to up to 3200 Tweets.  **As in the previous step, this process can take a long time.**  During collection, we will perform sentiment analysis on the text of each Tweet.  As a result of the processing time and the Twitter API rate limits, expect this collection to take **several days** on the full data set.  Once all of the statuses have been collected, future updates will take much less time as they will only collect new Twitter posts that have not yet been collected.
+
+Setting up a sink to the NULL device prevents package `RSentiment` from outputing each status text to the screen.  For large collections, this is recommended.
+
+```{r eval = FALSE}
+# THIS TAKES A LONG TIME (2-3 days) ON THE FULL SET.  You have been warned.
+sink("/dev/null")
+update_user_timelines(con)
+sink()
 ```
 
 # Summarize the database
 
-To wrap up part I, we can view a summary of what is in our Twitter database.
+To wrap up part I, we can view a summary of what is in our Twitter database.  Note that many Tweets and users have been collected due to embedded retweets.
 
 ```{r echo=FALSE}
 DBI::dbDisconnect(con)
-con <- DBI::dbConnect(RSQLite::SQLite(),"~/USPol_large/pol_nostatus.sqlite")
+con <- DBI::dbConnect(RSQLite::SQLite(),"~/USPol/pol.sqlite")
 ```
 
 ```{r}
