@@ -29,12 +29,19 @@ We begin by allocating additional memory for RJava to support sentiment analysis
 
 This code assumes the `auth.vector` from Part I is saved.  If it isn't, reauthenticate using the `authorize_IT()` function as done in Part I.
 
-```{r}
+```{r eval = FALSE}
 options(java.parameters = "-Xmx1024m")
-# library(twinfoR)
-devtools::load_all("~/Projects/twinfoR")
+library(twinfoR)
 setwd("~/USPol")
 con <- twitter_database("USPol.sqlite")
+load("auth_vector.RData") 
+```
+
+```{r echo = FALSE, message=FALSE}
+options(java.parameters = "-Xmx1024m")
+devtools::load_all("~/Projects/twinfoR")
+setwd("~/USPol")
+con <- twitter_database("pol.sqlite")
 load("auth_vector.RData") 
 ```
 
@@ -42,11 +49,17 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  Again, we divert output to the NULL device.
 
-```{r eval=FALSE}
-sink("/dev/null")
-update_user_timelines(con)
-sink()
-
+```{r eval=FALSE, message=FALSE}
+# sink("/dev/null") # Recommended to suppress Rsentiment output, but
+## might not work on all platforms.
+update_user_timelines(
+  con,
+  calc.Rsentiment = TRUE,
+  calc.syu = TRUE
+)
+# sink()
+```
+```{r}
 # Summarize database
 summarize_database(con)
 ```
@@ -59,24 +72,25 @@ This section goes quickly through the analysis capability available in the `twin
 
 ```{r}
 tophashtags.dem <- top_hashtags(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'democrat'",
-  excel.export.file = "thtd.xlsx"
+  where.criteria = "query_users.party = 'democrat'"
 )
+names(tophashtags.dem) = c("Dem.Hashtag","Count")
 
 tophashtags.rep <- top_hashtags(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'republican'",
-  excel.export.file = "thtr.xlsx"
+  where.criteria = "query_users.party = 'republican'"
 )
+names(tophashtags.rep) = c("Rep.Hashtag","Count")
 
 knitr::kable(
   list(
     tophashtags.dem,
     tophashtags.rep
-  )
+  ),
+  caption = "Top Hashtags Used by Democrats and Republicans"
 )
 ```
 
@@ -84,78 +98,233 @@ knitr::kable(
 
 ```{r}
 topusermentions.dem <- top_usermentions(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'democrat'",
-  excel.export.file = "tumd.xlsx"
+  where.criteria = "query_users.party = 'democrat'"
 )
 
 topusermentions.rep <- top_usermentions(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'republican'",
-  excel.export.file = "tumr.xlsx"
+  where.criteria = "query_users.party = 'republican'"
 )
+
+
+knitr::kable(
+  data.frame(
+    Screen_Name = topusermentions.dem$user_mention_screen_name,
+    Name = topusermentions.dem$user_mention_name,
+    Mentions = topusermentions.dem$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Democrat User Mentions"
+)
+knitr::kable(
+  data.frame(
+    Screen_Name = topusermentions.rep$user_mention_screen_name,
+    Name = topusermentions.rep$user_mention_name,
+    Mentions = topusermentions.rep$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Republican User Mentions"
+)
+```
+
+## Top URLs posted by democrats and republicans in the last week
+
+```{r}
+topurls.dem <- top_urls(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_users.party = 'democrat'"
+)
+
+topurls.rep <- top_urls(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_users.party = 'republican'"
+)
+
 
 knitr::kable(
   list(
-    topusermentions.dem
-    topusermentions.rep
-  )
+    Democrat = data.frame(
+      Dem.URL = topurls.dem$extended_url,
+      Count = topurls.dem$n,
+      stringsAsFactors = FALSE
+    ),
+    Republican = data.frame(
+      Rep.URL = topurls.rep$extended_url,
+      Count = topurls.rep$n,
+      stringsAsFactors = FALSE
+    )
+  ),
+  caption = "Top Democrat and Republican URLs"
 )
 ```
 
 ### Top media from democrats and republicans in the last week
 
-```{r}
+```{r fig.width = 4, fig.height = 4}
 topmedia.dem <- top_media(
-  t.con,
-  start.date = Sys.Date()-7,
+  con,
+  start.date = Sys.Date()-14,
   where.criteria = "query_users.party = 'democrat'",
-  media.file.prefix = "DEM",
-  excel.export.file = "tmd.xlsx"
+  save.to.file = FALSE
 )
 
 topmedia.rep <- top_media(
-  t.con,
-  start.date = Sys.Date()-7,
+  con,
+  start.date = Sys.Date()-14,
   where.criteria = "query_users.party = 'republican'",
-  media.file.prefix = "REP",
-  excel.export.file = "tmr.xlsx"
+  save.to.file = FALSE
 )
 
 knitr::kable(
   list(
-    topmedia.dem
-    topmedia.rep
+    data.frame(
+      Dem.image_url = topmedia.dem$media_url,
+      count = topmedia.dem$n,
+      stringsAsFactors = FALSE
+    ),
+    data.frame(
+      Rep.image_url = topmedia.rep$media_url,
+      count = topmedia.rep$n,
+      stringsAsFactors = FALSE
+    )
+  ),
+  caption = "Top Media Posted by Democrats and Republicans"
+)
+
+## Top Dem Image (Not Run)
+
+# status_media(
+#   topmedia.dem[1,],
+#   con, 
+#   update.media.b64 = FALSE,
+#   display.image = TRUE
+# )
+
+## Top Rep Image (Not Run)
+
+# status_media(
+#   topmedia.dem[1,],
+#   con,
+#   update.media.b64 = FALSE,
+#   display.image = TRUE
+# )
+```
+
+```{r echo = FALSE}
+dem.split <- strsplit(topmedia.dem$media_url[1],".",fixed=TRUE)[[1]]
+dem.ext <- dem.split[length(dem.split)]
+if(tolower(dem.ext) %in% c("jpg","jpeg")){
+  dem.media.type <- "jpeg"
+} else if(tolower(dem.ext) %in% c("tif","tiff")){
+  dem.media.type <- "tiff"
+} else {
+  dem.media.type <- "png"
+}
+rep.split <- strsplit(topmedia.rep$media_url[1],".",fixed=TRUE)[[1]]
+rep.ext <- rep.split[length(rep.split)]
+if(tolower(rep.ext) %in% c("jpg","jpeg")){
+  rep.media.type <- "jpeg"
+} else if(tolower(rep.ext) %in% c("tif","tiff")){
+  rep.media.type <- "tiff"
+} else {
+  rep.media.type <- "png"
+}
+dem.b64 <- DBI::dbGetQuery(
+  con,
+  sprintf(
+    "SELECT img_b64 FROM media WHERE media_id = '%s' LIMIT 1;",
+    topmedia.dem$media_id[1]
+  )
+)$img_b64[1]
+rep.b64 <- DBI::dbGetQuery(
+  con,
+  sprintf(
+    "SELECT img_b64 FROM media WHERE media_id = '%s' LIMIT 1;",
+    topmedia.rep$media_id[1]
+  )
+)$img_b64[1]
+knitr::asis_output(
+  htmltools::htmlPreserve(
+    paste(
+      "\n",
+      "<div>\n",
+      "<table>\n",
+      "<tr>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/%s;base64,%s\" alt=\"Dem Image\"/>\n",
+        dem.media.type,
+        dem.b64
+      ),
+      "</td>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/%s;base64,%s\" alt=\"Rep Image\"/>\n",
+        rep.media.type,
+        rep.b64
+      ),
+      "</td>\n",
+      "</tr>\n",
+      "<tr>\n",
+      "<td align = \"center\">\n",
+      "Top Democrat Image\n",
+      "</td>",
+      "<td align = \"center\">\n",
+      "Top Republican Image\n",
+      "</td>\n",
+      "</tr>\n",
+      "</table>\n",
+      "</div>\n"
+    )
   )
 )
 ```
 
-These images are saved and can be rendered.
-
-[Top Democrat Image](./DEMTopImg-1.png) [Top Republican Image](./REPTopImg-1.png)
+The `top_media` and `status_media` have many options for saving and rendering images.  See documentation for details.
 
 ### Top tweeters democrats and republicans in the last week
 
 ```{r}
 toptweeters.dem <- top_tweeters(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'democrat'"
 )
 
 toptweeters.rep <- top_tweeters(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican'"
 )
 
+toptweeters.dem$description <- gsub("\n"," -- ",toptweeters.dem$description)
+toptweeters.dem$location <- gsub("\n"," -- ",toptweeters.dem$location)
+toptweeters.rep$description <- gsub("\n"," -- ",toptweeters.rep$description)
+toptweeters.rep$location <- gsub("\n"," -- ",toptweeters.rep$location)
 knitr::kable(
-  list(
-    toptweeters.dem
-    toptweeters.rep
-  )
+  data.frame(
+    Name = toptweeters.dem$name,
+    Location = toptweeters.dem$location,
+    Description = toptweeters.dem$description,
+    Tweets = toptweeters.dem$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Top Democrat Tweeters"
+)
+knitr::kable(
+  data.frame(
+    Name = toptweeters.rep$name,
+    Location = toptweeters.rep$location,
+    Description = toptweeters.rep$description,
+    Tweets = toptweeters.rep$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Top Republican Tweeters"
 )
 ```
 
@@ -163,24 +332,45 @@ knitr::kable(
 
 ```{r}
 mostliked.dem <- most_liked(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'democrat'",
-  excel.export.file = "mld.xlsx"
+  where.criteria = "query_users.party = 'democrat'"
 )
 
 mostliked.rep <- most_liked(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'republican'",
-  excel.export.file = "mlr.xlsx"
+  where.criteria = "query_users.party = 'republican'"
 )
 
+# For nice Markdown rendering
+mostliked.dem$description <- gsub("\n"," -- ",mostliked.dem$description)
+mostliked.dem$location <- gsub("\n"," -- ",mostliked.dem$location)
+mostliked.dem$text <- gsub("\n"," -- ",mostliked.dem$text)
+mostliked.dem$name <- gsub("\n"," -- ",mostliked.dem$name)
+mostliked.rep$description <- gsub("\n"," -- ",mostliked.rep$description)
+mostliked.rep$location <- gsub("\n"," -- ",mostliked.rep$location)
+mostliked.rep$text <- gsub("\n"," -- ",mostliked.rep$text)
+mostliked.rep$name <- gsub("\n"," -- ",mostliked.rep$name)
 knitr::kable(
-  list(
-    mostliked.dem
-    mostliked.rep
-  )
+  data.frame(
+    Name = mostliked.dem$name,
+    Created = mostliked.dem$created_at,
+    Likes = mostliked.dem$favorite_count,
+    Text = mostliked.dem$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Liked Democrat Tweets"
+)
+knitr::kable(
+  data.frame(
+    Name = mostliked.rep$name,
+    Created = mostliked.rep$created_at,
+    Likes = mostliked.rep$favorite_count,
+    Text = mostliked.rep$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Liked Republican Tweets"
 )
 ```
 
@@ -189,23 +379,45 @@ knitr::kable(
 
 ```{r}
 mostretweeted.dem <- most_retweeted(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'democrat'"
 )
 
 mostretweeted.rep <- most_retweeted(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'republican'",
-  excel.export.file = "mrr.xlsx"
+  where.criteria = "query_users.party = 'republican'"
 )
 
+# For nice Markdown rendering
+mostretweeted.dem$description <- gsub("\n"," -- ",mostretweeted.dem$description)
+mostretweeted.dem$location <- gsub("\n"," -- ",mostretweeted.dem$location)
+mostretweeted.dem$text <- gsub("\n"," -- ",mostretweeted.dem$text)
+mostretweeted.dem$name <- gsub("\n"," -- ",mostretweeted.dem$name)
+mostretweeted.rep$description <- gsub("\n"," -- ",mostretweeted.rep$description)
+mostretweeted.rep$location <- gsub("\n"," -- ",mostretweeted.rep$location)
+mostretweeted.rep$text <- gsub("\n"," -- ",mostretweeted.rep$text)
+mostretweeted.rep$name <- gsub("\n"," -- ",mostretweeted.rep$name)
 knitr::kable(
-  list(
-    mostretweeted.dem
-    mostretweeted.rep
-  )
+  data.frame(
+    Name = mostretweeted.dem$name,
+    Created = mostretweeted.dem$created_at,
+    Retweet_Count = mostretweeted.dem$retweet_count,
+    Text = mostretweeted.dem$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Retweeted Democrat Tweets"
+)
+knitr::kable(
+  data.frame(
+    Name = mostretweeted.rep$name,
+    Created = mostretweeted.rep$created_at,
+    Retweet_Count = mostretweeted.rep$retweet_count,
+    Text = mostretweeted.rep$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Retweeted Republican Tweets"
 )
 ```
 
@@ -214,23 +426,45 @@ knitr::kable(
 
 ```{r}
 mostpopRT.dem <- most_popular_RT_in_sample(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'democrat'",
-
+  where.criteria = "query_users.party = 'democrat'"
 )
 
 mostpopRT.rep <- most_popular_RT_in_sample(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican'"
 )
 
+# For nice Markdown rendering
+mostpopRT.dem$description <- gsub("\n"," -- ",mostpopRT.dem$description)
+mostpopRT.dem$location <- gsub("\n"," -- ",mostpopRT.dem$location)
+mostpopRT.dem$text <- gsub("\n"," -- ",mostpopRT.dem$text)
+mostpopRT.dem$name <- gsub("\n"," -- ",mostpopRT.dem$name)
+mostpopRT.rep$description <- gsub("\n"," -- ",mostpopRT.rep$description)
+mostpopRT.rep$location <- gsub("\n"," -- ",mostpopRT.rep$location)
+mostpopRT.rep$text <- gsub("\n"," -- ",mostpopRT.rep$text)
+mostpopRT.rep$name <- gsub("\n"," -- ",mostpopRT.rep$name)
 knitr::kable(
-  list(
-    mostpopRT.dem
-    mostpopRT.rep
-  )
+  data.frame(
+    Name = mostpopRT.dem$name,
+    Created = mostpopRT.dem$created_at,
+    Dem_Retweets = mostpopRT.dem$n,
+    Text = mostpopRT.dem$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Popular Retweets Among Democrats"
+)
+knitr::kable(
+  data.frame(
+    Name = mostpopRT.rep$name,
+    Created = mostpopRT.rep$created_at,
+    Rep_Retweets = mostpopRT.rep$n,
+    Text = mostpopRT.rep$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Popular Retweets Among Republicans"
 )
 ```
 
@@ -241,39 +475,64 @@ Note: this metric is of dubious value.  See documentation.
 
 ```{r}
 mostreach.dem <- most_reach(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'democrat'"
 )
 
 mostreach.rep <- most_reach(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican'"
 )
 
+# For nice Markdown rendering
+mostreach.dem$description <- gsub("\n"," -- ",mostreach.dem$description)
+mostreach.dem$location <- gsub("\n"," -- ",mostreach.dem$location)
+mostreach.dem$text <- gsub("\n"," -- ",mostreach.dem$text)
+mostreach.dem$name <- gsub("\n"," -- ",mostreach.dem$name)
+mostreach.rep$description <- gsub("\n"," -- ",mostreach.rep$description)
+mostreach.rep$location <- gsub("\n"," -- ",mostreach.rep$location)
+mostreach.rep$text <- gsub("\n"," -- ",mostreach.rep$text)
+mostreach.rep$name <- gsub("\n"," -- ",mostreach.rep$name)
 knitr::kable(
-  list(
-    mostreach.dem
-    mostreach.rep
-  )
+  data.frame(
+    Name = mostreach.dem$name,
+    Created = mostreach.dem$created_at,
+    Reach = mostreach.dem$n,
+    Text = mostreach.dem$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Democrat Tweets with Most 'Reach'"
+)
+knitr::kable(
+  data.frame(
+    Name = mostreach.rep$name,
+    Created = mostreach.rep$created_at,
+    Reach = mostreach.rep$n,
+    Text = mostreach.rep$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Republican Tweets with Most 'Reach'"
 )
 ```
 
 
 ### Word clouds 
 
-```{r fig.width=3,fig.height=3}
+```{r fig.width=7,fig.height=7,message=FALSE,warning=FALSE,results="hold"}
 wordcloud_plot(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'democrat'"
+  where.criteria = "query_users.party = 'democrat'",
+  caption = "Democrats"
 )
 
 wordcloud_plot(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
-  where.criteria = "query_users.party = 'republican'"
+  where.criteria = "query_users.party = 'republican'",
+  caption = "Republicans"
 )
 ```
 
@@ -283,7 +542,7 @@ Note these are saved to files.
 
 ```{r fig.width=3,fig.height=3}
 sentiment_plots(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'democrat'",
   file.name.prefix = "Dem",
@@ -291,22 +550,77 @@ sentiment_plots(
 )
 
 sentiment_plots(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican'",
   file.name.prefix = "Rep",
   caption = "Republicans"
 )
 ```
-[Absolute Democrat Sentiment](Dem_sentiment-barplot.png) [Relative Democrat Sentiment](Dem_sentiment-lineplot.png)
 
-[Absolute Republican Sentiment](Rep_sentiment-barplot.png) [Relative Republican Sentiment](Rep_sentiment-lineplot.png)
+```{r echo=FALSE, fig.width=3, fig.height=3}
+knitr::asis_output(
+  htmltools::htmlPreserve(
+    paste(
+      "\n",
+      "<div>\n",
+      "<table>\n",
+      "<tr>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/png;base64,%s\" alt=\"Dem Image\"/>\n",
+        base64enc::base64encode("Dem_sentiment-barplot.png")
+      ),
+      "</td>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/png;base64,%s\" alt=\"Rep Image\"/>\n",
+        base64enc::base64encode("Rep_sentiment-barplot.png")
+      ),
+      "</td>\n",
+      "</tr>\n",
+      "<tr>\n",
+      "<td align = \"center\">\n",
+      "Democrat Absolute Sentiment\n",
+      "</td>",
+      "<td align = \"center\">\n",
+      "Republican Absolute Sentiment\n",
+      "</td>\n",
+      "</tr>\n",
+      "<tr style=\"padding-top:30px\">\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/png;base64,%s\" alt=\"Dem Image\"/>\n",
+        base64enc::base64encode("Dem_sentiment-lineplot.png")
+      ),
+      "</td>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/png;base64,%s\" alt=\"Rep Image\"/>\n",
+        base64enc::base64encode("Rep_sentiment-lineplot.png")
+      ),
+      "</td>\n",
+      "</tr>\n",
+      "<tr>\n",
+      "<td align = \"center\">\n",
+      "Democrat Relative Sentiment\n",
+      "</td>",
+      "<td align = \"center\">\n",
+      "Republican Relative Sentiment\n",
+      "</td>\n",
+      "</tr>\n",
+      "</table>\n",
+      "</div>\n"
+    )
+  )
+)
+```
 
 ### Tweet timeplot
 
 ```{r fig.width=5, fig.height=5}
 timeplot(
-  t.con,
+  con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican' OR query_users.party = 'democrat'",
   group.column = "query_users.party"
@@ -314,20 +628,20 @@ timeplot(
 ```
 
 
-### Friend network analysis, for some nice network plots
+### Friend network analysis and some nice network plots
 
 
-```{r fig.width=5, fig.height=5}
+```{r}
 # Import igraph
 library(igraph)
 
 # Custom database queries and graph creation.
 edgelist.query <- "SELECT query_users_fo.screen_name as follower, query_users_fr.screen_name as friend, query_users_fo.party as follower_party, query_users_fr.party as friend_party FROM query_users as query_users_fo JOIN followers ON query_users_fo.user_id = followers.follower_id JOIN query_users AS query_users_fr ON followers.friend_id = query_users_fr.user_id;"
-edgelist.df <- DBI::dbGetQuery(t.con,edgelist.query)
+edgelist.df <- DBI::dbGetQuery(con,edgelist.query)
 g <- graph_from_data_frame(edgelist.df)
 vertices.df <- data.frame(index=as.integer(V(g)), screen_name = names(V(g)),stringsAsFactors = FALSE)
 vertex.query <- sprintf("SELECT query_users.screen_name,query_users.party,query_users.body,user.name,user.location,user.description,user.followers_count,user.statuses_count FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.screen_name IN (%s);",paste("'",vertices.df$screen_name,"'",sep="",collapse=","))
-vertex.query.df <- DBI::dbGetQuery(t.con,vertex.query)
+vertex.query.df <- DBI::dbGetQuery(con,vertex.query)
 vertex.query.df <- vertex.query.df[match(vertices.df$screen_name,vertex.query.df$screen_name),]
 
 bluered <- function(party){
@@ -349,7 +663,10 @@ vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
 ec <- centr_eigen(g,directed=FALSE)
 df <- cbind(vertex.query.df$screen_name,ec$vector)
 df <- df[order(df[,2],decreasing=TRUE),]
-df[1:10,]
+  knitr::kable(
+  df[1:10,],
+  caption = "Friend Network Eigenvector Centrality"
+)
 ```
 
 #### Betweenness centrality
@@ -358,16 +675,22 @@ df[1:10,]
 bc <- centr_betw(g,directed=FALSE)
 df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
 df <- df[order(df[,2],decreasing=TRUE),]
-df[1:10,]
+  knitr::kable(
+  df[1:10,],
+  caption = "Friend Network Betweenness Centrality"
+)
 ```
 
 #### Clustering (label propagation)
 
+```{r}
 clust.labelprop <- cluster_label_prop(as.undirected(g))
 clust.labelprop
+```
 
 #### Visualize
 
+```{r fig.width=7,fig.height=7}
 verts <- data.frame(
     name = vertex.query.df$screen_name,
     label = vertex.query.df$screen_name,
@@ -380,25 +703,24 @@ for(n in names(verts)){
   g <- set_vertex_attr(g,n,value=verts[,n])
 }
 
-
 plot(g,vertex.color=vertex_attr(g,"color"),vertex.size=4,vertex.label=NA)
+```
 
-#### More visualizations...
 
-#### With sigmajs
+#### Interactive visualization with sigmajs
 
+```{r fig.width=7,fig.height=7}
 library(sigmajs)
 
 s <- sigmajs()
 s <- sg_from_igraph(s,g)
 s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
-htmlwidgets::saveWidget(s,"followers-sigmajs.html")
+s
+```
 
-browseURL("followers-sigmajs.html",browser="firefox")
+#### Interactive visualization with visNetwork
 
-
-#### With visNetwork
-
+```{r fig.width=7,fig.height=7}
 library(visNetwork)
 v <- visIgraph(g)
 v <- visEdges(
@@ -409,24 +731,24 @@ v <- visNodes(
   v,
   size = 10
 )
-# v <- visOptions(v, autoResize = TRUE)
-
-htmlwidgets::saveWidget(v,"followers-visnetwork.html")
-browseURL("followers-visnetwork.html",browser="firefox")
+v
+```
 
 
 
 
+### User mention network analysis
 
-## User mention network analysis
+This is essentially the same analysis as above, but using the user mention network.
 
+```{r fig.width=7, fig.height=7}
 usermention.query <- sprintf("SELECT query_users_mentioner.screen_name,query_users_mentioned.screen_name, status.id as status_id, status.text as status_text, status.created_at as created_at FROM query_users as query_users_mentioner JOIN status ON query_users_mentioner.user_id = status.user_id JOIN user_mention ON status.id = user_mention.status_id JOIN query_users as query_users_mentioned ON user_mention.user_mention_id = query_users_mentioned.user_id WHERE status.created_at > '%s';",format(Sys.Date()-7))
-usermentions.df <- DBI::dbGetQuery(t.con,usermention.query)
+usermentions.df <- DBI::dbGetQuery(con,usermention.query)
 if(nrow(usermentions.df) > 0){
   g <- graph_from_data_frame(usermentions.df)
   vertices.df <- data.frame(index=as.integer(V(g)), screen_name = names(V(g)),stringsAsFactors = FALSE)
   vertex.query <- sprintf("SELECT query_users.screen_name,query_users.party,query_users.body,user.name,user.location,user.description,user.followers_count,user.statuses_count FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.screen_name IN (%s);",paste("'",vertices.df$screen_name,"'",sep="",collapse=","))
-  vertex.query.df <- DBI::dbGetQuery(t.con,vertex.query)
+  vertex.query.df <- DBI::dbGetQuery(con,vertex.query)
   vertex.query.df <- vertex.query.df[match(vertices.df$screen_name,vertex.query.df$screen_name),]
 
   bluered <- function(party){
@@ -441,23 +763,29 @@ if(nrow(usermentions.df) > 0){
 
   vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
 
-
-  #### Eigenvector Centrality
+  # Eigenvector Centrality
 
   ec <- centr_eigen(g,directed=FALSE)
-  cbind(vertex.query.df$screen_name,ec$vector)
+  df <- cbind(vertex.query.df$screen_name,ec$vector)
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "User Mention Network Eigenvector Centrality"
+  )
 
-  #### Betweenness centrality
+  # Betweenness centrality
 
   bc <- centr_betw(g,directed=FALSE)
-  cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "User Mention Network Betweenness Centrality"
+  )
 
-  #### Clustering (label propagation)
+  # Clustering (omitted)
 
-  clust.labelprop <- cluster_label_prop(as.undirected(g))
-  clust.labelprop
-
-  #### Visualize
+  # Visualize
 
   verts <- data.frame(
       name = vertex.query.df$screen_name,
@@ -471,22 +799,29 @@ if(nrow(usermentions.df) > 0){
     g <- set_vertex_attr(g,n,value=verts[,n])
   }
 
+  plot(
+    g,
+    vertex.color=vertex_attr(g,"color"),
+    vertex.size=4,
+    vertex.label=NA
+  )
+}
+```
 
-  plot(g,vertex.color=vertex_attr(g,"color"),vertex.size=4,vertex.label=NA)
+#### Interactive visualization with sigmajs
 
-  #### More visualizations...
-
-  #### With sigmajs
-
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
   s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
-  htmlwidgets::saveWidget(s,"usermention-sigmajs.html")
-  browseURL("usermention-sigmajs.html", browser="firefox")
+  s
+}
+```
 
-
-  #### With visNetwork
-
+#### Interactive visualization with visNetwork
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
 
   v <- visIgraph(g)
@@ -498,28 +833,22 @@ if(nrow(usermentions.df) > 0){
     v,
     size = 15
   )
-  # v <- visOptions(v, autoResize = TRUE)
-
-  htmlwidgets::saveWidget(v,"usermentions-visnetwork.html")
-  browseURL("usermentions-visnetwork.html",browser="firefox")
+  v
 }
+```
 
-## Would be interesting to plot sentiment of blue to red, red to blue, etc.
+### Retweet network analysis
 
+This is a final network model, using the retweet network.
 
-
-
-
-## Retweet network analysis
-
-
+```{r fig.width=7, fig.height=7}
 retweet.query <- sprintf("SELECT query_users_retweeter.screen_name,query_users_retweeted.screen_name, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM query_users as query_users_retweeter JOIN status as status_retweet ON query_users_retweeter.user_id = status_retweet.user_id JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN query_users as query_users_retweeted ON status_original.user_id = query_users_retweeted.user_id WHERE status_retweet.created_at > '%s' AND status_retweet.retweet = 1;",format(Sys.Date()-7))
-retweets.df <- DBI::dbGetQuery(t.con,retweet.query)
+retweets.df <- DBI::dbGetQuery(con,retweet.query)
 if(nrow(retweets.df) > 0){
   g <- graph_from_data_frame(retweets.df)
   vertices.df <- data.frame(index=as.integer(V(g)), screen_name = names(V(g)),stringsAsFactors = FALSE)
   vertex.query <- sprintf("SELECT query_users.screen_name,query_users.party,query_users.body,user.name,user.location,user.description,user.followers_count,user.statuses_count FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.screen_name IN (%s);",paste("'",vertices.df$screen_name,"'",sep="",collapse=","))
-  vertex.query.df <- DBI::dbGetQuery(t.con,vertex.query)
+  vertex.query.df <- DBI::dbGetQuery(con,vertex.query)
   vertex.query.df <- vertex.query.df[match(vertices.df$screen_name,vertex.query.df$screen_name),]
 
   bluered <- function(party){
@@ -534,23 +863,29 @@ if(nrow(retweets.df) > 0){
 
   vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
 
-
-  #### Eigenvector Centrality
+  # Eigenvector Centrality
 
   ec <- centr_eigen(g,directed=FALSE)
-  cbind(vertex.query.df$screen_name,ec$vector)
+  df <- cbind(vertex.query.df$screen_name,ec$vector)
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "Retweet Network Eigenvector Centrality"
+  )
 
-  #### Betweenness centrality
+  # Betweenness centrality
 
   bc <- centr_betw(g,directed=FALSE)
-  cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "Retweet Network Betweenness Centrality"
+  )
 
-  #### Clustering (label propagation)
+  # Clustering (omitted)
 
-  clust.labelprop <- cluster_label_prop(as.undirected(g))
-  clust.labelprop
-
-  #### Visualize
+  # Visualize
 
   verts <- data.frame(
       name = vertex.query.df$screen_name,
@@ -564,22 +899,24 @@ if(nrow(retweets.df) > 0){
     g <- set_vertex_attr(g,n,value=verts[,n])
   }
 
-
   plot(g,vertex.color=vertex_attr(g,"color"),vertex.size=4,vertex.label=NA)
+}
+```
 
-  #### More visualizations...
+#### Interactive visualization with sigmajs
 
-  #### With sigmajs
-
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
   s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
-  htmlwidgets::saveWidget(s,"retweet-sigmajs.html")
-  browseURL("retweet-sigmajs.html",browser = "firefox")
+  s
+}
+```
 
-
-  #### With visNetwork
-
+#### Interactive visualization with visNetwork
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
 
   v <- visIgraph(g)
@@ -591,16 +928,20 @@ if(nrow(retweets.df) > 0){
     v,
     size = 15
   )
-  # v <- visOptions(v, autoResize = TRUE)
-
-  htmlwidgets::saveWidget(v,"retweet-visnetwork.html")
-  browseURL("retweet-visnetwork.html",browser = "firefox")
+  v
 }
+```
+
+# Way ahead
+
+There are many more interesting analyses that could be done with this set.  For example, do how to democrats' and republicans' sentiments vary when they use different hashtags or user mentions?  Can we classify users as democrat or republican by their Twitter timelines?  Hopefully, this package provides a useful toolset in collecting and analyzing Twitter data to answer questions like these.
 
 
+## Don't forget to disconnect!
 
-DBI::dbDisconnect(t.con)
-
+```{r}
+DBI::dbDisconnect(con)
+```
 
 
 

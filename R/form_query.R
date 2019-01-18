@@ -83,7 +83,7 @@ make_join_statement <- function(con,sql.clause){
           "JOIN status AS retweet_status ON status.retweet_status_id = retweet_status.id JOIN user AS retweet_user ON retweet_status.user_id = retweet_user.id",
           sep=" "
         )
-      } else {
+      } else if (sql.table != 'retweet_user') {
         output.str <- paste(
           output.str,
           "JOIN",

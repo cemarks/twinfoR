@@ -1,7 +1,7 @@
 ---
 title: "US Politics Part I"
 author: "Christopher Marks"
-date: "`r Sys.Date()`"
+date: "`{r} Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{US Politics Part I}
@@ -9,12 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+
 
 # PART I: Initialize and Collect User Timelines & Friends
 
@@ -30,21 +25,21 @@ The second part of this vignette performs updates the database and analyzes the 
 
 The sentiment analysis we conduct during Twitter collection tends to require more Java heap space than the default.  Therefore, we start by allocating more space.
 
-```{r eval=FALSE}
+
+```r
 options(java.parameters = "-Xmx1024m")
-````
+```
 
 # Package Import
 
 Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
-```{r eval=FALSE}
+
+```r
 # install.packages("twinfoR.zip",repos=NULL,type="binary")
 library(twinfoR)
 ```
 
-```{r echo=FALSE, results="hide", message=FALSE}
-devtools::load_all("~/Projects/twinfoR")
-```
+
 
 # Some important initializations
 
@@ -52,11 +47,10 @@ devtools::load_all("~/Projects/twinfoR")
 
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the politician database.
 
-```{r echo=FALSE, results="hide"}
-file.remove("~/USPol/USPol.sqlite")
-```
 
-```{r}
+
+
+```r
 dir.create("~/USPol",showWarnings=FALSE)
 setwd("~/USPol")
 con <- twitter_database(
@@ -72,7 +66,8 @@ We'll use the [INFORM-Tutorial](http://zlisto.scripts.mit.edu/informs_tutorial/t
 
 I recommend logging onto Twitter in your Browser before running this line.  Either way, be careful not to hit <Enter> immediately after running it, for example by copying and pasting the whole line with the 'newline' character into an R console. 
 
-```{r eval=FALSE}
+
+```r
 auth.vector <- authorize_IT()
 ```
 
@@ -80,13 +75,12 @@ Run this line, log into Twitter, and get the authentication PIN.  If you get an 
 
 It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
 
-```{r eval=FALSE}
+
+```r
 save(auth.vector,"auth_vector.RData")
 ```
 
-```{r echo=FALSE}
-load("~/USPol/auth_vector.RData")
-```
+
 
 # Creation of User data.frame
 
@@ -103,7 +97,8 @@ We want to get the members of an existing Twitter list.  This package does not p
 
 Note: to best understand the code below, you should read the documentation for the `twitter_request` function *and* the `get-lists-members` [Twitter API endpoint](https://developer.twitter.com/en/docs/accounts-and-users/create-manage-lists/api-reference/get-lists-members) documentation.  At then end we should have four lists of Twitter user objects: `house.dems`, `senate.dems`, `house.reps`, `senate.reps`, as well as the official user account of the US President (@POTUS).
 
-```{r eval=FALSE}
+
+```r
 # Set the URL and count
 url <- 'https://api.twitter.com/1.1/lists/members.json'
 count <- 5000
@@ -201,9 +196,10 @@ If you want this script to run in a short amount of time, take a small sample fr
 
 **If you want to reduce collection time, sample using code similar to the following**
 
-```{r eval=FALSE}
+
+```r
 # Not run
-sample.size <- 3
+sample.size <- 1
 house.dems <- sample(house.dems,sample.size)
 senate.dems <- sample(senate.dems,sample.size)
 house.reps <- sample(house.reps,sample.size)
@@ -212,59 +208,52 @@ senate.reps <- sample(senate.reps,sample.size)
 
 Now that we have the finalized lists of politicians we are going to collect, we can put them into a `query_user` data.frame structured as described in the `twitter_database` function documentation.  Then, we add this table to the Twitter database connection (`con`).
 
-```{r eval=FALSE}
+
+```r
+with(
+house.reps,
 house.reps.df <- data.frame(
-  user_id = sapply(
-    house.reps,
-    function(x) return (x$id_str)
-  ),
-  screen_name = sapply(
-    house.reps,
-    function(x) return (x$screen_name)
-  ),
-  party = rep('republican',length(house.reps)),
-  body = rep('house',length(house.reps)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('republican',length(house.reps)),
+   body = rep('house',length(house.reps)),
+   stringsAsFactors = FALSE
+  )
 )
+#> Error in data.frame(user_id = id_str, screen_name = screen_name, party = rep("republican", : object 'id_str' not found
+with(
+senate.reps,
 senate.reps.df <- data.frame(
-  user_id = sapply(
-    senate.reps,
-    function(x) return (x$id_str)
-  ),
-  screen_name = sapply(
-    senate.reps,
-    function(x) return (x$screen_name)
-  ),
-  party = rep('republican',length(senate.reps)),
-  body = rep('senate',length(senate.reps)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('republican',length(senate.reps)),
+   body = rep('senate',length(senate.reps)),
+   stringsAsFactors = FALSE
+  )
 )
+#> Error in data.frame(user_id = id_str, screen_name = screen_name, party = rep("republican", : object 'id_str' not found
+with(
+house.dems,
 house.dems.df <- data.frame(
-  user_id = sapply(
-    house.dems,
-    function(x) return (x$id_str)
-  ),
-  screen_name = sapply(
-    house.dems,
-    function(x) return (x$screen_name)
-  ),
-  party = rep('democrat',length(house.dems)),
-  body = rep('house',length(house.dems)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('democrat',length(house.dems)),
+   body = rep('house',length(house.dems)),
+   stringsAsFactors = FALSE
+  )
 )
+#> Error in data.frame(user_id = id_str, screen_name = screen_name, party = rep("democrat", : object 'id_str' not found
+with(
+senate.dems,
 senate.dems.df <- data.frame(
-  user_id = sapply(
-    senate.dems,
-    function(x) return (x$id_str)
-  ),
-  screen_name = sapply(
-    senate.dems,
-    function(x) return (x$screen_name)
-  ),
-  party = rep('democrat',length(senate.dems)),
-  body = rep('senate',length(senate.dems)),
-  stringsAsFactors = FALSE
+   user_id = id_str,
+   screen_name = screen_name,
+   party = rep('democrat',length(senate.dems)),
+   body = rep('senate',length(senate.dems)),
+   stringsAsFactors = FALSE
+  )
 )
+#> Error in data.frame(user_id = id_str, screen_name = screen_name, party = rep("democrat", : object 'id_str' not found
 pres.df <- data.frame(
   user_id = pres$id_str,
   screen_name = pres$screen_name,
@@ -274,22 +263,23 @@ pres.df <- data.frame(
 )
 
 user.df <- rbind(
-  house.reps.df,
-  senate.reps.df,
-  house.dems.df,
-  senate.dems.df,
+  #house.reps.df,
+  #senate.reps.df,
+  #house.dems.df,
+  #senate.dems.df,
   pres.df
 )
 
 # Upload this user data.frame to the Twitter Database
 
 upload_query_users(con,user.df)
-
+#> [1] 1
 ```
 
 While we could upload the Twitter user objects we already collected, we'll just use the `update_users` function to go through the `query_users` table in the database and collect each user profile from the Twitter API to insert into the `user` table of the database.
 
-```{r eval=FALSE}
+
+```r
 update_users(con)
 ```
 
@@ -299,46 +289,58 @@ Now that we have initialized a Twitter database with a list of US Politician Twi
 
 **Note: this code takes a long time to execute.** Expect a 15-20 hour run time on the full U.S. Congress.  If you only kept a small sample, this time will be considerably shorter (typically 1.5-2 minutes per user).  The prolonged collection times result from query limits imposed by Twitter on the REST API.  The functions in this package include delays between queries to ensure these rate limits are not exceeded.  However, attempts to run multiple collection functions in parallel processes using the same authentication credentials runs a high risk of violating the API rate limits, which *will* result in HTTP errors.
 
-```{r eval=FALSE}
+
+```r
 # THIS TAKES A LONG TIME (15-20 hours) ON THE FULL SET.  You have been warned.
 get_all_friends(con)
 ```
 
 # Get Statuses
 
-Next, we collect all of the posts from each politician, going back to up to 3200 Tweets.  **As in the previous step, this process can take a long time.**  During collection, we will perform sentiment analysis on the text of each Tweet (note: this is not done by default, so the parameters must be set as shown below).  As a result of the sentiment analysis processing time and the Twitter API rate limits, expect this collection to take **several days** on the full data set.  Once all of the statuses have been collected, future updates will take much less time as they will only collect new Twitter posts that have not yet been collected.
+Next, we collect all of the posts from each politician, going back to up to 3200 Tweets.  **As in the previous step, this process can take a long time.**  During collection, we will perform sentiment analysis on the text of each Tweet.  As a result of the processing time and the Twitter API rate limits, expect this collection to take **several days** on the full data set.  Once all of the statuses have been collected, future updates will take much less time as they will only collect new Twitter posts that have not yet been collected.
 
 Setting up a sink to the NULL device prevents package `RSentiment` from outputing each status text to the screen.  For large collections, this is recommended.
 
-```{r eval = FALSE}
-# THIS TAKES A LONG TIME (2-3 days) ON THE FULL SET.  You have been warned.
 
-# sink("/dev/null") # Recommended to suppress output, but might not work
-## on all platforms
-update_user_timelines(
-  con,
-  calc.Rsentiment = TRUE,
-  calc.syu = TRUE
-)
-# sink() # Close the sink to /dev/null
+```r
+# THIS TAKES A LONG TIME (2-3 days) ON THE FULL SET.  You have been warned.
+sink("/dev/null")
+update_user_timelines(con)
+sink()
 ```
 
 # Summarize the database
 
 To wrap up part I, we can view a summary of what is in our Twitter database.  Note that many Tweets and users have been collected due to embedded retweets.
 
-```{r echo=FALSE}
-DBI::dbDisconnect(con)
-con <- DBI::dbConnect(RSQLite::SQLite(),"~/USPol/pol.sqlite")
-```
 
-```{r}
+
+
+```r
 summarize_database(con)
+#> Query users: 558
+#> User categories:
+#> party
+#> body
+#> since_id
+#> friends_collected
+#> followers_collected
+#> No query text table.
+#> Users: 579743
+#> Statuses: 1592588
+#> Unique user mentions: 123462
+#> Unique hashtags: 81272
+#> Unique URLs: 519065
+#> Total Images: 530301
+#> Unique Images: 495267
+#> Total relationships: 1095918
+#> Database file size: 1367MB
 ```
 
 Finally, to conclude this part of the vignette, we close the data connection.
 
-```{r}
+
+```r
 DBI::dbDisconnect(con)
 ```
 

@@ -68,7 +68,7 @@ open_user <- function(
 #' @param media.table.row data.frame row of the \code{media} table in the Twitter data connection.
 #' The row must contain the \code{media_url} and \code{img_b64} columns.
 #' @param conn DBI twitter database object.
-#' @param screen_name save.to.file logical indicating whether to save the image to a file.
+#' @param save.to.file logical indicating whether to save the image to a file.
 #' @param file.name character name of file to save.  Ignored if \code{save.to.file} is \code{FALSE}.
 #' @param return.image logical indicating whether to return the \code{image} object to the user.
 #' @param update.media.b64 logical.  If \code{TRUE}, the 64-bit encoded image and average hash value
@@ -110,18 +110,19 @@ status_media <- function(
   save.to.file = FALSE,
   file.name = NULL,
   return.image = FALSE,
-  update.media.b64 = FALSE,
+  update.media.b64 = TRUE,
   hash.size=16,
   display.image = FALSE,
   showWarnings = TRUE
 ){
   media.url <- media.table.row$media_url
   img.b64 <- media.table.row$img_b64
-  if(is.na(img.b64)){
+  if(is.null(img.b64) || is.na(img.b64)){
     p <- NA
     try(
       p <- retrieve_web_image(media.url,display.image=display.image)
     )
+    need.b64 <- TRUE
   } else {
     p <- reconstitute_image(img.b64,media.url,display.image = FALSE,showWarnings=showWarnings)
     if(!is.na(p) && save.to.file){
@@ -130,15 +131,20 @@ status_media <- function(
         file.name <- media.url.splt[length(media.url.splt)]
       }
       OpenImageR::writeImage(p,file.name)
-    }
-    if(return.image){
-      return(p)
+      p <- list(image=p,b64=img.b64)
+      need.b64 <- FALSE
+    } else {
+      p <- NA
+      try(
+        p <- retrieve_web_image(media.url,display.image=display.image)
+      )
+      need.b64 <- TRUE
     }
   }
   if(is.null(p) || is.na(p)){
     return(NA)
   } else {
-    if(update.media.b64){
+    if(update.media.b64 && need.b64){
       a <- OpenImageR::average_hash(OpenImageR::rgb_2gray(p$image),hash_size=hash.size)
       query <- sprintf(
         "UPDATE media SET img_hash='%s',img_b64='%s' WHERE media_id='%s';",
@@ -177,7 +183,7 @@ user_profile_image <- function(
 ){
   profile.image.url <- user.table.row$profile_image_url
   img.b64 <- user.table.row$profile_image_b64
-  if(is.na(img.b64)){
+  if(is.null(img.b64) || is.na(img.b64)){
     p <- NA
     try(
       p <- retrieve_web_image(profile.image.url)
@@ -549,8 +555,10 @@ top_urls <- function(
 #' \code{"auto"} the date range will be written.
 #' @param get.media logical indicating whether to download the image.  If the image is already
 #' in the database (64-bit encoded), it will be reconstructed.
+#' @param save.to.file logical indicating whether to save the image to a file.
 #' @param media.file.prefix character prefix that will be prepended to the file name of image
 #' when it is saved.
+#' @param ... additional parameters passed to status_media.
 #' 
 #' @return data frame containing most frequent media.
 #'
@@ -598,7 +606,9 @@ top_media <- function(
   excel.export.file = NULL,
   excel.file.footnote = "auto",
   get.media = TRUE,
-  media.file.prefix = NULL
+  save.to.file=TRUE,
+  media.file.prefix = NULL,
+  ...
 ){
   query <-top_count_query(
     con,
@@ -632,12 +642,9 @@ top_media <- function(
       status_media(
         results[i,],
         con,
-        save.to.file = TRUE,
+        save.to.file = save.to.file,
         file.name = paste(c(media.file.prefix,sprintf("TopImg-%i.png",i)),collapse=""),
-        return.image = FALSE,
-        update.media.b64 = FALSE,
-        hash.size=16,
-        display.image = FALSE
+        ...
       )
     }
   }
