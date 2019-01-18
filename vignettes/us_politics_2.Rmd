@@ -76,19 +76,21 @@ tophashtags.dem <- top_hashtags(
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'democrat'"
 )
-names(tophashtags.dem) = c("Dem.Hashtag","Count")
+names(tophashtags.dem) = c("Dem.Hashtag.Lower","Count","Dem.Hashtag")
+tophashtags.dem$Dem.Hashtag <- paste("#",tophashtags.dem$Dem.Hashtag,sep="")
 
 tophashtags.rep <- top_hashtags(
   con,
   start.date = Sys.Date()-7,
   where.criteria = "query_users.party = 'republican'"
 )
-names(tophashtags.rep) = c("Rep.Hashtag","Count")
+names(tophashtags.rep) = c("Rep.Hashtag.Lower","Count","Rep.Hashtag")
+tophashtags.rep$Rep.Hashtag <- paste("#",tophashtags.rep$Rep.Hashtag,sep="")
 
 knitr::kable(
   list(
-    tophashtags.dem,
-    tophashtags.rep
+    tophashtags.dem[,c("Dem.Hashtag","Count")],
+    tophashtags.rep[,c("Rep.Hashtag","Count")]
   ),
   caption = "Top Hashtags Used by Democrats and Republicans"
 )
@@ -112,7 +114,7 @@ topusermentions.rep <- top_usermentions(
 
 knitr::kable(
   data.frame(
-    Screen_Name = topusermentions.dem$user_mention_screen_name,
+    Screen_Name = paste("@",topusermentions.dem$user_mention_screen_name,sep=""),
     Name = topusermentions.dem$user_mention_name,
     Mentions = topusermentions.dem$n,
     stringsAsFactors = FALSE
@@ -121,7 +123,7 @@ knitr::kable(
 )
 knitr::kable(
   data.frame(
-    Screen_Name = topusermentions.rep$user_mention_screen_name,
+    Screen_Name = paste("@",topusermentions.rep$user_mention_screen_name,sep=""),
     Name = topusermentions.rep$user_mention_name,
     Mentions = topusermentions.rep$n,
     stringsAsFactors = FALSE
@@ -208,7 +210,7 @@ knitr::kable(
 ## Top Rep Image (Not Run)
 
 # status_media(
-#   topmedia.dem[1,],
+#   topmedia.rep[1,],
 #   con,
 #   update.media.b64 = FALSE,
 #   display.image = TRUE
@@ -661,10 +663,18 @@ vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
 
  ```{r}
 ec <- centr_eigen(g,directed=FALSE)
-df <- cbind(vertex.query.df$screen_name,ec$vector)
+df <- data.frame(
+  Screen_Name = paste(
+    "@",
+    vertex.query.df$screen_name,
+    sep=""
+  ),
+  Eig_Centrality = as.numeric(ec$vector)
+)
 df <- df[order(df[,2],decreasing=TRUE),]
-  knitr::kable(
+knitr::kable(
   df[1:10,],
+  row.names = FALSE,
   caption = "Friend Network Eigenvector Centrality"
 )
 ```
@@ -673,10 +683,18 @@ df <- df[order(df[,2],decreasing=TRUE),]
 
 ```{r}
 bc <- centr_betw(g,directed=FALSE)
-df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+df <- data.frame(
+  Screen_Name = paste(
+    "@",
+    vertex.query.df$screen_name,
+    sep=""
+  ),
+  Bet_Centrality = as.numeric(bc$res)
+)
 df <- df[order(df[,2],decreasing=TRUE),]
-  knitr::kable(
+knitr::kable(
   df[1:10,],
+  row.names = FALSE,
   caption = "Friend Network Betweenness Centrality"
 )
 ```
@@ -742,7 +760,7 @@ v
 This is essentially the same analysis as above, but using the user mention network.
 
 ```{r fig.width=7, fig.height=7}
-usermention.query <- sprintf("SELECT query_users_mentioner.screen_name,query_users_mentioned.screen_name, status.id as status_id, status.text as status_text, status.created_at as created_at FROM query_users as query_users_mentioner JOIN status ON query_users_mentioner.user_id = status.user_id JOIN user_mention ON status.id = user_mention.status_id JOIN query_users as query_users_mentioned ON user_mention.user_mention_id = query_users_mentioned.user_id WHERE status.created_at > '%s';",format(Sys.Date()-7))
+usermention.query <- sprintf("SELECT query_users_mentioner.screen_name as mentioner,query_users_mentioned.screen_name as mentioned, status.id as status_id, status.text as status_text, status.created_at as created_at FROM query_users as query_users_mentioner JOIN status ON query_users_mentioner.user_id = status.user_id JOIN user_mention ON status.id = user_mention.status_id JOIN query_users as query_users_mentioned ON user_mention.user_mention_id = query_users_mentioned.user_id WHERE status.created_at > '%s';",format(Sys.Date()-7))
 usermentions.df <- DBI::dbGetQuery(con,usermention.query)
 if(nrow(usermentions.df) > 0){
   g <- graph_from_data_frame(usermentions.df)
@@ -762,31 +780,58 @@ if(nrow(usermentions.df) > 0){
   }
 
   vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
+}
+```
 
-  # Eigenvector Centrality
+#### Eigenvector Centrality
 
+```{r}
+if(nrow(usermentions.df) > 0){
   ec <- centr_eigen(g,directed=FALSE)
-  df <- cbind(vertex.query.df$screen_name,ec$vector)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertex.query.df$screen_name,
+      sep=""
+    ),
+    Eig_Centrality = as.numeric(ec$vector)
+  )
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
+    row.names = FALSE,
     caption = "User Mention Network Eigenvector Centrality"
   )
+}
+```
 
-  # Betweenness centrality
+#### Betweenness centrality
 
+```{r}
+if(nrow(usermentions.df) > 0){
   bc <- centr_betw(g,directed=FALSE)
-  df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertex.query.df$screen_name,
+      sep=""
+    ),
+    Bet_Centrality = as.numeric(as.numeric(bc$res))
+  )
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
     caption = "User Mention Network Betweenness Centrality"
   )
+}
+```
 
-  # Clustering (omitted)
+#### Clustering (Omitted)
 
-  # Visualize
+#### Visualize
 
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
   verts <- data.frame(
       name = vertex.query.df$screen_name,
       label = vertex.query.df$screen_name,
@@ -842,7 +887,7 @@ if(nrow(usermentions.df) > 0){
 This is a final network model, using the retweet network.
 
 ```{r fig.width=7, fig.height=7}
-retweet.query <- sprintf("SELECT query_users_retweeter.screen_name,query_users_retweeted.screen_name, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM query_users as query_users_retweeter JOIN status as status_retweet ON query_users_retweeter.user_id = status_retweet.user_id JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN query_users as query_users_retweeted ON status_original.user_id = query_users_retweeted.user_id WHERE status_retweet.created_at > '%s' AND status_retweet.retweet = 1;",format(Sys.Date()-7))
+retweet.query <- sprintf("SELECT query_users_retweeter.screen_name as retweeter,query_users_retweeted.screen_name as retweeted, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM query_users as query_users_retweeter JOIN status as status_retweet ON query_users_retweeter.user_id = status_retweet.user_id JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN query_users as query_users_retweeted ON status_original.user_id = query_users_retweeted.user_id WHERE status_retweet.created_at > '%s' AND status_retweet.retweet = 1;",format(Sys.Date()-7))
 retweets.df <- DBI::dbGetQuery(con,retweet.query)
 if(nrow(retweets.df) > 0){
   g <- graph_from_data_frame(retweets.df)
@@ -860,33 +905,58 @@ if(nrow(retweets.df) > 0){
       return("black")
     }
   }
-
   vertex.query.df$color <- sapply(vertex.query.df$party,bluered)
+}
+```
 
-  # Eigenvector Centrality
+#### Eigenvector Centrality
 
+```{r}
+if(nrow(retweets.df) > 0){
   ec <- centr_eigen(g,directed=FALSE)
-  df <- cbind(vertex.query.df$screen_name,ec$vector)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertex.query.df$screen_name,
+      sep=""
+    ),
+    Eig_Centrality = as.numeric(ec$vector)
+  )
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
     caption = "Retweet Network Eigenvector Centrality"
   )
+}
+```
 
-  # Betweenness centrality
+#### Betweenness Centrality
 
+```{r}
+if(nrow(retweets.df) > 0){
   bc <- centr_betw(g,directed=FALSE)
-  df <- cbind(vertex.query.df$screen_name,ec$vector,bc$res)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertex.query.df$screen_name,
+      sep=""
+    ),
+    Bet_Centrality = as.numeric(bc$res)
+  )
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
     caption = "Retweet Network Betweenness Centrality"
   )
+}
+```
 
-  # Clustering (omitted)
+#### Clustering (Omitted)
 
-  # Visualize
+#### Visualize
 
+```{r fig.width=7, fig.height=7}
+if(nrow(retweets.df) > 0){
   verts <- data.frame(
       name = vertex.query.df$screen_name,
       label = vertex.query.df$screen_name,
@@ -906,7 +976,7 @@ if(nrow(retweets.df) > 0){
 #### Interactive visualization with sigmajs
 
 ```{r fig.width=7, fig.height=7}
-if(nrow(usermentions.df) > 0){
+if(nrow(retweets.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
   s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
@@ -916,7 +986,7 @@ if(nrow(usermentions.df) > 0){
 
 #### Interactive visualization with visNetwork
 ```{r fig.width=7, fig.height=7}
-if(nrow(usermentions.df) > 0){
+if(nrow(retweets.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
 
   v <- visIgraph(g)

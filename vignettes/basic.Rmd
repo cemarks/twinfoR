@@ -1,0 +1,478 @@
+---
+title: "Basic Functionality"
+author: "Christopher Marks"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic Functionality}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette works through the basic Twitter collection functions offered by the twinfoR package.  The 'US Politics' vignettes demonstrate more advanced collection and analysis functionality.
+
+# Package Import
+
+Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
+```{r eval=FALSE}
+# install.packages("twinfoR.zip",repos=NULL,type="binary")
+library(twinfoR)
+```
+
+```{r echo=FALSE, results="hide", message=FALSE}
+devtools::load_all("~/Projects/twinfoR")
+```
+
+# Authentication
+
+Authenticating an App in R can be tricky, but the authentication methods supplied by this package aim to simplify the process.  These functions are
+
+* `authorize_app`
+* `authorize_IT`
+
+The documentation for these functions has more information about their usage.
+
+We'll use the [INFORM-Tutorial](http://zlisto.scripts.mit.edu/informs_tutorial/tutorial.html) Twitter Application (i.e., `authorize_IT`).  Alternatively, you can supply your own application credentials using the `authorize_app` function.
+
+*You will need a Twitter Account to continue!*  If you don't have one, you can easily create one on the [Twitter](https://twitter.com) website.  If you do not have a Twitter account and do not wish to make one, *this package will be of very limited use to you*.  
+
+I recommend logging onto Twitter in your Browser before running the following line of code.  Either way, you must be careful not to hit <Enter> immediately after running it, for example by copying and pasting the whole line including a the 'newline' character into an R console. A good way to prevent this problem is to *manually type* the following line into the console.
+
+```{r eval=FALSE}
+auth.vector <- authorize_IT()
+```
+
+This function attempts to browse to a web page that allows you to authorize the INFORMS-Tutorial Twitter Application.  Once you authorize the application, you will receive a PIN.  You must enter this PIN exactly as it appears back into the R Console.  The the Authorization page does not open automatically, you can browse to it manually using the URL written by the function in the R Console.
+
+It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
+
+```{r eval=FALSE}
+dir.create("~/twinfoR_basic",showWarnings=FALSE)
+setwd("~/twinfoR_basic")
+save(auth.vector,file="auth_vector.RData")
+```
+
+```{r echo=FALSE}
+dir.create("~/twinfoR_basic",showWarnings=FALSE)
+setwd("~/twinfoR_basic")
+load("~/USPol/auth_vector.RData")
+```
+
+# Twitter Search & Status Analyses
+
+This section demonstrates how to search Tweets using the Twitter Search API and analyze the results.
+
+## Twitter Search
+
+Now let's carry out a Twitter Search.  Perhaps we can see what is going on in Fargo.
+
+```{r}
+search.term <- "#Fargo"
+search.result <- search_tweets(search.term)
+
+statuses <- search.result$statuses
+```
+
+The variable `statuses` now contains a list of Tweet objects containing the '#Fargo' hashtag.
+
+## Analyses of Statuses
+
+### Time Plot
+
+We can manually make a plot of the Tweet rate in the list we have collected.  Note that this functionality is provided in this package for Tweets in a standard database format.  See the documentation for `twitter_database` and `timeplot`.  The code below does not make use of these functions.
+
+```{r fig.width=5, fig.height=5}
+created.at <- sapply(
+  statuses,
+  function(x) return(
+    x$created_at
+  )
+)
+
+created.at.df <- data.frame(
+  created.at = sort(as.POSIXct(created.at,format = "%a %b %d %H:%M:%S +0000 %Y")),
+  cumulative.tweets = 1:length(created.at)
+)
+
+plot(
+  created.at.df$created.at,
+  created.at.df$cumulative.tweets,
+  main = sprintf(
+    "Tweet Rate for %s",
+    search.term
+  ),
+  xlab = "Date",
+  ylab = "Cumulative Tweets",
+  xaxt = "n"
+)
+axis.POSIXct(
+  1,
+  at=seq(
+    min(
+      created.at.df$created.at
+    ),
+    max(
+      created.at.df$created.at
+    ),
+    by="day"
+  ),
+  format = "%Y-%m-%d"
+)
+```
+
+### Word Cloud
+
+We can also make a word cloud of the status text.  Note that this functionality is also provided in this package for Tweets in a standard database format.  See the documentation for `twitter_database` and `wordcloud_plot`.  The code below does not make use of these functions.
+
+```{r fig.width=7, fig.height=7}
+tweet.text <- paste(
+  sapply(
+    statuses,
+    function(x) return(x$full_text)
+  ),
+  collapse = " "
+)
+tweet.text <- tolower(tweet.text)
+
+#Remove 'Fargo' because it is in all Tweets
+tweet.text <- gsub('fargo','',tweet.text,ignore.case=TRUE)
+
+wordcloud::wordcloud(tweet.text,max.words=100)
+```
+
+### Most retweeted statuses
+
+Now let's see which status has been Retweeted the most.  It is important to note that these counts are a static snapshot of retweet counts, while the actual Twitter Retweet counts are always changing as users continue to Retweet.
+
+```{r}
+not.retweets <- which(
+  sapply(
+    statuses,
+    function(x) if("retweeted_status" %in% names(x)) return(FALSE) else return(TRUE)
+  )
+)
+
+retweet.dataframe <- data.frame(
+  user = sapply(
+    statuses[not.retweets],
+    function(x) return(x$user$screen_name)
+  ),
+  text = sapply(
+    statuses[not.retweets],
+    function(x) return(x$full_text)
+  ),
+  retweet.count = sapply(
+    statuses[not.retweets],
+    function(x) return(x$retweet_count)
+  ),
+  stringsAsFactors = FALSE
+)
+
+
+retweet.dataframe <- retweet.dataframe[order(retweet.dataframe$retweet.count,decreasing = TRUE),]
+
+knitr::kable(
+  data.frame(
+    Screen_Name = paste("@",retweet.dataframe$user[1:5],sep=""),
+    Text = gsub("\n"," -- ",retweet.dataframe$text[1:5]),
+    Retweet_Count = retweet.dataframe$retweet.count[1:5],
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Retweeted #Fargo Tweets"
+)
+```
+
+## Analysis of Users
+
+Now we'll take a look at some basic characteristics of users in the data we've collected.
+
+### Unique Users
+
+First, we'll create a list of unique users.
+
+```{r}
+users <- lapply(
+  statuses,
+  function(x) return(x$user)
+)
+
+user_ids <- sapply(
+  users,
+  function(x) return(x$id_str)
+)
+
+unique.user_id.indices <- which(!duplicated(user_ids))
+unique.users <- users[unique.user_id.indices]
+```
+
+### Followers counts
+
+Now we can see who in the dataset has the most followers.
+
+```{r fig.width=5,fig.height=5}
+followers.counts <- sapply(
+  unique.users,
+  function(x) return(x$followers_count)
+)
+
+hist(
+  log10(followers.counts+1),
+  breaks = 0:ceiling(max(log10(followers.counts+1))),
+  main = "Distribution of number of followers (log)",
+  xlab = "Log number of followers (base 10)"
+)
+```
+
+### User status counts
+
+Seeing who Tweets the most follows a similar process.
+
+```{r fig.width=5,fig.height=5}
+status.counts <- sapply(
+  users,
+  function(x) return(x$statuses_count)
+)
+
+hist(
+  log10(status.counts+1),
+  breaks = 0:ceiling(max(log10(status.counts+1))),
+  main = "Distribution of number of statuses (log)",
+  xlab = "Log number of statuses (base 10)"
+)
+```
+
+### Most prolific #Fargo Tweeters
+
+```{r}
+tweeters <- sapply(
+  statuses,
+  function(x) return(x$user$screen_name)
+)
+
+tweeter.table <- table(tweeters)
+names(tweeter.table) <- paste("@",names(tweeter.table),sep="")
+tweeter.table <- sort(tweeter.table,decreasing=TRUE)
+tweeter.df <- data.frame(
+  Screen_Name = names(tweeter.table)[1:5],
+  Tweet_Count = as.numeric(tweeter.table[1:5]),
+  stringsAsFactors = FALSE
+)
+knitr::kable(
+  tweeter.df,
+  caption = "Most prolific #Fargo Tweeters"
+)
+```
+
+
+# Collecting and Analyzing Users and Timelines
+
+This section demonstrates some methods for collecting Users and User Timelines and analyzing the results.
+
+## User search.
+
+Let's see if we can get some Users from Fargo.  We'll just take the top five of the results.
+
+
+```{r}
+users <- user_search("Fargo ND")
+
+# Just use up to the first five screen names.
+
+user.screen_names <- sapply(
+  users[1:min(c(5,length(users)))],
+  function(x) return(x$screen_name)
+)
+
+knitr::kable(
+  data.frame(
+    User = paste("@",user.screen_names,sep="")
+  ),
+  caption = "Collected Fargo, ND Users"
+)
+```
+
+## Collect user timelines
+
+Now we collect these users' timelines.  This will take a few minutes because of the Twitter rate limits.  This is the first demonstration of one of the API recursive functions, which inserts a delay in each call to prevent exceeding Twitter rate limits.  This function, `user_timeline_recursive`, recursively calls the `user_timeline` function.  See the documentation on these functions for details.
+
+```{r}
+user.timelines <- list()
+for(i in 1:length(user.screen_names)){
+  user.timelines[[user.screen_names[i]]] <- user_timeline_recursive(screen_name = user.screen_names[i])
+}
+```
+
+## A look at the first user
+
+We'll look at the first user's Tweets.
+
+```{r}
+screen.name <- user.screen_names[1]
+timeline <- user.timelines[[screen.name]]
+```
+
+### Word Cloud
+
+```{r fig.width = 7, fig.height = 7}
+status.text <- paste(
+  sapply(
+    timeline,
+    function(x) return(x$full_text)
+  ),
+  collapse=" "
+)
+
+wordcloud::wordcloud(status.text,max.words = 100)
+```
+
+### Most-used hashtags
+
+```{r}
+hashtags <- unlist(
+  lapply(
+    timeline,
+    function(x) {
+      lapply(
+        x$entities$hashtags,
+        function(y) return(y$text)
+      )
+    }
+  )
+)
+
+hashtag.table <- sort(table(tolower(hashtags)),decreasing = TRUE)
+knitr::kable(
+  data.frame(
+    Hashtag = paste("#",names(hashtag.table[1:10]),sep=""),
+    Count = as.numeric(hashtag.table[1:10]),
+    stringsAsFactors = FALSE
+  ),
+  caption=sprintf("@%s most-used hashtags",screen.name)
+)
+```
+
+
+### User mentions
+
+```{r}
+usermentions <- unlist(
+  lapply(
+    timeline,
+    function(x) {
+      lapply(
+        x$entities$user_mentions,
+        function(y) return(y$screen_name)
+      )
+    }
+  )
+)
+
+usermention.table <- sort(table(tolower(usermentions)),decreasing = TRUE)
+knitr::kable(
+  data.frame(
+    Mentioned_User = paste("@",names(usermention.table[1:10]),sep=""),
+    Count = as.numeric(usermention.table[1:10]),
+    stringsAsFactors = FALSE
+  ),
+  caption=sprintf("@%s most-mentioned Users",screen.name)
+)
+```
+
+## A look at all Users together
+
+Now we'll combine all of our User's Tweets and carry out the same analyses.
+
+### Wordcloud
+
+```{r fig.width = 7, fig.height = 7}
+status.text <- paste(
+  sapply(user.timelines,
+    function(timeline){
+      paste(
+        sapply(
+          timeline,
+          function(x) return(x$full_text)
+        ),
+        collapse=" "
+      )
+    }
+  ),
+  collapse = " "
+)
+
+wordcloud::wordcloud(status.text,max.words = 100)
+```
+
+
+### Most-used hashtags
+
+```{r}
+hashtags <- unlist(
+  lapply(
+    user.timelines,
+    function(timeline){
+      unlist(
+        lapply(
+          timeline,
+          function(x) {
+            lapply(
+              x$entities$hashtags,
+              function(y) return(y$text)
+            )
+          }
+        )
+      )
+    }
+  )
+)
+
+hashtag.table <- sort(table(tolower(hashtags)),decreasing = TRUE)
+knitr::kable(
+  data.frame(
+    Hashtag = paste("#",names(hashtag.table[1:10]),sep=""),
+    Count = as.numeric(hashtag.table[1:10]),
+    stringsAsFactors = FALSE
+  ),
+  caption="All Users most-used hashtags"
+)
+```
+
+### User mentions
+
+```{r}
+usermentions <- unlist(
+  lapply(
+    user.timelines,
+    function(timeline){
+      unlist(
+        lapply(
+          timeline,
+          function(x) {
+            lapply(
+              x$entities$user_mentions,
+              function(y) return(y$screen_name)
+            )
+          }
+        )
+      )
+    }
+  )
+)
+
+usermention.table <- sort(table(tolower(usermentions)),decreasing = TRUE)
+knitr::kable(
+  data.frame(
+    Mentioned_User = paste("@",names(usermention.table[1:10]),sep=""),
+    Count = as.numeric(usermention.table[1:10]),
+    stringsAsFactors = FALSE
+  ),
+  caption="All Users most-mentioned users"
+)
+```

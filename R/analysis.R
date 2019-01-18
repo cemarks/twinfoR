@@ -304,10 +304,11 @@ top_hashtags <- function(
 ){
   query <- top_count_query(
     con,
-    "hashtag.hashtag_text",
+    "LOWER(hashtag.hashtag_text)",
     start.date = start.date,
     end.date = end.date,
     where.criteria = where.criteria,
+    additional.columns = "hashtag.hashtag_text as HT",
     limit=limit
   )
   results <- DBI::dbGetQuery(con,query)

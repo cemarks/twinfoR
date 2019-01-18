@@ -1,0 +1,784 @@
+---
+title: "Locations Search Part I"
+author: "Christopher Marks"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Locations Search Part I}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# PART II: Update Data and Analyze
+
+This is the second part of a two-part vignette designed to collect and analyze Twitter posts from Boston and Guatemala by searching for location hashtags. This part of the vignette carries out the database initialization and initial status collections. This part of the vignette consists of two sub-parts: (a) updating the twitter database with new posts, and (b) analysis.  These two sub-parts can be run together or independently, as often as required.
+
+# Initialization
+
+We begin by loading the `twinfoR` namespace, establishing the Twitter database connection to the sqlite database created in Part I of this vignette, and loading the authentication vector.  See (and execute) the `location_search_1` vignette if you haven't already done so.
+
+This code assumes the `auth.vector` from Part I is saved.  If it isn't, reauthenticate using the `authorize_IT()` function as done in Part I.
+
+```{r eval = FALSE}
+library(twinfoR)
+setwd("~/twitter_locations")
+con <- twitter_database("locations.sqlite")
+load("auth_vector.RData") 
+```
+
+```{r echo = FALSE, message=FALSE}
+devtools::load_all("~/Projects/twinfoR")
+setwd("~/twitter_locations")
+con <- twitter_database("locations.sqlite")
+load("auth_vector.RData") 
+```
+
+# Update Database with New Statuses
+
+This function should take considerably less time to run than the initial call, because it only collects new statuses.  
+
+```{r}
+update_search(
+  con
+)
+
+# Summarize database
+summarize_database(con)
+```
+
+# Analysis
+
+The summary output from the last section shows the columns of the `query_text` table.  Let's take a closer look at this table, which we created in Part I of this vignette.
+
+```{r}
+df <- DBI::dbReadTable(con,"query_text")
+knitr::kable(
+  df,
+  caption = "The `query_text` table"
+)
+```
+
+**Any column** in this table can be used as `where.criteria` in the analysis functions.  We are going to use the `location` column.
+
+## Top hashtags from Boston and Guatemala City in the last week
+
+```{r}
+tophashtags.boston <- top_hashtags(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+names(tophashtags.boston) = c("Boston.Hashtag.Lower","Count","Boston.Hashtag")
+tophashtags.boston$Boston.Hashtag <- paste("#",tophashtags.boston$Boston.Hashtag,sep="")
+
+tophashtags.GC <- top_hashtags(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+names(tophashtags.GC) = c("GuatemalaCity.Hashtag.Lower","Count","GuatemalaCity.Hashtag")
+tophashtags.GC$GuatemalaCity.Hashtag <- paste("#",tophashtags.GC$GuatemalaCity.Hashtag,sep="")
+
+knitr::kable(
+  list(
+    tophashtags.boston[,c("Boston.Hashtag","Count")],
+    tophashtags.GC[,c("GuatemalaCity.Hashtag","Count")]
+  ),
+  caption = "Top Hashtags Used by Boston and Guatemala City"
+)
+```
+
+## Top usermentions from Boston and Guatemala City in the last week
+
+```{r}
+topusermentions.boston <- top_usermentions(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+topusermentions.GC <- top_usermentions(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+
+knitr::kable(
+  data.frame(
+    Screen_Name = paste("@",topusermentions.boston$user_mention_screen_name,sep=""),
+    Name = topusermentions.boston$user_mention_name,
+    Mentions = topusermentions.boston$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Boston User Mentions"
+)
+knitr::kable(
+  data.frame(
+    Screen_Name = paste("@",topusermentions.GC$user_mention_screen_name,sep=""),
+    Name = topusermentions.GC$user_mention_name,
+    Mentions = topusermentions.GC$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Guatemala City User Mentions"
+)
+```
+
+## Top URLs posted by Boston and Guatemala City in the last week
+
+```{r}
+topurls.boston <- top_urls(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+topurls.GC <- top_urls(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+
+knitr::kable(
+  list(
+    Boston = data.frame(
+      Boston.URL = topurls.boston$extended_url,
+      Count = topurls.boston$n,
+      stringsAsFactors = FALSE
+    ),
+    "Guatemala City" = data.frame(
+      GuatemalaCity.URL = topurls.GC$extended_url,
+      Count = topurls.GC$n,
+      stringsAsFactors = FALSE
+    )
+  ),
+  caption = "Top Boston and Guatemala City URLs"
+)
+```
+
+### Top media from Boston and Guatemala City in the last week
+
+```{r fig.width = 4, fig.height = 4}
+topmedia.boston <- top_media(
+  con,
+  start.date = Sys.Date()-14,
+  where.criteria = "query_text.location = 'Boston'",
+  save.to.file = FALSE
+)
+
+topmedia.GC <- top_media(
+  con,
+  start.date = Sys.Date()-14,
+  where.criteria = "query_text.location = 'Guatemala City'",
+  save.to.file = FALSE
+)
+
+knitr::kable(
+  list(
+    data.frame(
+      Boston.image_url = topmedia.boston$media_url,
+      count = topmedia.boston$n,
+      stringsAsFactors = FALSE
+    ),
+    data.frame(
+      GuatemalaCity.image_url = topmedia.GC$media_url,
+      count = topmedia.GC$n,
+      stringsAsFactors = FALSE
+    )
+  ),
+  caption = "Top Media Posted by Boston and Guatemala City"
+)
+
+## Top Boston Image (Not Run)
+
+# status_media(
+#   topmedia.boston[1,],
+#   con, 
+#   update.media.b64 = FALSE,
+#   display.image = TRUE
+# )
+
+## Top Guatemala City Image (Not Run)
+
+# status_media(
+#   topmedia.GC[1,],
+#   con,
+#   update.media.b64 = FALSE,
+#   display.image = TRUE
+# )
+```
+
+```{r echo = FALSE}
+Boston.split <- strsplit(topmedia.boston$media_url[1],".",fixed=TRUE)[[1]]
+Boston.ext <- Boston.split[length(Boston.split)]
+if(tolower(Boston.ext) %in% c("jpg","jpeg")){
+  Boston.media.type <- "jpeg"
+} else if(tolower(Boston.ext) %in% c("tif","tiff")){
+  Boston.media.type <- "tiff"
+} else {
+  Boston.media.type <- "png"
+}
+GuatemalaCity.split <- strsplit(topmedia.GC$media_url[1],".",fixed=TRUE)[[1]]
+GuatemalaCity.ext <- GuatemalaCity.split[length(GuatemalaCity.split)]
+if(tolower(GuatemalaCity.ext) %in% c("jpg","jpeg")){
+  GuatemalaCity.media.type <- "jpeg"
+} else if(tolower(GuatemalaCity.ext) %in% c("tif","tiff")){
+  GuatemalaCity.media.type <- "tiff"
+} else {
+  GuatemalaCity.media.type <- "png"
+}
+Boston.b64 <- DBI::dbGetQuery(
+  con,
+  sprintf(
+    "SELECT img_b64 FROM media WHERE media_id = '%s' LIMIT 1;",
+    topmedia.boston$media_id[1]
+  )
+)$img_b64[1]
+GuatemalaCity.b64 <- DBI::dbGetQuery(
+  con,
+  sprintf(
+    "SELECT img_b64 FROM media WHERE media_id = '%s' LIMIT 1;",
+    topmedia.GC$media_id[1]
+  )
+)$img_b64[1]
+knitr::asis_output(
+  htmltools::htmlPreserve(
+    paste(
+      "\n",
+      "<div>\n",
+      "<table>\n",
+      "<tr>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/%s;base64,%s\" alt=\"Boston Image\"/>\n",
+        Boston.media.type,
+        Boston.b64
+      ),
+      "</td>\n",
+      "<td align=\"center\">\n",
+      sprintf(
+        "<img width=\"420px\" src=\"data:image/%s;base64,%s\" alt=\"Guatemala City Image\"/>\n",
+        GuatemalaCity.media.type,
+        GuatemalaCity.b64
+      ),
+      "</td>\n",
+      "</tr>\n",
+      "<tr>\n",
+      "<td align = \"center\">\n",
+      "Top Boston Image\n",
+      "</td>",
+      "<td align = \"center\">\n",
+      "Top Guatemala City Image\n",
+      "</td>\n",
+      "</tr>\n",
+      "</table>\n",
+      "</div>\n"
+    )
+  )
+)
+```
+
+The `top_media` and `status_media` have many options for saving and rendering images.  See documentation for details.
+
+### Top tweeters Boston and Guatemala City in the last week
+
+```{r}
+toptweeters.boston <- top_tweeters(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+toptweeters.GC <- top_tweeters(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+toptweeters.boston$description <- gsub("\n"," -- ",toptweeters.boston$description)
+toptweeters.boston$location <- gsub("\n"," -- ",toptweeters.boston$location)
+toptweeters.GC$description <- gsub("\n"," -- ",toptweeters.GC$description)
+toptweeters.GC$location <- gsub("\n"," -- ",toptweeters.GC$location)
+knitr::kable(
+  data.frame(
+    Name = toptweeters.boston$name,
+    Location = toptweeters.boston$location,
+    Description = toptweeters.boston$description,
+    Tweets = toptweeters.boston$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Top Boston Tweeters"
+)
+knitr::kable(
+  data.frame(
+    Name = toptweeters.GC$name,
+    Location = toptweeters.GC$location,
+    Description = toptweeters.GC$description,
+    Tweets = toptweeters.GC$n,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Top Guatemala City Tweeters"
+)
+```
+
+### Most liked tweets Boston and Guatemala City in the last week
+
+```{r}
+mostliked.boston <- most_liked(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+mostliked.GC <- most_liked(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+# For nice Markdown rendering
+mostliked.boston$description <- gsub("\n"," -- ",mostliked.boston$description)
+mostliked.boston$location <- gsub("\n"," -- ",mostliked.boston$location)
+mostliked.boston$text <- gsub("\n"," -- ",mostliked.boston$text)
+mostliked.boston$name <- gsub("\n"," -- ",mostliked.boston$name)
+mostliked.GC$description <- gsub("\n"," -- ",mostliked.GC$description)
+mostliked.GC$location <- gsub("\n"," -- ",mostliked.GC$location)
+mostliked.GC$text <- gsub("\n"," -- ",mostliked.GC$text)
+mostliked.GC$name <- gsub("\n"," -- ",mostliked.GC$name)
+knitr::kable(
+  data.frame(
+    Name = mostliked.boston$name,
+    Created = mostliked.boston$created_at,
+    Likes = mostliked.boston$favorite_count,
+    Text = mostliked.boston$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Liked Boston Tweets"
+)
+knitr::kable(
+  data.frame(
+    Name = mostliked.GC$name,
+    Created = mostliked.GC$created_at,
+    Likes = mostliked.GC$favorite_count,
+    Text = mostliked.GC$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Liked Guatemala City Tweets"
+)
+```
+
+
+### Most retweeted tweets Boston and Guatemala City in the last week
+
+```{r}
+mostretweeted.boston <- most_retweeted(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+mostretweeted.GC <- most_retweeted(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+# For nice Markdown rendering
+mostretweeted.boston$description <- gsub("\n"," -- ",mostretweeted.boston$description)
+mostretweeted.boston$location <- gsub("\n"," -- ",mostretweeted.boston$location)
+mostretweeted.boston$text <- gsub("\n"," -- ",mostretweeted.boston$text)
+mostretweeted.boston$name <- gsub("\n"," -- ",mostretweeted.boston$name)
+mostretweeted.GC$description <- gsub("\n"," -- ",mostretweeted.GC$description)
+mostretweeted.GC$location <- gsub("\n"," -- ",mostretweeted.GC$location)
+mostretweeted.GC$text <- gsub("\n"," -- ",mostretweeted.GC$text)
+mostretweeted.GC$name <- gsub("\n"," -- ",mostretweeted.GC$name)
+knitr::kable(
+  data.frame(
+    Name = mostretweeted.boston$name,
+    Created = mostretweeted.boston$created_at,
+    Retweet_Count = mostretweeted.boston$retweet_count,
+    Text = mostretweeted.boston$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Retweeted Boston Tweets"
+)
+knitr::kable(
+  data.frame(
+    Name = mostretweeted.GC$name,
+    Created = mostretweeted.GC$created_at,
+    Retweet_Count = mostretweeted.GC$retweet_count,
+    Text = mostretweeted.GC$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Retweeted Guatemala City Tweets"
+)
+```
+
+
+## Most popular retweet in sample
+
+```{r}
+mostpopRT.boston <- most_popular_RT_in_sample(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+mostpopRT.GC <- most_popular_RT_in_sample(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+# For nice Markdown rendering
+mostpopRT.boston$description <- gsub("\n"," -- ",mostpopRT.boston$description)
+mostpopRT.boston$location <- gsub("\n"," -- ",mostpopRT.boston$location)
+mostpopRT.boston$text <- gsub("\n"," -- ",mostpopRT.boston$text)
+mostpopRT.boston$name <- gsub("\n"," -- ",mostpopRT.boston$name)
+mostpopRT.GC$description <- gsub("\n"," -- ",mostpopRT.GC$description)
+mostpopRT.GC$location <- gsub("\n"," -- ",mostpopRT.GC$location)
+mostpopRT.GC$text <- gsub("\n"," -- ",mostpopRT.GC$text)
+mostpopRT.GC$name <- gsub("\n"," -- ",mostpopRT.GC$name)
+knitr::kable(
+  data.frame(
+    Name = mostpopRT.boston$name,
+    Created = mostpopRT.boston$created_at,
+    Dem_Retweets = mostpopRT.boston$n,
+    Text = mostpopRT.boston$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Popular Retweets Among Boston"
+)
+knitr::kable(
+  data.frame(
+    Name = mostpopRT.GC$name,
+    Created = mostpopRT.GC$created_at,
+    Rep_Retweets = mostpopRT.GC$n,
+    Text = mostpopRT.GC$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Most Popular Retweets Among Guatemala City"
+)
+```
+
+
+### Most reach 
+
+Note: this metric is of dubious value.  See documentation.
+
+```{r}
+mostreach.boston <- most_reach(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'"
+)
+
+mostreach.GC <- most_reach(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'"
+)
+
+# For nice Markdown rendering
+mostreach.boston$description <- gsub("\n"," -- ",mostreach.boston$description)
+mostreach.boston$location <- gsub("\n"," -- ",mostreach.boston$location)
+mostreach.boston$text <- gsub("\n"," -- ",mostreach.boston$text)
+mostreach.boston$name <- gsub("\n"," -- ",mostreach.boston$name)
+mostreach.GC$description <- gsub("\n"," -- ",mostreach.GC$description)
+mostreach.GC$location <- gsub("\n"," -- ",mostreach.GC$location)
+mostreach.GC$text <- gsub("\n"," -- ",mostreach.GC$text)
+mostreach.GC$name <- gsub("\n"," -- ",mostreach.GC$name)
+knitr::kable(
+  data.frame(
+    Name = mostreach.boston$name,
+    Created = mostreach.boston$created_at,
+    Reach = mostreach.boston$n,
+    Text = mostreach.boston$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Boston Tweets with Most 'Reach'"
+)
+knitr::kable(
+  data.frame(
+    Name = mostreach.GC$name,
+    Created = mostreach.GC$created_at,
+    Reach = mostreach.GC$n,
+    Text = mostreach.GC$text,
+    stringsAsFactors = FALSE
+  ),
+  caption = "Guatemala City Tweets with Most 'Reach'"
+)
+```
+
+
+### Word clouds 
+
+```{r fig.width=7,fig.height=7,message=FALSE,warning=FALSE,results="hold"}
+wordcloud_plot(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Boston'",
+  caption = "Boston"
+)
+
+wordcloud_plot(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City'",
+  caption = "Guatemala City"
+)
+```
+
+
+### Tweet timeplot
+
+```{r fig.width=5, fig.height=5}
+timeplot(
+  con,
+  start.date = Sys.Date()-7,
+  where.criteria = "query_text.location = 'Guatemala City' OR query_text.location = 'Boston'",
+  group.column = "query_text.location",
+  log.scale=TRUE
+)
+```
+
+
+### User mention network analysis for Boston with some nice plots
+
+```{r fig.width=7, fig.height=7}
+# Import igraph
+library(igraph)
+library(sigmajs)
+library(visNetwork)
+
+usermention.query <- sprintf("SELECT LOWER(status.screen_name) as mentioner,LOWER(user_mention.user_mention_screen_name) as mentioned, status.id as status_id, status.text as status_text, status.created_at as created_at FROM status JOIN search_status ON status.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id JOIN user_mention ON status.id = user_mention.status_id WHERE status.created_at > '%s' AND query_text.location = 'Boston';",format(Sys.Date()-7))
+usermentions.df <- DBI::dbGetQuery(con,usermention.query)
+if(nrow(usermentions.df) > 0){
+  g <- graph_from_data_frame(usermentions.df)
+  vertices.df <- data.frame(index=as.integer(V(g)), screen_name = names(V(g)),stringsAsFactors = FALSE)
+}
+```
+
+#### Boston Eigenvector Centrality
+
+```{r}
+if(nrow(usermentions.df) > 0){
+  ec <- centr_eigen(g,directed=FALSE)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertices.df$screen_name,
+      sep=""
+    ),
+    Eig_Centrality = as.numeric(ec$vector)
+  )
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    row.names = FALSE,
+    caption = "User Mention Network Eigenvector Centrality (Boston)"
+  )
+}
+```
+
+#### Boston Betweenness centrality
+
+```{r}
+if(nrow(usermentions.df) > 0){
+  bc <- centr_betw(g,directed=FALSE)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertices.df$screen_name,
+      sep=""
+    ),
+    Bet_Centrality = as.numeric(as.numeric(bc$res))
+  )
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "User Mention Network Betweenness Centrality (Boston)"
+  )
+}
+```
+
+#### Clustering (Omitted)
+
+#### Visualize
+
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
+  verts <- data.frame(
+      name = vertices.df$screen_name,
+      label = vertices.df$screen_name,
+      title = vertices.df$screen_name,
+      stringsAsFactors = FALSE
+  )
+  for(n in names(verts)){
+    g <- set_vertex_attr(g,n,value=verts[,n])
+  }
+  plot(
+    g,
+    vertex.size=4,
+    vertex.label=NA,
+    main = "User Mention Plot (Boston)"
+  )
+}
+```
+
+#### Interactive Boston User mention network visualization with sigmajs
+
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
+  s <- sigmajs()
+  s <- sg_from_igraph(s,g)
+  s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
+  s
+}
+```
+
+#### Interactive Boston User mention network visualization with visNetwork
+```{r fig.width=7, fig.height=7}
+if(nrow(usermentions.df) > 0){
+  g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
+
+  v <- visIgraph(g)
+  v <- visEdges(
+    v,
+    color="gray"
+  )
+  v <- visNodes(
+    v,
+    size = 15
+  )
+  v
+}
+```
+
+### Retweet network analysis for Boston
+
+This is a final network model, using the retweet network.
+
+```{r fig.width=7, fig.height=7}
+retweet.query <- sprintf("SELECT status_retweet.screen_name as retweeter,status_original.screen_name as retweeted, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM status as status_retweet JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN search_status ON status_retweet.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id WHERE status_original.created_at > '%s' AND status_retweet.retweet = 1 AND query_text.location = 'Boston' GROUP BY retweeter,retweeted;",format(Sys.Date()-7))
+retweets.df <- DBI::dbGetQuery(con,retweet.query)
+if(nrow(retweets.df) > 0){
+  g <- graph_from_data_frame(retweets.df)
+  vertices.df <- data.frame(index=as.integer(V(g)), screen_name = names(V(g)),stringsAsFactors = FALSE)
+}
+```
+
+#### Eigenvector Centrality
+
+```{r}
+if(nrow(retweets.df) > 0){
+  ec <- centr_eigen(g,directed=FALSE)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertices.df$screen_name,
+      sep=""
+    ),
+    Eig_Centrality = as.numeric(ec$vector)
+  )
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "Retweet Network Eigenvector Centrality (Boston)"
+  )
+}
+```
+
+#### Betweenness Centrality
+
+```{r}
+if(nrow(retweets.df) > 0){
+  bc <- centr_betw(g,directed=FALSE)
+  df <- data.frame(
+    Screen_Name = paste(
+      "@",
+      vertices.df$screen_name,
+      sep=""
+    ),
+    Bet_Centrality = as.numeric(bc$res)
+  )
+  df <- df[order(df[,2],decreasing=TRUE),]
+  knitr::kable(
+    df[1:10,],
+    caption = "Retweet Network Betweenness Centrality (Boston)"
+  )
+}
+```
+
+#### Clustering (Omitted)
+
+#### Visualize
+
+```{r fig.width=7, fig.height=7}
+if(nrow(retweets.df) > 0){
+  verts <- data.frame(
+      name = vertices.df$screen_name,
+      label = vertices.df$screen_name,
+      title = vertices.df$screen_name,
+      stringsAsFactors = FALSE
+  )
+
+  for(n in names(verts)){
+    g <- set_vertex_attr(g,n,value=verts[,n])
+  }
+
+  plot(g,vertex.color=vertex_attr(g,"color"),vertex.size=4,vertex.label=NA)
+}
+```
+
+#### Interactive Boston Retweet network visualization with sigmajs
+
+```{r fig.width=7, fig.height=7}
+if(nrow(retweets.df) > 0){
+  s <- sigmajs()
+  s <- sg_from_igraph(s,g)
+  s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
+  s
+}
+```
+
+#### Interactive Boston Retweet network visualization with visNetwork
+```{r fig.width=7, fig.height=7}
+if(nrow(retweets.df) > 0){
+  g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
+
+  v <- visIgraph(g)
+  v <- visEdges(
+    v,
+    color="gray"
+  )
+  v <- visNodes(
+    v,
+    size = 15
+  )
+  v
+}
+```
+
+## Don't forget to disconnect!
+
+```{r}
+DBI::dbDisconnect(con)
+```
+
+
+
+
+
+
+
+
+

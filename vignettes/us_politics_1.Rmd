@@ -81,7 +81,7 @@ Run this line, log into Twitter, and get the authentication PIN.  If you get an 
 It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
 
 ```{r eval=FALSE}
-save(auth.vector,"auth_vector.RData")
+save(auth.vector,file="auth_vector.RData")
 ```
 
 ```{r echo=FALSE}

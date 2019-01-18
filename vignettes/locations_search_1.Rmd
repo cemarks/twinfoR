@@ -1,0 +1,136 @@
+---
+title: "Locations Search Part I"
+author: "Christopher Marks"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Locations Search Part I}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# PART I: Initialize and Execute Search Queries
+
+This is the first part of a two-part vignette demonstrate the use of the Twitter Search API collection and analysis functionality of the `twinfoR` package.  One use of Twitter analyses is to investigate what is going on in different locations.  A simple way to collect Tweets related to a location is to use the [Twitter Search API](https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets), searching on the hashtag containing the location name.  Of course, this introduces a bias into the analysis, but can still be useful.
+
+In this Vignette, we'll look at two locations: Boston and Guatemala City.  We'll use the following hashtags:
+
+1. Boston
+** #Boston
+1. Guatemala City
+** #GuatemalaCity
+** #CiudaddeGuatemala
+** #CuidadGuatemala
+
+# Package Import
+
+Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
+```{r eval=FALSE}
+# install.packages("twinfoR.zip",repos=NULL,type="binary")
+library(twinfoR)
+```
+
+```{r echo=FALSE, results="hide", message=FALSE}
+devtools::load_all("~/Projects/twinfoR")
+```
+
+# Some important initializations
+
+## Query Text Table
+
+We'll be using the `query_text` table functionality of the `twitter_database`.  See `twitter_database` documentation for details.  We begin by creating the `query_text` table containing our search queries.
+
+```{r}
+query.text.dataframe <- data.frame(
+  query_text = c(
+    "#Boston",
+    "#GuatemalaCity",
+    "#CiudaddeGuatemala",
+    "#CiudadGuatemala"
+  ),
+  location = c(
+    "Boston",
+    "Guatemala City",
+    "Guatemala City",
+    "Guatemala City"
+  ),
+  stringsAsFactors = FALSE
+)
+```
+
+## Initialize database
+
+We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the location database with our `query.text.dataframe`.  Note that this vignette does not use the `query_users` table, but it could.  See the US Politics vignette and the `twitter_database` documentation for examples on how to include and use a `query_users` table.
+
+```{r echo=FALSE, results="hide"}
+file.remove("~/twitter_locations/locations.sqlite")
+```
+
+```{r}
+dir.create("~/twitter_locations",showWarnings=FALSE)
+setwd("~/twitter_locations")
+con <- twitter_database(
+  "locations.sqlite",
+  query.text.df = query.text.dataframe
+)
+```
+
+## Authenticate to Twitter API
+
+We'll use the [INFORM-Tutorial](http://zlisto.scripts.mit.edu/informs_tutorial/tutorial.html) Twitter Application.  Alternatively, you can supply your own application credentials using the `authorize_app` function.
+
+*You will need a Twitter Account to continue!*  If you don't have one, you can easily create one on the [Twitter](https://twitter.com) website.  If you do not have a Twitter account and do not wish to make one, *this package will be of very limited use to you*.  
+
+I recommend logging onto Twitter in your Browser before running this line.  Either way, be careful not to hit <Enter> immediately after running it, for example by copying and pasting the whole line with the 'newline' character into an R console. 
+
+```{r eval=FALSE}
+auth.vector <- authorize_IT()
+```
+
+Run this line, log into Twitter, and get the authentication PIN.  If you get an error message from Twitter saying the URL is expired, the probable cause is that you hit <Enter> before entering the PIN, possibly when you copied and pasted the command.
+
+It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
+
+```{r eval=FALSE}
+save(auth.vector,file="auth_vector.RData")
+```
+
+```{r echo=FALSE}
+load("~/twitter_locations/auth_vector.RData")
+```
+
+# Search
+
+Now we query the Twitter Search API for the search queries in the `query_text` table.  We will *not* include sentiment analysis.  For examples on how to include sentiment analysis in Twitter collections, see the documentation for `insert_statuses`, `user_timeline_recursive`,`update_user_timelines`, and `update_search`, as well as the US Politics vignette.
+
+Because of the Twitter API rate limits, this could take a few minutes.
+
+```{r eval = TRUE}
+update_search(
+  con,
+  calc.Rsentiment = FALSE, #Not required; this is the default
+  calc.syu = FALSE #Not required; this is the default
+)
+```
+
+# Summarize the database
+
+To wrap up part I, we can view a summary of what is in our Twitter database.  
+
+```{r}
+summarize_database(con)
+```
+
+Finally, to conclude this part of the vignette, we close the data connection.
+
+```{r}
+DBI::dbDisconnect(con)
+```
+
