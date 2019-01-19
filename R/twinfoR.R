@@ -1,28 +1,155 @@
 #' twinfoR: A package for mining Twitter.
 #'
-#' Methods for authorizing Apps and obtaining access tokens,
-#' collecting and storing Twitter data, and analyzing
-#' the data through plots, wordclouds, and descriptive statistics.
-#' Data is collected through the
-#' \href{https://developer.twitter.com/en/docs/api-reference-index}{Twitter REST APIs}.
+#' Methods for collecting and analyzing data from the Twitter REST APIs
+#' 
+#' @section What this package does:
+#' The goal of this package is to make it very easy to sent user authenticated
+#' queries to the \href{https://developer.twitter.com/en/docs/api-reference-index}{Twitter REST APIs},
+#' and collect, store, and analyze the response data.
+#' 
+#' @section Installation:
+#' Install from the compiled .zip file provided.
+#' 
+#' \code{install.packages("twinfoR.zip",repos=NULL,type="binary")}
 #'
 #' @section Authentication:
 #' The \code{\link{authorize_app}} and \code{\link{authorize_IT}} provide
-#' methods to obtain access tokens needed for most API methods.
+#' methods to obtain access tokens needed for most API methods.  These methods
+#' require the user to log on to Twitter and authorize a Twitter Application
+#' on the user's account.  **You must have a Twitter account to authenticate.**  
+#' Without a \href{https://www.twitter.com}{Twitter account}, this package will
+#' be of very limited use.  When calling either of the authentication functions, 
+#' use care not to hit <ENTER> following the call to the function until you have
+#' authorized the App in your browser, retrieved the PIN, and entered the PIN into
+#' the R console.  This mistake is easy to make if you are copying and pasting
+#' the authentication function into the console. 
+#' 
+#' All methods in this package that send requests to the Twitter REST APIs, with 
+#' the single exception of \code{\link{twitter_request}}, look for user 
+#' authentication credentials in a variable named \code{auth.vector} if
+#' credentials are not supplied to the function.
+#'
+#' @section Twitter Requsts:
+#' The workhorse function for this package is \code{\link{twitter_request}}.
+#' It can be used to send a user authenticated request to any of the 
+#' \href{https://developer.twitter.com/en/docs/api-reference-index}{REST API endpoints}.
+#' See \code{\link{twitter_request}} documentation for details.  All functions
+#' in this package that send requests to the Twitter REST APIs call this function.
+#' 
+#' @section Basic API Methods:
+#'
+#' This package offers several functions that access common Twitter REST API endpoints
+#' and return the response.  These functions are:
+#' \itemize{
+#'     \item \code{\link{search_tweets}} (see \href{https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets}{Twitter Search API})
+#'     \item \code{\link{user_timeline}} (see \href{https://developer.twitter.com/en/docs/tweets/search/api-reference/get-statuses-user_timeline}{User Timeline API})
+#'     \item \code{\link{user_lookup}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-lookup}{User Lookup API})
+#'     \item \code{\link{user_show}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-show}{Show User API})
+#'     \item \code{\link{status_lookup}} (see \href{https://developer.twitter.com/en/docs/tweets/post-and-engage/api-reference/get-statuses-lookup}{Status Lookup API})
+#'     \item \code{\link{status_show}} (see \href{https://developer.twitter.com/en/docs/tweets/post-and-engage/api-reference/get-statuses-show-id}{Show Status API})
+#'     \item \code{\link{user_search}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-search}{User Search API})
+#'     \item \code{\link{followers_ids}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-ids}{Followers IDs API})
+#'     \item \code{\link{friends_ids}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-ids}{Friends IDs API})
+#'     \item \code{\link{followers_list}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-list}{Followers List API})
+#'     \item \code{\link{friends_list}} (see \href{https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-list}{Friends List API})
+#' }
+#' 
+#' @section Recursive API Methods:
+#' 
+#' Often it is useful to call the methods listed in the preceding section recursively, 
+#' in order to continue to collect relevant data from the Twitter REST APIs.  Twitter
+#' imposes rate limits on all of these API end points.  The following functions
+#' recursively query the end points, but include a delay for each query in order
+#' to build a large data set without exceeding the rate limits.  The recursive nature
+#' of these functions varies.  Some functions are designed to iterate through more
+#' inputs than a single query can handle, e.g., \code{\link{status_lookup_recursive}};
+#' others page through more results than can be returned by a single query, e.g.,
+#' \code{\link{search_tweets_recursive}}.  The recursive API request functions are
+#' \itemize{
+#'     \item \code{\link{search_tweets_recursive}}
+#'     \item \code{\link{user_timeline_recursive}}
+#'     \item \code{\link{user_lookup_recursive}}
+#'     \item \code{\link{status_lookup_recursive}}
+#'     \item \code{\link{user_search_recursive}}
+#'     \item \code{\link{followers_list_recursive}}
+#'     \item \code{\link{friends_list_recursive}}
+#'     \item \code{\link{followers_ids_recursive}}
+#'     \item \code{\link{friends_ids_recursive}}
+#' }
+#' These recursive functions can return the results to the user, or, if a 
+#' \code{\link{twitter_database}} connection is supplied, they will insert
+#' the results directly into the database.  This specific database structure
+#' is provided in the next section.
 #'
 #' @section Data:
-#'
-#' @section Collection:
-#'
+#' This package offers a useful SQLite data structure that can be initialized
+#' or re-established useing the \code{\link{twitter_database}} function.  
+#' Understanding this data structure and familiarity with SQLite syntax will
+#' enable a user to carry out a wide array of analyses that are tailored for
+#' specific scenarios using this package.  Of  particular note, the 
+#' \code{query_users} and \code{query_text} tables enable a user to specify
+#' and categorize query criteria that can be executed and analyzed over
+#' a time horizon.  The following functions act on a \code{\link{twitter_database}}
+#' connection, and interact with the \code{query_text} and \code{query_users} tables,
+#' enabling a wide range of collection and analysis capabilities.
+#' \itemize{
+#'     \item \code{\link{update_users}}
+#'     \item \code{\link{update_user_timelines}}
+#'     \item \code{\link{update_search}}
+#'     \item \code{\link{get_all_friends}}
+#'     \item \code{\link{get_all_followers}}
+#'     \item \code{\link{summarize_database}}
+#' }
+#' Additionally, the following functions enable direct updates to a 
+#' \code{\link{twitter_database}}, and are called by some of the functions
+#' listed above.
+#' \itemize{
+#' \item \code{\link{upload_query_users}}
+#' \item \code{\link{upload_query_text}}
+#' \item \code{\link{insert_users}}
+#' \item \code{\link{insert_statuses}}
+#' \item \code{\link{insert_followers}}
+#' \item \code{\link{insert_friends}}
+#' }
+#' 
 #' @section Analysis:
-#'
+#' While many analyses are situation dependent, this package provides several
+#' useful, basic analysis and plotting functions that have applicability in many
+#' use cases.  These functions include the following:
+#' \itemize{
+#'     \item \code{\link{open_user}} (open a user profile in a browser)
+#'     \item \code{\link{status_media}} (general function to manage images attached to Tweets)
+#'     \item \code{\link{top_hashtags}}
+#'     \item \code{\link{top_usermentions}}
+#'     \item \code{\link{top_urls}}
+#'     \item \code{\link{top_media}}
+#'     \item \code{\link{top_tweeters}}
+#'     \item \code{\link{most_liked}}
+#'     \item \code{\link{most_retweeted}}
+#'     \item \code{\link{most_popular_RT_in_sample}}
+#'     \item \code{\link{most_reach}}
+#' }
+#' The following functions produce plots of different aspects of the Twitter data.
+#' \itemize{
+#'     \item \code{\link{wordcloud_plot}}
+#'     \item \code{\link{sentiment_plots}}
+#'     \item \code{\link{timeplot}}
+#' }
+#' 
+#' @section Vignettes:
+#' The vignettes for this package demonstrate many of features described above.  They are:
+#' \itemize{
+#'     \item basic.  This vignette uses the API calls to collect data and provides some simple analyses.
+#'     \item US Politics (Parts I and II).  This vignette walks through the process of collecting 
+#' and analyzing Tweets from US politicians.  It demonstrates the
+#' \code{\link{twitter_database}} functionality.
+#'     \item Locations Search (Parts I and II).  This vignette walks through the process of collecting 
+#' and analyzing Tweets using different search criteria.  It demonstrates the
+#' \code{\link{twitter_database}} functionality.
+#' }
+#' 
 #' @docType package
 #' @name twinfoR
-#' @examples
-#'
-#'
-#'
-#'
 #'
 NULL
 

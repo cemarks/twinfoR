@@ -39,8 +39,8 @@ returns a single user object.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 potus.obj <- user_show(
   "realDonaldTrump",
@@ -48,7 +48,7 @@ potus.obj <- user_show(
 )
 
 cat(potus$description)
-
+}
 }
 \seealso{
 \code{\link{twitter_request}}, \code{\link{authorize_app}}, \code{\link{user_lookup}}

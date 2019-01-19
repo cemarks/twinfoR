@@ -5,7 +5,8 @@
 \title{Recursively Get Friends IDs}
 \usage{
 friends_ids_recursive(screen_name, user_id, data.connection,
-  authentication.vector, stringify_ids = TRUE)
+  authentication.vector, stringify_ids = TRUE, tweet_mode = "extended",
+  ...)
 }
 \arguments{
 \item{screen_name}{character single screen_name.  This is only used is \code{user_id} is missing.}
@@ -17,9 +18,14 @@ friends_ids_recursive(screen_name, user_id, data.connection,
 \item{authentication.vector}{character vector containing authentication tokens and secrets.}
 
 \item{stringify_ids}{logical indicating whether to return user_ids as strings.}
+
+\item{tweet_mode}{character either 'extended' for full_text statuses or 'compat' for
+140 character compatability. This parameter has no effect if no \code{data.connection} is provided.}
+
+\item{...}{other named parameters passed to \code{\link{insert_users}}.}
 }
 \value{
-\code{NULL} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
+character collected \code{user_id} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
 }
 \description{
 Recursively call the Friends IDs API to get all friends IDs
@@ -31,11 +37,12 @@ friends/list endpoint (see
 A user_id or screen_name is required.  If an authentication vector is not
 provided and there is no globally defined \code{auth.vector}, an error is returned.  A *one minute* delay
 is included for each query in order to avoid exceeding the rate limit.
+If a \code{data.connection} is provided, user objects will also be collected and inserted.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 dma.friends <- friends_ids_recursive(
   "Nature_Island",
@@ -45,8 +52,8 @@ dma.friends <- friends_ids_recursive(
 cat(
   dma.friends[1:20]
 )
-
+}
 }
 \seealso{
-\code{\link{friends_ids}}, \code{\link{insert_friends}}
+\code{\link{friends_ids}}, \code{\link{insert_friends}}, \code{\link{twitter_database}}
 }

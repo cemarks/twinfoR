@@ -47,8 +47,8 @@ function will throw an error.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 searched.users <- user_search_recursive(
   "Trump",
@@ -57,8 +57,8 @@ searched.users <- user_search_recursive(
 )
 
 cat(searched.users[[3]]$description)
-
+}
 }
 \seealso{
-\code{\link{user_search}}, \code{\link{insert_users}}
+\code{\link{user_search}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 }

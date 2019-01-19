@@ -56,8 +56,8 @@ function will throw an error.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 original.statuses <- user_timeline_recursive("realDonaldTrump")
 status.ids <- sapply(original.statuses,function(x) return(x$id_str))
@@ -68,8 +68,8 @@ new.statuses <- status_lookup_recursive(
 )
 
 cat(new.statuses[[1]]$full_text)
-
+}
 }
 \seealso{
-\code{\link{status_lookup}}, \code{\link{insert_statuses}}
+\code{\link{status_lookup}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 }

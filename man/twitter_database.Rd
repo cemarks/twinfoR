@@ -59,9 +59,11 @@ geo_enabled \tab TINYINT(1) \tab Account geo-enabled TINYINT(1)ean \cr
 verified \tab TINYINT(1) \tab Account owner verified TINYINT(1)ean \cr
 lang \tab TEXT \tab Account langauage abbreviation \cr
 status_id \tab TEXT \tab Account recent/pinned status \cr
-profile_img_hash \tab TEXT \tab profile image average hash (optional, requires OpenImageR) \cr
+profile_image_url \tab TEXT \tab URL to profile image \cr
+profile_banner_url \tab TEXT \tab URL to profile banner image \cr
+profile_image_hash \tab TEXT \tab profile image average hash (optional, requires OpenImageR) \cr
 profile_banner_hash \tab TEXT \tab profile banner average hash (optional, requires OpenImageR) \cr
-profile_img_b64 \tab TEXT \tab profile image 64-bit encoding (optional, requires base64enc) \cr
+profile_image_b64 \tab TEXT \tab profile image 64-bit encoding (optional, requires base64enc) \cr
 profile_banner_b64 \tab TEXT \tab profile banner 64-bit encoding (optional, requires base64enc)
 }
 }
@@ -172,6 +174,9 @@ COLUMN \tab TYPE \tab DESCRIPTION \cr
 id \tab TEXT \tab Row ID for reference and indexing \cr
 user_id \tab TEXT or TEXT \tab Twitter user_id \cr
 screen_name \tab TEXT \tab Twitter screen_name \cr
+since_id \tab TEXT \tab Most recent status from user in database \cr
+friends_collected \tab TINYINT \tab Indicates whether user's friends have been collected \cr
+followers_collected \tab TINYINT \tab Indicates whether user's followers have been collected \cr
 [CATEGORY1] \tab [TYPE] \tab Analyst-defined user categorization \cr
 [CATEGORY2] \tab [TYPE] \tab Analyst-defined user categorization \cr
 ... \tab ... \tab Analyst-defined user categorization \cr
@@ -188,6 +193,7 @@ It can include as many columns as the analyst requires.
 COLUMN \tab TYPE \tab DESCRIPTION \cr
 id \tab INT \tab Row ID for indexing and referencing. \cr
 query_text \tab TEXT \tab Character string to be used in search queries \cr
+since_id \tab TEXT \tab Most recent status from query in database \cr
 [CATEGORY1] \tab [TYPE] \tab Analyst-defined user categorization \cr
 [CATEGORY2] \tab [TYPE] \tab Analyst-defined user categorization \cr
 ... \tab ... \tab Analyst-defined user categorization \cr

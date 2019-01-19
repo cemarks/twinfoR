@@ -97,7 +97,7 @@ wordcloud_plot <- function(
   )
   if(nrow(word.df)>10){
     if(!is.null(file.name)){
-      png(file.name,width=600,height=600)
+      grDevices::png(file.name,width=600,height=600)
     }
     wordcloud::wordcloud(
       words=word.df$word,
@@ -106,7 +106,7 @@ wordcloud_plot <- function(
       colors = c("green","red")
     )
     if(!is.null(file.name)){
-      dev.off()
+      grDevices::dev.off()
     }
   }
 }
@@ -288,9 +288,9 @@ sentiment_barplot <- function(
   if(is.null(file.name)){
     print(g)
   } else {
-    png(file.name)
+    grDevices::png(file.name)
     print(g)
-    dev.off()
+    grDevices::dev.off()
   }
 }
 
@@ -329,9 +329,9 @@ sentiment_lineplot <- function(
   if(is.null(file.name)){
     print(g)
   } else {
-    png(file.name,height=600,width=800)
+    grDevices::png(file.name,height=600,width=800)
     print(g)
-    dev.off()
+    grDevices::dev.off()
   }
 }
 
@@ -348,6 +348,8 @@ sentiment_lineplot <- function(
 #' with creation times or dates strictly less than this parameter.
 #' @param where.criteria character additional criteria to filter the status results, in 
 #' SQLite syntax.
+#' @param group.column character column from Twitter database in the form of \code{table.column}.
+#' Results will be grouped for comparison on this variable.
 #' @param file.name character name of file to save the word cloud.  If \code{NULL}, the
 #' time plot is displayed on the screen.
 #' @param caption character caption to include on the plot.
@@ -489,8 +491,8 @@ tweet_timeplot <- function(
   if(is.null(file.name)){
     print(g)
   } else {
-    png(file.name,height=600,width=800)
+    grDevices::png(file.name,height=600,width=800)
     print(g)
-    dev.off()
+    grDevices::dev.off()
   }
 }

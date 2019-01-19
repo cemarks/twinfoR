@@ -229,7 +229,7 @@ update_users <- function(
 #' @return \code{NULL} (Invisible).
 #'
 #' @seealso \code{\link{twitter_database}}, \code{\link{user_timeline_recursive}},
-#' \code{\link{\update_users}}, \code{\link{insert_statuses}}
+#' \code{\link{update_users}}, \code{\link{insert_statuses}}
 #' @export
 #' @examples
 #'
@@ -449,7 +449,7 @@ update_search <- function(
     row.ids <- rep(0,length(query.text))
     current.row.id <- max(query.df$row_id)+1
     for(i in 1:length(query.text)){
-      w <- which(lower(query.df$query_text)==lower(query.text[i]))
+      w <- which(tolower(query.df$query_text)==tolower(query.text[i]))
       if(length(w)>0){
         row.ids[i] <- query.df$row_id[w[1]]
       } else {
@@ -531,7 +531,7 @@ update_search <- function(
 #' @return \code{NULL} (Invisible).
 #'
 #' @seealso \code{\link{twitter_database}}, \code{\link{friends_ids_recursive}},
-#' \code{\link{\insert_friends}}
+#' \code{\link{insert_friends}}
 #' @export
 #' @examples
 #'
@@ -731,7 +731,7 @@ get_all_friends <- function(con,
 #' @return \code{NULL} (Invisible).
 #'
 #' @seealso \code{\link{twitter_database}}, \code{\link{followers_ids_recursive}},
-#' \code{\link{\insert_friends}}
+#' \code{\link{insert_friends}}
 #' @export
 #' @examples
 #'

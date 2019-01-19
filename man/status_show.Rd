@@ -49,8 +49,8 @@ returns a single status object.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 status.obj <- status_show(
   "1059843699298000897",
@@ -58,7 +58,7 @@ status.obj <- status_show(
 )
 
 cat(status.obj$full_text)
-
+}
 }
 \seealso{
 \code{\link{twitter_request}}, \code{\link{authorize_app}}, \code{\link{status_lookup}}

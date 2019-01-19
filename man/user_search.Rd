@@ -39,8 +39,8 @@ provided and there is no globally defined \code{auth.vector}, an error is return
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 searched.users <- user_search(
   "Donald Trump",
@@ -48,7 +48,7 @@ searched.users <- user_search(
 )
 
 cat(searched.users[[3]]$description)
-
+}
 }
 \seealso{
 \code{\link{twitter_request}}, \code{\link{authorize_app}}

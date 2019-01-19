@@ -46,14 +46,14 @@ function will throw an error.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 user.ids.response <- get_followers_ids("realDonaldTrump")
 user.ids <- user.ids.response$ids
 
 users <- user_lookup_recursive(user_id=user.ids)
-
+}
 }
 \seealso{
-\code{\link{user_lookup}}, \code{\link{insert_users}}
+\code{\link{user_lookup}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 }

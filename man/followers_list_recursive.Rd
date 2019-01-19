@@ -29,7 +29,7 @@ in the returned follower user objects.}
 \item{...}{other named parameters passed to \code{\link{insert_users}}.}
 }
 \value{
-\code{NULL} if \code{data.connection} is supplied, otherwise a list of user objects.
+character collected \code{user_id} if \code{data.connection} is supplied, otherwise a list of user objects.
 }
 \description{
 Recursively call the Followers List API to get all followers
@@ -44,8 +44,8 @@ is included for each query in order to avoid exceeding the rate limit.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 dma.relief.followers <- followers_list_recursive(
   "dominica_relief",
@@ -62,8 +62,8 @@ cat(
     collapse="\\n"
   )
 )
-
+}
 }
 \seealso{
-\code{\link{followers_list}}, \code{\link{insert_followers}}, \code{\link{insert_users}}
+\code{\link{followers_list}}, \code{\link{insert_followers}}, \code{\link{insert_users}}, \code{\link{twitter_database}}
 }

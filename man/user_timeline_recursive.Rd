@@ -38,7 +38,8 @@ equal to this value (and therefore no more recent) will be returned.}
 from the results.}
 }
 \value{
-\code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
+character most recent status id if \code{data.connection} is supplied, 
+otherwise a list of status objects (lists).
 }
 \description{
 Call the get/user_timeline API recursively
@@ -59,16 +60,15 @@ function will throw an error.
 }
 \examples{
 
-## Not run: authenticate
-# auth.vector <- authorize_IT()
+\dontrun{
+auth.vector <- authorize_IT()
 
 user.statuses <- user_timeline_recursive(
   "realDonaldTrump",
   authentication.vector = auth.vector
 )
-
-
+}
 }
 \seealso{
-\code{\link{user_timeline}}, \code{\link{insert_statuses}}
+\code{\link{user_timeline}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 }

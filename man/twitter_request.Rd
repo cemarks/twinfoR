@@ -26,6 +26,9 @@ httr response object.
 Send an authenticated HTTPS request to a Twitter REST API endpoint.
 }
 \details{
+This is the workhorse function of this package, as it is called by every 
+function that queries the Twitter API.  It is useful for accessing API endpoints
+that are not provided in this package.
 The authentication vector must be provided.  It can be created using the
 \code{\link{authorize_app}} or \code{\link{authorize_IT}} functions, or can be read from
 a locally saved location if one has already been created.  This function
@@ -34,13 +37,14 @@ Twitter API endpoint specified.  Parameters vary among the endpoints; user
 familiarity with the endpoint is assumed.
 }
 \examples{
-## Not run: read authentication vector from file.
-# auth.vector <- load("auth-vector.RData")
+
+\dontrun{
+auth.vector <- load("auth-vector.RData")
 
 resource.url <- "https://api.twitter.com/1.1/statuses/user_timeline.json"
 params <- list(screen_name="realDonaldTrump",count="200",tweet_mode="extended")
 httr.response <- twitter_request(auth.vector,resource.url,params)
-
+}
 }
 \seealso{
 \code{\link{authorize_app}},\code{\link{authorize_IT}}

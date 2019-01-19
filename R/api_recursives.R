@@ -163,7 +163,7 @@ search_tweets_recursive <- function(
             paste("(",query.row.id,",'",status.ids,"')",sep="",collapse=","),
             ";"
           )
-          DBI::dbExecute(con,query)
+          DBI::dbExecute(data.connection,query)
         }
       }
       max_id <- as.character(
@@ -214,7 +214,7 @@ search_tweets_recursive <- function(
 #' @param max_id numeric or character status_id.  If suppled, only tweets with status_ids less than or
 #' equal to this value (and therefore no more recent) will be returned.
 #' @param trim_user logical indicating whether to remove the user object from each status.
-#' @param exlude_replies logical indicating whether to filter user replies to other statuses
+#' @param exclude_replies logical indicating whether to filter user replies to other statuses
 #' from the results.
 #' @param include_rts logical indicating whether to include retweets in the results.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for

@@ -8,7 +8,7 @@ search_tweets_recursive(q, data.connection, authentication.vector,
   geocode = NULL, lang = NULL, locale = NULL,
   result_type = "recent", until = NULL, since_id = NULL,
   max_id = NULL, include_entities = TRUE, tweet_mode = "extended",
-  ...)
+  query.row.id = NULL, ...)
 }
 \arguments{
 \item{q}{character search query string.}
@@ -46,17 +46,22 @@ equal to this value (and therefore no more recent) will be returned.}
 \item{tweet_mode}{character either 'extended' for full_text statuses or 'compat' for
 140 character compatability.}
 
+\item{query.row.id}{integer row \code{id} of the query in the \code{query_text} table.  This
+value is inserted into the \code{search_status} table.  Ignored if no \code{data.connection}
+provided.  See \code{\link{twitter_database}}.}
+
 \item{...}{other named parameters passed to \code{\link{insert_statuses}}.}
 }
 \value{
-\code{NULL} if \code{data.connection} is supplied, otherwise a list of status objects (lists).
+character most recent status id collected if \code{data.connection} is supplied,
+otherwise a list of status objects (lists).
 }
 \description{
 Call the Twitter Search API recursively
 }
 \details{
 This function recursively searches the Twitter API from most recent results to less
-recent results until no tweets are returned.  Each query includes a one-second
+recent results until no tweets are returned.  Each query includes a five-second
 delay in order to prevent exceeding the API rate limit.  Optionally, this function
 inputs a function to call that takes the resulting status list as an argument.  This
 function can be anything, but is intended to be a function that writes the statuses to
@@ -68,15 +73,16 @@ this variable as the \code{authentication.vector}.  If this variable does not ex
 function will throw an error.
 }
 \examples{
-## Not run: read authentication vector from file.
-# auth.vector <- load("auth-vector.RData")
+
+\dontrun{
+auth.vector <- load("auth-vector.RData")
 query <- "Miami"
 statuses <- search_tweets_recursive(
   query,
   authentication.vector = auth.vector
 )
-
+}
 }
 \seealso{
-\code{\link{search_tweets}}, \code{\link{insert_statuses}}
+\code{\link{search_tweets}}, \code{\link{insert_statuses}}, \code{\link{twitter_database}}
 }

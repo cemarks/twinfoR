@@ -11,12 +11,21 @@
 #' application.  The Twitter website will return a PIN, which the user
 #' must enter in R to complete the authentication.
 #'
-#' @section Note:
+#' @section Authentication Keys:
 #' The application consumer secret and user token secret are authentication passcodes
 #' that should not be shared.  The authentication vector returned by this function
 #' can be saved locally and reloaded for use at a later time, enabling the user
 #' to skip the authentication step.
 #'
+#' @section Note:
+#' It is easy to hit <ENTER> in the console after calling this function before
+#' entering your PIN, especially when copying and pasting code; this will
+#' result in an authentication failure. To avoid this 
+#' mistake, enter the \code{authorize_app} line manually into the console.  Then,
+#' log on to Twitter and browse to the URL provided (if this does not happen automatically),
+#' authorize the app in the browser, retrieve the PIN, and enter the PIN back into the
+#' R Console. 
+#' 
 #' @param consumer.token character Twitter application consumer token
 #' (see \href{https://developer.twitter.com/en/docs/basics/authentication/overview/3-legged-oauth}{Twitter Oauth}).
 #' @param consumer.secret character Twitter application consumer secret
@@ -39,7 +48,11 @@
 #' ## Consumer token and consumer secret are fake.
 #' consumer.token <- "ArP09ecJ8ismgszHGuxis5p2tie6zLiLiWhgsWPbZxw3qpLSds"
 #' consumer.secret <- "7N2e5hh1fYzFYfYib4OvRGv1zYAOpBGg2d2SK81qygnIYdtjnohehg2gx11HTInmCFF4uC9puLl"
+#' 
+#' # Be careful not to hit <ENTER> before entering your PIN following the next line.
+#' 
 #' auth.vector <- authorize_app(consumer.token,consumer.secret)
+#' 
 #' }
 authorize_app<-function(consumer.token,consumer.secret){
   consumer.token <- as.character(consumer.token)
@@ -100,13 +113,21 @@ authorize_app<-function(consumer.token,consumer.secret){
 #' the user's authentication credentials (access token and secret), which the user
 #' can save locally for future use.
 #'
-#' @section Note:
+#' @section Authentication Keys:
 #' The application consumer secret and user token secret are authentication passcodes
 #' that should not be shared.  In particular, the INFORMS-Tutorial consumer secret, while
 #' provided as a part of this package, should not be shared or used outside of
 #' the scope of mining Twitter data for the purposes of research and analyses that
 #' conform to applicable laws and policies, including Twitter's terms of use.
 #'
+#' @section Note:
+#' It is easy to hit <ENTER> in the console after calling this function before
+#' entering your PIN, especially when copying and pasting code; this will
+#' result in an authentication failure. To avoid this 
+#' mistake, enter the \code{authorize_app} line manually into the console.  Then,
+#' log on to Twitter and browse to the URL provided (if this does not happen automatically),
+#' authorize the app in the browser, retrieve the PIN, and enter the PIN back into the
+#' R Console. 
 #'
 #' @return On successful authentication, a character vector containing the following named character strings:
 #' \tabular{ll}{
@@ -120,7 +141,7 @@ authorize_app<-function(consumer.token,consumer.secret){
 #'
 #' @seealso \code{\link{twitter_request}}, \code{\link{authorize_app}}
 #' @export
-#' @example
+#' @examples
 #' \dontrun{
 #' auth.vector <- authorize_IT()
 #' }

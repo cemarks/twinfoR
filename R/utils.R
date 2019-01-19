@@ -24,7 +24,7 @@ date_subtitle <- function(start.date,end.date){
 reconstitute_image <- function(base64.image,media.url,display.image=TRUE,showWarnings=TRUE){
   if(is.na(base64.image)){
     if(showWarnings){
-      warn("No image available in table row.")
+      warning("No image available in table row.")
     }
     return(NA)
   } else {
@@ -37,7 +37,7 @@ reconstitute_image <- function(base64.image,media.url,display.image=TRUE,showWar
     } else if(tolower(z.ext) == "png"){
       p <- png::readPNG(z.raw)
     } else if(tolower(z.ext) %in% c("tif","tiff")){
-      p <- tiff::readTIFF(z$raw)
+      p <- tiff::readTIFF(z.raw)
     }
     if(is.na(p) && showWarnings){
       warn("URL does not include file extension")
@@ -90,7 +90,7 @@ make_top10_excel <- function(
 ){
   if(requireNamespace("xlsx")){
     maxchar <- 0
-    if(nrow(top10.df) > 1 && var(top10.df[,count.col]) > 0){
+    if(nrow(top10.df) > 1 && stats::var(top10.df[,count.col]) > 0){
       for(j in 1:ncol(top10.df)){
         if(is.character(top10.df[,j]) || is.factor(top10.df[,j])){
           top10.df[,j] <- gsub("\n"," // ",top10.df[,j])
@@ -215,6 +215,6 @@ make_top10_excel <- function(
       }
     }
   } else {
-    warn("Package xlsx is required to output to Excel file.  No Excel file created.")
+    warning("Package xlsx is required to output to Excel file.  No Excel file created.")
   }
 }

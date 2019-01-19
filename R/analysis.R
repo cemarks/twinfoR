@@ -46,7 +46,7 @@ open_user <- function(
       screen_name <- u$screen_name
     }
   }
-  browseURL(
+  utils::browseURL(
     paste(
       "http://twitter.com/",
       screen_name,
@@ -80,10 +80,10 @@ open_user <- function(
 #' 
 #' @return NULL (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{reconstitute_image}}
+#' @seealso \code{\link{twitter_database}}
 #' @export
 #' @examples
-#'
+#' \dontrun{
 #' auth.vector <- authorize_IT()
 #'
 #' con <- twitter_database("throwback.sqlite")
@@ -103,7 +103,7 @@ open_user <- function(
 #'   update.media.b64 = TRUE,
 #'   hash.size = 16
 #' )
-#'
+#' }
 status_media <- function(
   media.table.row,
   conn,
@@ -216,7 +216,7 @@ user_profile_image <- function(
       }
     }
   } else {
-    p <- reconstitute_image(img.b64,profile.image.url,showWarnings=showWarnings,...)
+    p <- reconstitute_image(img.b64,profile.image.url,...)
     if(!is.na(p) && save.to.file){
       if(is.null(file.name)){
         profile.image.url.splt <- strsplit(profile.image.url,"/",fixed=TRUE)[[1]]
@@ -241,7 +241,7 @@ user_profile_image <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -262,7 +262,7 @@ user_profile_image <- function(
 #' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
 #' @export
 #' @examples
-#'
+#' \dontrun{
 #' auth.vector <- authorize_IT()
 #'
 #' con <- twitter_database(
@@ -292,7 +292,7 @@ user_profile_image <- function(
 #' 
 #' 
 #' DBI::dbDisonnect(con)
-#'
+#' }
 top_hashtags <- function(
   con,
   start.date=NULL,
@@ -341,7 +341,7 @@ top_hashtags <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -363,6 +363,7 @@ top_hashtags <- function(
 #' @export
 #' @examples
 #'
+#' \dontrun{
 #' auth.vector <- authorize_IT()
 #'
 #' con <- twitter_database(
@@ -392,7 +393,7 @@ top_hashtags <- function(
 #' 
 #' 
 #' DBI::dbDisonnect(con)
-#'
+#' }
 top_usermentions <- function(
   con,
   start.date=NULL,
@@ -443,7 +444,7 @@ top_usermentions <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -465,6 +466,7 @@ top_usermentions <- function(
 #' @export
 #' @examples
 #'
+#' \dontrun{
 #' auth.vector <- authorize_IT()
 #'
 #' con <- twitter_database(
@@ -494,7 +496,7 @@ top_usermentions <- function(
 #' 
 #' 
 #' DBI::dbDisonnect(con)
-#'
+#'}
 top_urls <- function(
   con,
   start.date=NULL,
@@ -539,7 +541,7 @@ top_urls <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -662,7 +664,7 @@ top_media <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -766,7 +768,7 @@ top_tweeters <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -875,7 +877,7 @@ most_liked <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #'
@@ -996,7 +998,7 @@ most_retweeted <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #' 
@@ -1109,7 +1111,7 @@ most_popular_RT_in_sample <- function(
 #' at times greater than or equal to the \code{start.date}, but strictly less
 #' than the \code{end.date}.  The \code{where.criteria} must be in SQLite syntax and
 #' reference tables and columns in the database (see \code{\link{twitter_database}}).
-#' Be sure to include table names, e.g., \code{user.location LIKE '%fargo%'}.
+#' Be sure to include table names, e.g., \code{user.location LIKE '\%fargo\%'}.
 #' Returns the most frequent hashtags 
 #' in the tweets meeting the filter criteria.
 #' 

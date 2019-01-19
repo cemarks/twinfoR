@@ -26,15 +26,8 @@ We begin by loading the `twinfoR` namespace, establishing the Twitter database c
 
 This code assumes the `auth.vector` from Part I is saved.  If it isn't, reauthenticate using the `authorize_IT()` function as done in Part I.
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 library(twinfoR)
-setwd("~/twitter_locations")
-con <- twitter_database("locations.sqlite")
-load("auth_vector.RData") 
-```
-
-```{r echo = FALSE, message=FALSE}
-devtools::load_all("~/Projects/twinfoR")
 setwd("~/twitter_locations")
 con <- twitter_database("locations.sqlite")
 load("auth_vector.RData") 
@@ -636,7 +629,9 @@ if(nrow(usermentions.df) > 0){
 
 #### Interactive Boston User mention network visualization with sigmajs
 
-```{r fig.width=7, fig.height=7}
+```{r eval = FALSE, fig.width=7, fig.height=7}
+# Not Run
+
 if(nrow(usermentions.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -646,7 +641,8 @@ if(nrow(usermentions.df) > 0){
 ```
 
 #### Interactive Boston User mention network visualization with visNetwork
-```{r fig.width=7, fig.height=7}
+```{r ewal = FALSE, fig.width=7, fig.height=7}
+# Not Run
 if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
 
@@ -741,7 +737,8 @@ if(nrow(retweets.df) > 0){
 
 #### Interactive Boston Retweet network visualization with sigmajs
 
-```{r fig.width=7, fig.height=7}
+```{r eval = FALSE, fig.width=7, fig.height=7}
+# Not Run
 if(nrow(retweets.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -751,7 +748,8 @@ if(nrow(retweets.df) > 0){
 ```
 
 #### Interactive Boston Retweet network visualization with visNetwork
-```{r fig.width=7, fig.height=7}
+```{r eval = FALSE, fig.width=7, fig.height=7}
+# Not Run
 if(nrow(retweets.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
 

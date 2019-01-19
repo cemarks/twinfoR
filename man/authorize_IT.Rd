@@ -35,7 +35,7 @@ into R.  Using this PIN, R will complete the authentication process and return
 the user's authentication credentials (access token and secret), which the user
 can save locally for future use.
 }
-\section{Note}{
+\section{Authentication Keys}{
 
 The application consumer secret and user token secret are authentication passcodes
 that should not be shared.  In particular, the INFORMS-Tutorial consumer secret, while
@@ -44,9 +44,21 @@ the scope of mining Twitter data for the purposes of research and analyses that
 conform to applicable laws and policies, including Twitter's terms of use.
 }
 
-\examples{
-auth.vector <- authorize_IT()
+\section{Note}{
 
+It is easy to hit <ENTER> in the console after calling this function before
+entering your PIN, especially when copying and pasting code; this will
+result in an authentication failure. To avoid this 
+mistake, enter the \code{authorize_app} line manually into the console.  Then,
+log on to Twitter and browse to the URL provided (if this does not happen automatically),
+authorize the app in the browser, retrieve the PIN, and enter the PIN back into the
+R Console.
+}
+
+\examples{
+\dontrun{
+auth.vector <- authorize_IT()
+}
 }
 \seealso{
 \code{\link{twitter_request}}, \code{\link{authorize_app}}

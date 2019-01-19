@@ -37,13 +37,9 @@ options(java.parameters = "-Xmx1024m")
 # Package Import
 
 Let's start by importing the `twinfoR` namespace.  Don't forget to install the package, if you haven't already.
-```{r eval=FALSE}
+```{r eval=TRUE}
 # install.packages("twinfoR.zip",repos=NULL,type="binary")
 library(twinfoR)
-```
-
-```{r echo=FALSE, results="hide", message=FALSE}
-devtools::load_all("~/Projects/twinfoR")
 ```
 
 # Some important initializations

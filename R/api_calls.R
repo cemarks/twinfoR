@@ -35,7 +35,7 @@
 #' params <- list(screen_name="realDonaldTrump",count="200",tweet_mode="extended")
 #' httr.response <- twitter_request(auth.vector,resource.url,params)
 #' }
-twitter_request<-function(auth.vector,base.url,query.param.list=list()){
+twitter_request<-function(auth.vector,endpoint.url,query.param.list=list()){
   consumer.token<-as.character(auth.vector['consumer.token'])
   consumer.secret<-as.character(auth.vector['consumer.secret'])
   access.token<-as.character(auth.vector['access.token'])
@@ -66,7 +66,7 @@ twitter_request<-function(auth.vector,base.url,query.param.list=list()){
   oauth.params[6,]<-c('oauth_token',access.token)
   oauth.params[7,]<-c('oauth_version','1.0')
   all.params<-rbind(query.params,oauth.params[c(1:2,4:7),])
-  oauth.sign<-gen_oauth_signature('GET',base.url,all.params,consumer.secret,access.secret)
+  oauth.sign<-gen_oauth_signature('GET',endpoint.url,all.params,consumer.secret,access.secret)
   oauth.params[3,2]<-oauth.sign
   oauth.str<-"OAuth "
   for(i in 1:dim(oauth.params)[1]){
@@ -90,12 +90,12 @@ twitter_request<-function(auth.vector,base.url,query.param.list=list()){
       mod<-paste(mod,'=',sep='')
       mod<-paste(mod,utils::URLencode(query.params[i,2],reserved=TRUE),sep="")
     }
-    x<-httr::GET(base.url,
+    x<-httr::GET(endpoint.url,
                  query=mod,
                  httr::add_headers(Authorization=oauth.str)
     )
   } else {
-    x<-httr::GET(base.url,
+    x<-httr::GET(endpoint.url,
                  httr::add_headers(Authorization=oauth.str)
     )
   }
@@ -229,7 +229,7 @@ search_tweets <- function(
 #' @param max_id numeric or character status_id.  If suppled, only tweets with status_ids less than or
 #' equal to this value (and therefore no more recent) will be returned.
 #' @param trim_user logical indicating whether to remove the user object from each status.
-#' @param exlude_replies logical indicating whether to filter user replies to other statuses
+#' @param exclude_replies logical indicating whether to filter user replies to other statuses
 #' from the results.
 #' @param include_rts logical indicating whether to include retweets in the results.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
@@ -785,6 +785,8 @@ user_search <- function(
 #'
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
 #' @param cursor numeric or character cursor value for controlling pagination.
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
 #' @param count numeric number of user_ids per page, up to 5000.
@@ -872,6 +874,8 @@ followers_ids <- function(
 #'
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
 #' @param cursor numeric or character cursor value for controlling pagination.
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
 #' @param count numeric number of user_ids per page, up to 5000.
@@ -959,6 +963,8 @@ friends_ids <- function(
 #'
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
 #' @param cursor numeric or character cursor value for controlling pagination.
 #' @param count numeric number of user_ids per page, up to 200.
 #' @param skip_status logical indicating whether to exclude the user status from the returned
@@ -1064,6 +1070,8 @@ followers_list <- function(
 #'
 #' @param screen_name character single screen_name.  This is only used is \code{user_id} is missing.
 #' @param user_id numeric or character single user_id.
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
 #' @param cursor numeric or character cursor value for controlling pagination.
 #' @param count numeric number of user_ids per page, up to 200.
 #' @param skip_status logical indicating whether to exclude the user status from the returned

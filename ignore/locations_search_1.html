@@ -309,8 +309,16 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <p>This is the first part of a two-part vignette demonstrate the use of the Twitter Search API collection and analysis functionality of the <code>twinfoR</code> package. One use of Twitter analyses is to investigate what is going on in different locations. A simple way to collect Tweets related to a location is to use the <a href="https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets">Twitter Search API</a>, searching on the hashtag containing the location name. Of course, this introduces a bias into the analysis, but can still be useful.</p>
 <p>In this Vignette, we’ll look at two locations: Boston and Guatemala City. We’ll use the following hashtags:</p>
 <ol style="list-style-type: decimal">
-<li>Boston ** #Boston</li>
-<li>Guatemala City ** #GuatemalaCity ** #CiudaddeGuatemala ** #CuidadGuatemala</li>
+<li>Boston
+<ul>
+<li>#Boston</li>
+</ul></li>
+<li>Guatemala City
+<ul>
+<li>#GuatemalaCity</li>
+<li>#CiudaddeGuatemala</li>
+<li>#CuidadGuatemala</li>
+</ul></li>
 </ol>
 </div>
 <div id="package-import" class="section level1">
@@ -380,15 +388,15 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb7-4" title="4"><span class="co">#&gt; Search categories:</span></a>
 <a class="sourceLine" id="cb7-5" title="5"><span class="co">#&gt; location</span></a>
 <a class="sourceLine" id="cb7-6" title="6"><span class="co">#&gt; since_id</span></a>
-<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt; Users: 11351</span></a>
-<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt; Statuses: 21618</span></a>
-<a class="sourceLine" id="cb7-9" title="9"><span class="co">#&gt; Unique user mentions: 5582</span></a>
-<a class="sourceLine" id="cb7-10" title="10"><span class="co">#&gt; Unique hashtags: 15931</span></a>
-<a class="sourceLine" id="cb7-11" title="11"><span class="co">#&gt; Unique URLs: 7208</span></a>
-<a class="sourceLine" id="cb7-12" title="12"><span class="co">#&gt; Total Images: 6311</span></a>
-<a class="sourceLine" id="cb7-13" title="13"><span class="co">#&gt; Unique Images: 5407</span></a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt; Users: 11520</span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt; Statuses: 22012</span></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="co">#&gt; Unique user mentions: 5684</span></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="co">#&gt; Unique hashtags: 16128</span></a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="co">#&gt; Unique URLs: 7370</span></a>
+<a class="sourceLine" id="cb7-12" title="12"><span class="co">#&gt; Total Images: 6430</span></a>
+<a class="sourceLine" id="cb7-13" title="13"><span class="co">#&gt; Unique Images: 5511</span></a>
 <a class="sourceLine" id="cb7-14" title="14"><span class="co">#&gt; Total relationships: 0</span></a>
-<a class="sourceLine" id="cb7-15" title="15"><span class="co">#&gt; Cannot get file size.  Did you change directory?</span></a></code></pre></div>
+<a class="sourceLine" id="cb7-15" title="15"><span class="co">#&gt; Database file size: 89MB</span></a></code></pre></div>
 <p>Finally, to conclude this part of the vignette, we close the data connection.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">DBI<span class="op">::</span><span class="kw">dbDisconnect</span>(con)</a></code></pre></div>
 </div>

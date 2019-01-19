@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>twinfoR</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="twinfor-a-package-for-mining-twitter.">twinfoR: A package for mining Twitter.</h1>
+<p>This package provides methods for collecting and analyzing data from the Twitter REST APIs.</p>
+<h2 id="what-this-package-does">What this package does</h2>
+<p>The goal of this package is to make it very easy to sent user authenticated queries to the <a href="https://developer.twitter.com/en/docs/api-reference-index">Twitter REST APIs</a>, and collect, store, and analyze the response data.</p>
+<h2 id="installation-and-getting-started">Installation and Getting Started</h2>
+<p>Install from the compiled .zip file provided, as shown below from the R Console. After installing, check out the documentation.</p>
+<pre class="{r}"><code>&gt; install.packages(&quot;twinfoR.zip&quot;,repos=NULL,type=&quot;binary&quot;)}
+&gt; ?twinfoR::twinfoR</code></pre>
+<p>If you do not have a copy of this package and would like one, send a request to <code>cemarks</code> at <code>alum.mit.edu</code>.</p>
+<h2 id="authentication">Authentication</h2>
+<p>The <code>authorize_app</code> and <code>authorize_IT</code> provide methods to obtain access tokens needed for most API methods. These methods require the user to log on to Twitter and authorize a Twitter Application on the user’s account. <strong>You must have a Twitter account to authenticate.</strong><br />
+Without a <a href="https://www.twitter.com">Twitter account</a>, this package will be of very limited use. When calling either of the authentication functions, use care not to hit <ENTER> following the call to the function until you have authorized the App in your browser, retrieved the PIN, and entered the PIN into the R console. This mistake is easy to make if you are copying and pasting the authentication function into the console.</p>
+<p>All methods in this package that send requests to the Twitter REST APIs, with the single exception of <code>twitter_request</code>, look for user authentication credentials in a variable named <code>auth.vector</code> if credentials are not supplied to the function.</p>
+<h2 id="twitter-requsts">Twitter Requsts</h2>
+<p>The workhorse function for this package is <code>twitter_request</code>. It can be used to send a user authenticated request to any of the <a href="https://developer.twitter.com/en/docs/api-reference-index">REST API endpoints</a>. See <code>twitter_request</code> documentation for details. All functions in this package that send requests to the Twitter REST APIs call this function.</p>
+<h2 id="basic-api-methods">Basic API Methods</h2>
+<p>This package offers several functions that access common Twitter REST API endpoints and return the response. These functions are:</p>
+<ul>
+<li><code>search_tweets</code> (see <a href="https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets">Twitter Search API</a>)</li>
+<li><code>user_timeline</code> (see <a href="https://developer.twitter.com/en/docs/tweets/search/api-reference/get-statuses-user_timeline">User Timeline API</a>)</li>
+<li><code>user_lookup</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-lookup">User Lookup API</a>)</li>
+<li><code>user_show</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-show">Show User API</a>)</li>
+<li><code>status_lookup</code> (see <a href="https://developer.twitter.com/en/docs/tweets/post-and-engage/api-reference/get-statuses-lookup">Status Lookup API</a>)</li>
+<li><code>status_show</code> (see <a href="https://developer.twitter.com/en/docs/tweets/post-and-engage/api-reference/get-statuses-show-id">Show Status API</a>)</li>
+<li><code>user_search</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-search">User Search API</a>)</li>
+<li><code>followers_ids</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-ids">Followers IDs API</a>)</li>
+<li><code>friends_ids</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-ids">Friends IDs API</a>)</li>
+<li><code>followers_list</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-followers-list">Followers List API</a>)</li>
+<li><code>friends_list</code> (see <a href="https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-friends-list">Friends List API</a>)</li>
+</ul>
+<h2 id="recursive-api-methods">Recursive API Methods</h2>
+<p>Often it is useful to call the methods listed in the preceding section recursively, in order to continue to collect relevant data from the Twitter REST APIs. Twitter imposes rate limits on all of these API end points. The following functions recursively query the end points, but include a delay for each query in order to build a large data set without exceeding the rate limits. The recursive nature of these functions varies. Some functions are designed to iterate through more inputs than a single query can handle, e.g., <code>status_lookup_recursive</code>; others page through more results than can be returned by a single query, e.g., <code>search_tweets_recursive</code>. The recursive API request functions are</p>
+<ul>
+<li><code>search_tweets_recursive</code></li>
+<li><code>user_timeline_recursive</code></li>
+<li><code>user_lookup_recursive</code></li>
+<li><code>status_lookup_recursive</code></li>
+<li><code>user_search_recursive</code></li>
+<li><code>followers_list_recursive</code></li>
+<li><code>friends_list_recursive</code></li>
+<li><code>followers_ids_recursive</code></li>
+<li><code>friends_ids_recursive</code></li>
+</ul>
+<p>These recursive functions can return the results to the user, or, if a <code>twitter_database</code> connection is supplied, they will insert the results directly into the database. This specific database structure is provided in the next section.</p>
+<h2 id="data">Data</h2>
+<p>This package offers a useful SQLite data structure that can be initialized or re-established useing the <code>twitter_database</code> function.<br />
+Understanding this data structure and familiarity with SQLite syntax will enable a user to carry out a wide array of analyses that are tailored for specific scenarios using this package. Of particular note, the <code>query_users} and</code>query_text} tables enable a user to specify and categorize query criteria that can be executed and analyzed over a time horizon. The following functions act on a <code>twitter_database</code> connection, and interact with the <code>query_text} and</code>query_users} tables, enabling a wide range of collection and analysis capabilities.</p>
+<ul>
+<li><code>update_users</code></li>
+<li><code>update_user_timelines</code></li>
+<li><code>update_search</code></li>
+<li><code>get_all_friends</code></li>
+<li><code>get_all_followers</code></li>
+<li><code>summarize_database</code></li>
+</ul>
+<p>Additionally, the following functions enable direct updates to a <code>twitter_database</code>, and are called by some of the functions listed above.</p>
+<ul>
+<li><code>upload_query_users</code></li>
+<li><code>upload_query_text</code></li>
+<li><code>insert_users</code></li>
+<li><code>insert_statuses</code></li>
+<li><code>insert_followers</code></li>
+<li><code>insert_friends</code></li>
+</ul>
+<h2 id="analysis">Analysis</h2>
+<p>While many analyses are situation dependent, this package provides several useful, basic analysis and plotting functions that have applicability in many use cases. These functions include the following:</p>
+<ul>
+<li><code>open_user</code> (open a user profile in a browser)</li>
+<li><code>status_media</code> (general function to manage images attached to Tweets)</li>
+<li><code>top_hashtags</code></li>
+<li><code>top_usermentions</code></li>
+<li><code>top_urls</code></li>
+<li><code>top_media</code></li>
+<li><code>top_tweeters</code></li>
+<li><code>most_liked</code></li>
+<li><code>most_retweeted</code></li>
+<li><code>most_popular_RT_in_sample</code></li>
+<li><code>most_reach</code></li>
+</ul>
+<p>The following functions produce plots of different aspects of the Twitter data.</p>
+<ul>
+<li><code>wordcloud_plot</code></li>
+<li><code>sentiment_plots</code></li>
+<li><code>timeplot</code></li>
+</ul>
+<h2 id="vignettes">Vignettes</h2>
+<p>The vignettes for this package demonstrate many of features described above. They are:</p>
+<ul>
+<li>Basic. This vignette uses the API calls to collect data and provides some simple analyses.</li>
+<li>US Politics (Parts I and II). This vignette walks through the process of collecting and analyzing Tweets from US politicians. It demonstrates the <code>twitter_database</code> functionality.</li>
+<li>Locations Search (Parts I and II). This vignette walks through the process of collecting and analyzing Tweets using different search criteria. It demonstrates the <code>twitter_database</code> functionality.</li>
+</ul>
+</body>
+</html>

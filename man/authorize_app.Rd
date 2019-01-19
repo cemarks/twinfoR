@@ -35,7 +35,7 @@ The user must log-in to Twitter (as directed) and authorize the
 application.  The Twitter website will return a PIN, which the user
 must enter in R to complete the authentication.
 }
-\section{Note}{
+\section{Authentication Keys}{
 
 The application consumer secret and user token secret are authentication passcodes
 that should not be shared.  The authentication vector returned by this function
@@ -43,14 +43,28 @@ can be saved locally and reloaded for use at a later time, enabling the user
 to skip the authentication step.
 }
 
+\section{Note}{
+
+It is easy to hit <ENTER> in the console after calling this function before
+entering your PIN, especially when copying and pasting code; this will
+result in an authentication failure. To avoid this 
+mistake, enter the \code{authorize_app} line manually into the console.  Then,
+log on to Twitter and browse to the URL provided (if this does not happen automatically),
+authorize the app in the browser, retrieve the PIN, and enter the PIN back into the
+R Console.
+}
+
 \examples{
-## Not Run.
+\dontrun{
 ## Consumer token and consumer secret are fake.
+consumer.token <- "ArP09ecJ8ismgszHGuxis5p2tie6zLiLiWhgsWPbZxw3qpLSds"
+consumer.secret <- "7N2e5hh1fYzFYfYib4OvRGv1zYAOpBGg2d2SK81qygnIYdtjnohehg2gx11HTInmCFF4uC9puLl"
 
-# consumer.token <- "ArP09ecJ8ismgszHGuxis5p2tie6zLiLiWhgsWPbZxw3qpLSds"
-# consumer.secret <- "7N2e5hh1fYzFYfYib4OvRGv1zYAOpBGg2d2SK81qygnIYdtjnohehg2gx11HTInmCFF4uC9puLl"
-# auth.vector <- authorize_app(consumer.token,consumer.secret)
+# Be careful not to hit <ENTER> before entering your PIN following the next line.
 
+auth.vector <- authorize_app(consumer.token,consumer.secret)
+
+}
 }
 \seealso{
 \code{\link{twitter_request}}, \code{\link{authorize_IT}}

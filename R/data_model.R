@@ -14,7 +14,7 @@
 #' tables are provided as data frames.  The search_status table is created
 #' if a 'query_text' table is created.  Each of tables are described below.
 #'
-#' @section `user` table:
+#' @section \code{user} table:
 #' This table is created automatically to contain all of the user objects
 #' collected, including user objects embedded in tweets collected using
 #' a method that returns statuses, e.g., the search API.  It consists of
@@ -45,7 +45,7 @@
 #' profile_banner_b64 \tab TEXT \tab profile banner 64-bit encoding (optional, requires base64enc)
 #' }
 #'
-#' @section `status` table:
+#' @section \code{status} table:
 #' This table contains the status or tweet objects collected.  These
 #' statuses can include retweets embedded in collected tweets or
 #' statuses embedded in user objects.  The table consists of
@@ -81,7 +81,7 @@
 #' sentiment_collected \tab TINYINT(1) \tab TINYINT(1)ean (0/1) indicating whether sentiment analysis has been run\cr
 #' }
 #'
-#' @section `user_mention` table:
+#' @section \code{user_mention} table:
 #' This table captures the one to many relationship between tweets (i.e., statuses)
 #' and user-mentions.  If a status mentions a user, that mention is captured in this
 #' table.
@@ -93,7 +93,7 @@
 #' user_mention_name \tab TEXT \tab the mentioned user's name
 #' }
 #'
-#' @section `hashtag` table:
+#' @section \code{hashtag} table:
 #' This table captures the one to many relationship between tweets (i.e., statuses)
 #' and hashtags.  If a status includes a hashtag, that hashtag is captured in this
 #' table.
@@ -103,7 +103,7 @@
 #' hashtag_text \tab TEXT \tab The hashtag text (omitting the '#')
 #' }
 #'
-#' @section `url` table:
+#' @section \code{url} table:
 #' This table captures the one to many relationship between tweets (i.e., statuses)
 #' and urls.  If a status includes a url, that url is captured in this
 #' table.
@@ -114,7 +114,7 @@
 #' extended_url \tab TEXT \tab The full URL
 #' }
 #'
-#' @section `media` table:
+#' @section \code{media} table:
 #' This table captures the one to many relationship between tweets (i.e., statuses)
 #' and attached media (images).  If a status includes an image, information about that
 #' image is captured in this table.
@@ -131,7 +131,7 @@
 #' img_b64 \tab TEXT \tab 64-bit image encoding (optional, requires base64enc)
 #' }
 #'
-#' @section `query_users` table:
+#' @section \code{query_users} table:
 #' This optional table allows analysts to categorize Twitter users for
 #' collection and analysis.  It *must* include users' screen_names or
 #' user_ids.  It can include as many columns as the analyst requires.
@@ -148,7 +148,7 @@
 #' ... \tab ... \tab Analyst-defined user categorization \cr
 #' [CATEGORYN] \tab [TYPE] \tab Analyst-defined user categorization \cr
 #' }
-#' @section `query_text` table:
+#' @section \code{query_text} table:
 #' This optional table allows analysts to categorize search queries for
 #' collection and analysis.  It *must* include a query_text column.
 #' It can include as many columns as the analyst requires.
@@ -163,7 +163,7 @@
 #' [CATEGORYN] \tab [TYPE] \tab Analyst-defined user categorization \cr
 #' }
 #'
-#' @section `search_status` table:
+#' @section \code{search_status} table:
 #' This table is created to map statuses to queries, effectively recording
 #' which search queries produced which tweets.
 #' \tabular{lll}{
@@ -180,12 +180,14 @@
 #' and query.text tables should be overwritten with tables provided (does not
 #' apply if tables are not provided).
 #'
-#' @seealso \code{\link{get_search}},\code{\link{get_timeline}}
-#' @return An S4 connection object that inherits from \link[DBI]{DBIConnection}.
+#' @seealso \code{\link{search_tweets}},\code{\link{user_timeline}}, \code{\link[DBI]{dbConnect}}
+#' @return An S4 connection object that inherits from \code{DBI::DBIConnection} class.
 #' @export
 #' @examples
 #'
-#' \notrun{con <- twitter_database("tweet_collection.sqlite")}
+#' \dontrun{
+#' con <- twitter_database("tweet_collection.sqlite")
+#' }
 #'
 twitter_database <- function(
   db.file,
@@ -223,13 +225,13 @@ twitter_database <- function(
 #' See \code{\link{twitter_database}}.  
 #'
 #' @param con a Twitter database connection.  See \code{twitter_database}.
-#' @param query.users.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
+#' @param query.users.df data frame.  See details and \code{\link{twitter_database}} documentation.
 #' @param overwrite logical indicating whether to overwrite an existing \code{query_user} table in
 #' the \code{conn} data connection.
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_timelines}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_user_timelines}}
 #' @export
 #' @examples
 #' \dontrun{
@@ -298,7 +300,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
 #' See \code{\link{twitter_database}}.  
 #'
 #' @param con a Twitter database connection.  See \code{twitter_database}.
-#' @param query.text.df data frame.  See details and \code{\link{tiwtter_database}} documentation.
+#' @param query.text.df data frame.  See details and \code{\link{twitter_database}} documentation.
 #' @param overwrite logical indicating whether to overwrite an existing \code{query_text} table in
 #' the \code{conn} data connection.
 #'
@@ -366,6 +368,8 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
 #' @param user.list list of Twitter user objects,
+#' @param authentication.vector character vector containing authentication tokens and secrets.
+#' See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.
 #' @param calc.Rsentiment logical.  If \code{TRUE}, the status text sentiment will be calculated using
 #' the \code{RSentiment} library.
 #' @param calc.syu logical.  If \code{TRUE}, the status text sentiment will be calculated using
@@ -386,8 +390,8 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
 #'
 #' @return \code{NULL} (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{user_lookup_recursive},
-#' \code{\link{user_search_recursive}, \code{\link{update_users}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{user_lookup_recursive}},
+#' \code{\link{user_search_recursive}}, \code{\link{update_users}}
 #' @export
 #' @examples
 #' 
@@ -403,6 +407,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
 insert_users <- function(
   conn,
   user.list,
+  authentication.vector,
   calc.Rsentiment = FALSE,
   calc.syu = FALSE,
   status.media.hash=FALSE,
@@ -412,6 +417,14 @@ insert_users <- function(
   users.per.insert=50,
   insert.statuses = FALSE
 ){
+  if(missing(authentication.vector)){
+    if(!exists('auth.vector')){
+      # cat(ls())
+      stop("No authentication tokens found!")
+    } else {
+      authentication.vector <- auth.vector
+    }
+  }
   if(profile.img.64bit){
     users.per.insert=1
   }
@@ -441,15 +454,7 @@ insert_users <- function(
     w <- which(sapply(user.list,function(x) return("status" %in% names(x))))
     if((length(w) > 0) && insert.statuses){
       status.ids <- unique(sapply(user.list[w],function(x) return(x$status$id_str)))
-      # query <- paste(
-      #   "SELECT id FROM status WHERE id IN (",
-      #   paste(status.ids,collapse=","),
-      #   ");",
-      #   sep=""
-      # )
-      # already.collected <- DBI::dbGetQuery(conn,query)
-      # need.ids <- setdiff(as.character(already.collected$id),as.character(status.ids))
-      if(length(need.ids)>0){
+      if(length(status.ids)>0){
         search_tweets_recursive(
           status.ids,
           conn,
@@ -766,8 +771,8 @@ insert_statuses <- function(
 #' \code{\link{followers_list_recursive}} functions.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
-#' @param friend_id character user_id of Twitter friend.
-#' @param follower_ids character user_ids of Twitter followers.
+#' @param friend.id character user_id of Twitter friend.
+#' @param follower.ids character user_ids of Twitter followers.
 #' @param ids.per.insert integer maximum number of relationships per insert query.
 #'
 #' @return \code{NULL} (Invisible).
@@ -842,8 +847,8 @@ insert_followers <- function(
 #' \code{\link{friends_list_recursive}} functions.
 #'
 #' @param conn a Twitter database connection.  See \code{twitter_database}.
-#' @param follower_id character user_id of Twitter follower.
-#' @param friend_ids character user_ids of Twitter friends.
+#' @param follower.id character user_id of Twitter follower.
+#' @param friend.ids character user_ids of Twitter friends.
 #' @param ids.per.insert integer maximum number of relationships per insert query.
 #'
 #' @return \code{NULL} (Invisible).
@@ -1150,7 +1155,7 @@ status_values <- function(status,calc.Rsentiment,calc.syu){
     txt <- NULL
     calc.Rsentiment <- FALSE
     calc.syu <- FALSE
-    warn("No text found in status")
+    warning("No text found in status")
   }
   txt <- gsub("“","\"",gsub("”","\"",txt))
   sent.list <- calculate_sentiment(txt,lang=status$lang,calc.RSentiment=calc.Rsentiment,calc.syuzhet=calc.syu)
