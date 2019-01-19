@@ -3,7 +3,7 @@
 This package provides methods for collecting and analyzing data from the Twitter REST APIs.
 
 ## What this package does
-The goal of this package is to make it very easy to sent user authenticated
+The goal of this package is to make it very easy to send user authenticated
 queries to the [Twitter REST APIs](https://developer.twitter.com/en/docs/api-reference-index),
 and collect, store, and analyze the response data.
 
