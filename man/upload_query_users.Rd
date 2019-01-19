@@ -9,7 +9,7 @@ upload_query_users(con, query.users.df, overwrite = FALSE)
 \arguments{
 \item{con}{a Twitter database connection.  See \code{twitter_database}.}
 
-\item{query.users.df}{data frame.  See details and \code{\link{tiwtter_database}} documentation.}
+\item{query.users.df}{data frame.  See details and \code{\link{twitter_database}} documentation.}
 
 \item{overwrite}{logical indicating whether to overwrite an existing \code{query_user} table in
 the \code{conn} data connection.}
@@ -51,5 +51,5 @@ upload_query_users(conn,users)
 }
 }
 \seealso{
-\code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_timelines}}
+\code{\link{twitter_database}}, \code{\link{update_users}}, \code{\link{update_user_timelines}}
 }

@@ -9,11 +9,11 @@ insert_followers(conn, friend.id, follower.ids, ids.per.insert = 1000)
 \arguments{
 \item{conn}{a Twitter database connection.  See \code{twitter_database}.}
 
+\item{friend.id}{character user_id of Twitter friend.}
+
+\item{follower.ids}{character user_ids of Twitter followers.}
+
 \item{ids.per.insert}{integer maximum number of relationships per insert query.}
-
-\item{friend_id}{character user_id of Twitter friend.}
-
-\item{follower_ids}{character user_ids of Twitter followers.}
 }
 \value{
 \code{NULL} (Invisible).

@@ -1157,7 +1157,7 @@ status_values <- function(status,calc.Rsentiment,calc.syu){
     calc.syu <- FALSE
     warning("No text found in status")
   }
-  txt <- gsub("“","\"",gsub("”","\"",txt))
+  txt <- gsub("\u201C","\"",gsub("\u201D","\"",txt))
   sent.list <- calculate_sentiment(txt,lang=status$lang,calc.RSentiment=calc.Rsentiment,calc.syuzhet=calc.syu)
   if((calc.Rsentiment || calc.syu)){
     calc.sent <- 1

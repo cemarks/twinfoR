@@ -1,10 +1,10 @@
 ---
-title: "Locations Search Part I"
+title: "Locations Search Part II"
 author: "Christopher Marks"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Locations Search Part I}
+  %\VignetteIndexEntry{Locations Search Part II}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -37,7 +37,7 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  
 
-```{r}
+```{r eval = FALSE}
 update_search(
   con
 )
@@ -544,7 +544,7 @@ timeplot(
 ```
 
 
-### User mention network analysis for Boston with some nice plots
+### User mention network analysis for Guatemala City with some nice plots
 
 ```{r fig.width=7, fig.height=7}
 # Import igraph
@@ -552,7 +552,7 @@ library(igraph)
 library(sigmajs)
 library(visNetwork)
 
-usermention.query <- sprintf("SELECT LOWER(status.screen_name) as mentioner,LOWER(user_mention.user_mention_screen_name) as mentioned, status.id as status_id, status.text as status_text, status.created_at as created_at FROM status JOIN search_status ON status.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id JOIN user_mention ON status.id = user_mention.status_id WHERE status.created_at > '%s' AND query_text.location = 'Boston';",format(Sys.Date()-7))
+usermention.query <- sprintf("SELECT LOWER(status.screen_name) as mentioner,LOWER(user_mention.user_mention_screen_name) as mentioned, status.id as status_id, status.text as status_text, status.created_at as created_at FROM status JOIN search_status ON status.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id JOIN user_mention ON status.id = user_mention.status_id WHERE status.created_at > '%s' AND query_text.location = 'Guatemala City';",format(Sys.Date()-7))
 usermentions.df <- DBI::dbGetQuery(con,usermention.query)
 if(nrow(usermentions.df) > 0){
   g <- graph_from_data_frame(usermentions.df)
@@ -560,7 +560,7 @@ if(nrow(usermentions.df) > 0){
 }
 ```
 
-#### Boston Eigenvector Centrality
+#### Guatemala City Eigenvector Centrality
 
 ```{r}
 if(nrow(usermentions.df) > 0){
@@ -577,12 +577,12 @@ if(nrow(usermentions.df) > 0){
   knitr::kable(
     df[1:10,],
     row.names = FALSE,
-    caption = "User Mention Network Eigenvector Centrality (Boston)"
+    caption = "User Mention Network Eigenvector Centrality (Guatemala City)"
   )
 }
 ```
 
-#### Boston Betweenness centrality
+#### Guatemala City Betweenness centrality
 
 ```{r}
 if(nrow(usermentions.df) > 0){
@@ -598,7 +598,7 @@ if(nrow(usermentions.df) > 0){
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
-    caption = "User Mention Network Betweenness Centrality (Boston)"
+    caption = "User Mention Network Betweenness Centrality (Guatemala City)"
   )
 }
 ```
@@ -622,16 +622,14 @@ if(nrow(usermentions.df) > 0){
     g,
     vertex.size=4,
     vertex.label=NA,
-    main = "User Mention Plot (Boston)"
+    main = "User Mention Plot (Guatemala City)"
   )
 }
 ```
 
-#### Interactive Boston User mention network visualization with sigmajs
+#### Interactive Guatemala City User mention network visualization with sigmajs
 
-```{r eval = FALSE, fig.width=7, fig.height=7}
-# Not Run
-
+```{r eval = TRUE, fig.width=7, fig.height=7}
 if(nrow(usermentions.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -640,9 +638,8 @@ if(nrow(usermentions.df) > 0){
 }
 ```
 
-#### Interactive Boston User mention network visualization with visNetwork
-```{r ewal = FALSE, fig.width=7, fig.height=7}
-# Not Run
+#### Interactive Guatemala City User mention network visualization with visNetwork
+```{r eval = TRUE, fig.width=7, fig.height=7}
 if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
 
@@ -659,12 +656,12 @@ if(nrow(usermentions.df) > 0){
 }
 ```
 
-### Retweet network analysis for Boston
+### Retweet network analysis for Guatemala City
 
 This is a final network model, using the retweet network.
 
 ```{r fig.width=7, fig.height=7}
-retweet.query <- sprintf("SELECT status_retweet.screen_name as retweeter,status_original.screen_name as retweeted, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM status as status_retweet JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN search_status ON status_retweet.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id WHERE status_original.created_at > '%s' AND status_retweet.retweet = 1 AND query_text.location = 'Boston' GROUP BY retweeter,retweeted;",format(Sys.Date()-7))
+retweet.query <- sprintf("SELECT status_retweet.screen_name as retweeter,status_original.screen_name as retweeted, status_retweet.id as status_id, status_retweet.text as retweet_text, status_original.text as original_text, status_retweet.created_at as created_at FROM status as status_retweet JOIN status as status_original ON status_retweet.retweet_status_id = status_original.id JOIN search_status ON status_retweet.id = search_status.status_id JOIN query_text ON search_status.query_id = query_text.id WHERE status_original.created_at > '%s' AND status_retweet.retweet = 1 AND query_text.location = 'Guatemala City' GROUP BY retweeter,retweeted;",format(Sys.Date()-7))
 retweets.df <- DBI::dbGetQuery(con,retweet.query)
 if(nrow(retweets.df) > 0){
   g <- graph_from_data_frame(retweets.df)
@@ -688,7 +685,7 @@ if(nrow(retweets.df) > 0){
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
-    caption = "Retweet Network Eigenvector Centrality (Boston)"
+    caption = "Retweet Network Eigenvector Centrality (Guatemala City)"
   )
 }
 ```
@@ -709,7 +706,7 @@ if(nrow(retweets.df) > 0){
   df <- df[order(df[,2],decreasing=TRUE),]
   knitr::kable(
     df[1:10,],
-    caption = "Retweet Network Betweenness Centrality (Boston)"
+    caption = "Retweet Network Betweenness Centrality (Guatemala City)"
   )
 }
 ```
@@ -735,10 +732,9 @@ if(nrow(retweets.df) > 0){
 }
 ```
 
-#### Interactive Boston Retweet network visualization with sigmajs
+#### Interactive Guatemala City Retweet network visualization with sigmajs
 
-```{r eval = FALSE, fig.width=7, fig.height=7}
-# Not Run
+```{r eval = TRUE, fig.width=7, fig.height=7}
 if(nrow(retweets.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -747,9 +743,8 @@ if(nrow(retweets.df) > 0){
 }
 ```
 
-#### Interactive Boston Retweet network visualization with visNetwork
-```{r eval = FALSE, fig.width=7, fig.height=7}
-# Not Run
+#### Interactive Guatemala City Retweet network visualization with visNetwork
+```{r eval = TRUE, fig.width=7, fig.height=7}
 if(nrow(retweets.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
 

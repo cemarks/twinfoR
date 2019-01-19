@@ -13,6 +13,9 @@ friends_list(screen_name, user_id, authentication.vector, cursor = NULL,
 
 \item{user_id}{numeric or character single user_id.}
 
+\item{authentication.vector}{character vector containing authentication tokens and secrets.
+See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.}
+
 \item{cursor}{numeric or character cursor value for controlling pagination.}
 
 \item{count}{numeric number of user_ids per page, up to 200.}

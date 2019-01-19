@@ -66,5 +66,5 @@ status_media(
 }
 }
 \seealso{
-\code{\link{twitter_database}}, \code{\link{reconstitute_image}}
+\code{\link{twitter_database}}
 }

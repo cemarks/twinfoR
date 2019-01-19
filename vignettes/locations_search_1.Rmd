@@ -65,10 +65,6 @@ query.text.dataframe <- data.frame(
 
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the location database with our `query.text.dataframe`.  Note that this vignette does not use the `query_users` table, but it could.  See the US Politics vignette and the `twitter_database` documentation for examples on how to include and use a `query_users` table.
 
-```{r eval = FALSE, echo=FALSE, results="hide"}
-# file.remove("~/twitter_locations/locations.sqlite")
-```
-
 ```{r eval=FALSE}
 dir.create("~/twitter_locations",showWarnings=FALSE)
 setwd("~/twitter_locations")
@@ -119,7 +115,7 @@ Now we query the Twitter Search API for the search queries in the `query_text` t
 
 Because of the Twitter API rate limits, this could take a few minutes.
 
-```{r eval = TRUE}
+```{r eval = FALSE}
 update_search(
   con,
   calc.Rsentiment = FALSE, #Not required; this is the default

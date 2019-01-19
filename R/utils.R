@@ -40,7 +40,7 @@ reconstitute_image <- function(base64.image,media.url,display.image=TRUE,showWar
       p <- tiff::readTIFF(z.raw)
     }
     if(is.na(p) && showWarnings){
-      warn("URL does not include file extension")
+      warning("URL does not include file extension")
     }
     if(!is.na(p) && display.image){
       OpenImageR::imageShow(p)

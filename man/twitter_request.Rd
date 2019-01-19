@@ -4,20 +4,20 @@
 \alias{twitter_request}
 \title{Access Twitter REST Endpoint}
 \usage{
-twitter_request(auth.vector, base.url, query.param.list = list())
+twitter_request(auth.vector, endpoint.url, query.param.list = list())
 }
 \arguments{
 \item{auth.vector}{character authentication vector (see Details).}
+
+\item{endpoint.url}{character Twitter REST API endpoint URL.  See
+\href{https://developer.twitter.com/en/docs/api-reference-index}{Twitter Documentation} for details, and
+\href{https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets.html}{Twitter Search API} for an example of where to find these URLs.}
 
 \item{query.param.list}{named list giving the query parameters.  Names should
 only correspond to parameters provided in the
 \href{https://developer.twitter.com/en/docs/api-reference-index}{Twitter API Documentation}
 specific to the endpoint being called.  Any parameter values with length greater than
 one will be collapsed into a single, comma-separated string.}
-
-\item{endpoint.url}{character Twitter REST API endpoint URL.  See
-\href{https://developer.twitter.com/en/docs/api-reference-index}{Twitter Documentation} for details, and
-\href{https://developer.twitter.com/en/docs/tweets/search/api-reference/get-search-tweets.html}{Twitter Search API} for an example of where to find these URLs.}
 }
 \value{
 httr response object.

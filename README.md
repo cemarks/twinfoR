@@ -93,10 +93,10 @@ or re-established useing the `twitter_database` function.
 Understanding this data structure and familiarity with SQLite syntax will
 enable a user to carry out a wide array of analyses that are tailored for
 specific scenarios using this package.  Of  particular note, the 
-`query_users} and `query_text} tables enable a user to specify
+`query_users` and `query_text` tables enable a user to specify
 and categorize query criteria that can be executed and analyzed over
 a time horizon.  The following functions act on a `twitter_database`
-connection, and interact with the `query_text} and `query_users} tables,
+connection, and interact with the `query_text` and `query_users` tables,
 enabling a wide range of collection and analysis capabilities.
 
 * `update_users`

@@ -19,6 +19,9 @@ with creation times or dates strictly less than this parameter.}
 \item{where.criteria}{character additional criteria to filter the status results, in 
 SQLite syntax.}
 
+\item{group.column}{character column from Twitter database in the form of \code{table.column}.
+Results will be grouped for comparison on this variable.}
+
 \item{file.name}{character name of file to save the word cloud.  If \code{NULL}, the
 time plot is displayed on the screen.}
 

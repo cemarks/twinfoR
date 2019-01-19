@@ -4,16 +4,19 @@
 \alias{insert_users}
 \title{Insert Twitter User Objects}
 \usage{
-insert_users(conn, user.list, calc.Rsentiment = FALSE,
-  calc.syu = FALSE, status.media.hash = FALSE,
-  status.media.64bit = FALSE, profile.img.hash = FALSE,
-  profile.img.64bit = FALSE, users.per.insert = 50,
-  insert.statuses = FALSE)
+insert_users(conn, user.list, authentication.vector,
+  calc.Rsentiment = FALSE, calc.syu = FALSE,
+  status.media.hash = FALSE, status.media.64bit = FALSE,
+  profile.img.hash = FALSE, profile.img.64bit = FALSE,
+  users.per.insert = 50, insert.statuses = FALSE)
 }
 \arguments{
 \item{conn}{a Twitter database connection.  See \code{twitter_database}.}
 
 \item{user.list}{list of Twitter user objects,}
+
+\item{authentication.vector}{character vector containing authentication tokens and secrets.
+See \code{\link{authorize_app}} and \code{\link{authorize_IT}}.}
 
 \item{calc.Rsentiment}{logical.  If \code{TRUE}, the status text sentiment will be calculated using
 the \code{RSentiment} library.}

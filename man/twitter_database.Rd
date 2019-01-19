@@ -20,7 +20,7 @@ and query.text tables should be overwritten with tables provided (does not
 apply if tables are not provided).}
 }
 \value{
-An S4 connection object that inherits from \link[DBI]{DBIConnection}.
+An S4 connection object that inherits from \code{DBI::DBIConnection} class.
 }
 \description{
 Create RSQLite connection and Twitter tables
@@ -35,7 +35,7 @@ Optional tables 'query_users' and 'query_text' are not created unless these
 tables are provided as data frames.  The search_status table is created
 if a 'query_text' table is created.  Each of tables are described below.
 }
-\section{`user` table}{
+\section{\code{user} table}{
 
 This table is created automatically to contain all of the user objects
 collected, including user objects embedded in tweets collected using
@@ -68,7 +68,7 @@ profile_banner_b64 \tab TEXT \tab profile banner 64-bit encoding (optional, requ
 }
 }
 
-\section{`status` table}{
+\section{\code{status} table}{
 
 This table contains the status or tweet objects collected.  These
 statuses can include retweets embedded in collected tweets or
@@ -106,7 +106,7 @@ sentiment_collected \tab TINYINT(1) \tab TINYINT(1)ean (0/1) indicating whether 
 }
 }
 
-\section{`user_mention` table}{
+\section{\code{user_mention} table}{
 
 This table captures the one to many relationship between tweets (i.e., statuses)
 and user-mentions.  If a status mentions a user, that mention is captured in this
@@ -120,7 +120,7 @@ user_mention_name \tab TEXT \tab the mentioned user's name
 }
 }
 
-\section{`hashtag` table}{
+\section{\code{hashtag} table}{
 
 This table captures the one to many relationship between tweets (i.e., statuses)
 and hashtags.  If a status includes a hashtag, that hashtag is captured in this
@@ -132,7 +132,7 @@ hashtag_text \tab TEXT \tab The hashtag text (omitting the '#')
 }
 }
 
-\section{`url` table}{
+\section{\code{url} table}{
 
 This table captures the one to many relationship between tweets (i.e., statuses)
 and urls.  If a status includes a url, that url is captured in this
@@ -145,7 +145,7 @@ extended_url \tab TEXT \tab The full URL
 }
 }
 
-\section{`media` table}{
+\section{\code{media} table}{
 
 This table captures the one to many relationship between tweets (i.e., statuses)
 and attached media (images).  If a status includes an image, information about that
@@ -164,7 +164,7 @@ img_b64 \tab TEXT \tab 64-bit image encoding (optional, requires base64enc)
 }
 }
 
-\section{`query_users` table}{
+\section{\code{query_users} table}{
 
 This optional table allows analysts to categorize Twitter users for
 collection and analysis.  It *must* include users' screen_names or
@@ -184,7 +184,7 @@ followers_collected \tab TINYINT \tab Indicates whether user's followers have be
 }
 }
 
-\section{`query_text` table}{
+\section{\code{query_text} table}{
 
 This optional table allows analysts to categorize search queries for
 collection and analysis.  It *must* include a query_text column.
@@ -201,7 +201,7 @@ since_id \tab TEXT \tab Most recent status from query in database \cr
 }
 }
 
-\section{`search_status` table}{
+\section{\code{search_status} table}{
 
 This table is created to map statuses to queries, effectively recording
 which search queries produced which tweets.
@@ -214,9 +214,11 @@ status_id \tab TEXT \tab The status_id that resulted from the query.
 
 \examples{
 
-\\notrun{con <- twitter_database("tweet_collection.sqlite")}
+\dontrun{
+con <- twitter_database("tweet_collection.sqlite")
+}
 
 }
 \seealso{
-\code{\link{get_search}},\code{\link{get_timeline}}
+\code{\link{search_tweets}},\code{\link{user_timeline}}, \code{\link[DBI]{dbConnect}}
 }

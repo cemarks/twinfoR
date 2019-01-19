@@ -9,7 +9,7 @@ upload_query_text(con, query.text.df, overwrite = FALSE)
 \arguments{
 \item{con}{a Twitter database connection.  See \code{twitter_database}.}
 
-\item{query.text.df}{data frame.  See details and \code{\link{tiwtter_database}} documentation.}
+\item{query.text.df}{data frame.  See details and \code{\link{twitter_database}} documentation.}
 
 \item{overwrite}{logical indicating whether to overwrite an existing \code{query_text} table in
 the \code{conn} data connection.}

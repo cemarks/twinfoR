@@ -27,13 +27,13 @@ equal to this value (and therefore no more recent) will be returned.}
 
 \item{trim_user}{logical indicating whether to remove the user object from each status.}
 
+\item{exclude_replies}{logical indicating whether to filter user replies to other statuses
+from the results.}
+
 \item{include_rts}{logical indicating whether to include retweets in the results.}
 
 \item{tweet_mode}{character either 'extended' for full_text statuses or 'compat' for
 140 character compatability.}
-
-\item{exlude_replies}{logical indicating whether to filter user replies to other statuses
-from the results.}
 }
 \value{
 On success, an R list representation of the returned JSON object.  On failure, a warning
