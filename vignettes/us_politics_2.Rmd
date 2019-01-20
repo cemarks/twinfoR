@@ -765,9 +765,9 @@ if(nrow(usermentions.df) > 0){
 
   bluered <- function(party){
     if(tolower(party)=="democrat"){
-      return("#AAAAFF")
+      return("#DDDDFF")
     } else if(tolower(party)=="republican"){
-      return("#FFAAAA")
+      return("#FFDDDD")
     } else {
       return("black")
     }
@@ -854,7 +854,7 @@ if(nrow(usermentions.df) > 0){
 if(nrow(usermentions.df) > 0){
   s <- sigmajs(height="1024px")
   s <- sg_from_igraph(s,g)
-  s <- sg_settings(s,defaultEdgeColor="#AAA", edgeColor="default",minNodeSize=1,maxNodeSize=4)
+  s <- sg_settings(s,defaultEdgeColor="#EEE", edgeColor="default",minNodeSize=1,maxNodeSize=4)
   s
 }
 ```
