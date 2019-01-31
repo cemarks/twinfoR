@@ -148,6 +148,14 @@
 #' ... \tab ... \tab Analyst-defined user categorization \cr
 #' [CATEGORYN] \tab [TYPE] \tab Analyst-defined user categorization \cr
 #' }
+#' @section \code{followers} table:
+#' This table is created to capture virtual relationships in Twitter.
+#' \tabular{lll}{
+#' COLUMN \tab TYPE \tab DESCRIPTION \cr
+#' follower_id \tab TEXT \tab The user_id of the follower in the relationship \cr
+#' friend_id \tab TEXT \tab The user_id of the friend in the relationship.
+#' }
+#' 
 #' @section \code{query_text} table:
 #' This optional table allows analysts to categorize search queries for
 #' collection and analysis.  It *must* include a query_text column.
@@ -179,6 +187,9 @@
 #' @param query.tables.overwrite logical indicating whether the query.users
 #' and query.text tables should be overwritten with tables provided (does not
 #' apply if tables are not provided).
+#' @param driver DBI database driver object (experimental).  Default is RSQLite::SQLite().
+#' Other drivers are in development.
+#' @param ... Other named arguments passed to the DBI::dbConnect function.
 #'
 #' @seealso \code{\link{search_tweets}},\code{\link{user_timeline}}, \code{\link[DBI]{dbConnect}}
 #' @return An S4 connection object that inherits from \code{DBI::DBIConnection} class.
@@ -193,9 +204,11 @@ twitter_database <- function(
   db.file,
   query.users.df=NULL,
   query.text.df=NULL,
-  query.tables.overwrite=FALSE
+  query.tables.overwrite=FALSE,
+  driver = RSQLite::SQLite(),
+  ...
 ){
-  con <- DBI::dbConnect(RSQLite::SQLite(),db.file)
+  con <- DBI::dbConnect(driver,db.file)
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_image_url TEXT, profile_banner_url TEXT, profile_image_hash TEXT, profile_banner_hash TEXT, profile_image_b64 TEXT, profile_banner_b64 TEXT);")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id TEXT PRIMARY KEY, created_at DATETIME, user_id TEXT, screen_name TEXT, text TEXT, in_reply_to_status_id TEXT, in_reply_to_user_id TEXT, retweet_count INT, favorite_count INT, lang TEXT, geo_lat FLOAT, geo_long FLOAT, source TEXT, retweet TINYINT(1), retweet_status_id TEXT, sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT(1));")
   DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id TEXT, user_mention_id TEXT, user_mention_screen_name TEXT, user_mention_name TEXT, PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
@@ -818,10 +831,10 @@ insert_followers <- function(
         "(",
         sapply(
           follower.ids,
-          function(x) return(write_int(x))
+          function(x) return(write_text(x))
         ),
         ",",
-        write_int(friend.id),
+        write_text(friend.id),
         ")",
         sep="",
         collapse=","
@@ -892,11 +905,11 @@ insert_friends <- function(
       "INSERT OR IGNORE INTO followers VALUES ",
       paste(
         "(",
-        write_int(follower.id),
+        write_text(follower.id),
         ",",
         sapply(
           friend.ids,
-          function(x) return(write_int(x))
+          function(x) return(write_text(x))
         ),
         ")",
         sep="",

@@ -308,11 +308,17 @@ user_timeline_recursive <- function(
     }
     last.query.time <- as.POSIXct(Sys.time())
     if(class(request.result) == "response"){
+      if(request.result$status == 401){
+        # warning("HTTP Request returned status 401 (Not Authorized).")
+        statuses <- NULL
+        since_id <- NA
+        break
+      }
       fails <- fails + 1
-      if(fails < 3){
-        warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
-      } else {
+      if(fails >= 3){
         stop(sprintf("Three consecutive HTTP Errors!  HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
+      } else {
+        # warning(sprintf("HTTP Request returned %i status (%s).",request.result$status,httr::content(request.result)))
       }
     } else {
       fails <- 0
@@ -777,6 +783,8 @@ user_search_recursive <- function(
 #' in the returned follower user objects.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
 #' 140 character compatability.
+#' @param last.query.time POSIXct time of last query executed.  If not provided, a one minute delay will 
+#' be added before the first query to prevent exceeding the Twitter rate limit.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
 #' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a list of user objects.
@@ -812,6 +820,7 @@ followers_list_recursive <- function(
   skip_status = NULL,
   include_user_entities = NULL,
   tweet_mode = 'extended',
+  last.query.time = NULL,
   ...
 ){
   if(missing(authentication.vector)){
@@ -821,7 +830,9 @@ followers_list_recursive <- function(
       authentication.vector <- auth.vector
     }
   }
-  last.query.time <- as.POSIXct(Sys.time())
+  if(is.null(last.query.time)){
+    last.query.time <- as.POSIXct(Sys.time())
+  }
   fails <- 0
   if(missing(data.connection)){
     users <- list()
@@ -834,6 +845,11 @@ followers_list_recursive <- function(
       authentication.vector = authentication.vector
     )
     user_id <- user.request$id_str
+  } else {
+    user.request <- user_show(
+      user_id = user_id,
+      authentication.vector = authentication.vector
+    )
   }
   if(!user.request$protected && (user.request$followers_count > 0)){
     repeat{
@@ -898,19 +914,19 @@ followers_list_recursive <- function(
     if(missing(data.connection)){
       return(users)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   } else {
     if(user.request$protected){
       cat(sprintf("@%s account is protected.\n",user.request$screen_name))
     }
     if(user.request$followers_count==0){
-      cat(sprintf("@%s has no followers"))
+      cat(sprintf("@%s has no followers", user.request$screen_name))
     }
     if(missing(data.connection)){
       return(NULL)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   }
 }
@@ -937,6 +953,8 @@ followers_list_recursive <- function(
 #' in the returned follower user objects.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
 #' 140 character compatability.
+#' @param last.query.time POSIXct time of last query executed.  If not provided, a one minute delay will 
+#' be added before the first query to prevent exceeding the Twitter rate limit.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
 #' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a list of user objects.
@@ -972,6 +990,7 @@ friends_list_recursive <- function(
   skip_status = NULL,
   include_user_entities = NULL,
   tweet_mode = 'extended',
+  last.query.time = NULL,
   ...
 ){
   if(missing(authentication.vector)){
@@ -981,7 +1000,9 @@ friends_list_recursive <- function(
       authentication.vector <- auth.vector
     }
   }
-  last.query.time <- as.POSIXct(Sys.time())
+  if(is.null(last.query.time)){
+    last.query.time <- as.POSIXct(Sys.time())
+  }
   fails <- 0
   if(missing(data.connection)){
     users <- list()
@@ -994,6 +1015,11 @@ friends_list_recursive <- function(
       authentication.vector = authentication.vector
     )
     user_id <- user.request$id_str
+  } else {
+    user.request <- user_show(
+      user_id = user_id,
+      authentication.vector = authentication.vector
+    )
   }
   if(!user.request$protected && (user.request$friends_count > 0)){
     repeat{
@@ -1058,19 +1084,19 @@ friends_list_recursive <- function(
     if(missing(data.connection)){
       return(users)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   } else {
     if(user.request$protected){
       cat(sprintf("@%s account is protected.\n",user.request$screen_name))
     }
     if(user.request$friends_count==0){
-      cat(sprintf("@%s has no friends"))
+      cat(sprintf("@%s has no friends",user.request$screen_name))
     }
     if(missing(data.connection)){
       return(NULL)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   }
 }
@@ -1095,6 +1121,8 @@ friends_list_recursive <- function(
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
 #' 140 character compatability.  This parameter has no effect if no \code{data.connection} is provided.
+#' @param last.query.time POSIXct time of last query executed.  If not provided, a one minute delay will 
+#' be added before the first query to prevent exceeding the Twitter rate limit.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
 #' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
@@ -1122,6 +1150,7 @@ followers_ids_recursive <- function(
   authentication.vector,
   stringify_ids = TRUE,
   tweet_mode = 'extended',
+  last.query.time = NULL,
   ...
 ){
   if(missing(authentication.vector)){
@@ -1131,7 +1160,9 @@ followers_ids_recursive <- function(
       authentication.vector <- auth.vector
     }
   }
-  last.query.time <- as.POSIXct(Sys.time())
+  if(is.null(last.query.time)){
+    last.query.time <- as.POSIXct(Sys.time())
+  }
   fails <- 0
   if(missing(data.connection)){
     users <- NULL
@@ -1144,6 +1175,11 @@ followers_ids_recursive <- function(
       authentication.vector = authentication.vector
     )
     user_id <- user.request$id_str
+  } else {
+    user.request <- user_show(
+      user_id = user_id,
+      authentication.vector = authentication.vector
+    )
   }
   if(!user.request$protected && (user.request$followers_count > 0)){
     repeat{
@@ -1180,12 +1216,12 @@ followers_ids_recursive <- function(
         }
       } else {
         fails <- 0
-    if(missing(data.connection)){
+        if(missing(data.connection)){
           users <- c(users,as.character(request.result$ids))
         } else {
           if(length(request.result$ids)>0){
             user_lookup_recursive(
-              user_id = request.result$ids,
+              user_id = as.character(request.result$ids),
               data.connection = data.connection,
               authentication.vector = authentication.vector,
               tweet_mode = tweet_mode,
@@ -1207,19 +1243,19 @@ followers_ids_recursive <- function(
     if(missing(data.connection)){
       return(users)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   } else {
     if(user.request$protected){
       cat(sprintf("@%s account is protected.\n",user.request$screen_name))
     }
     if(user.request$followers_count==0){
-      cat(sprintf("@%s has no followers"))
+      cat(sprintf("@%s has no followers",user.request$screen_name))
     }
     if(missing(data.connection)){
       return(NULL)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   }
 }
@@ -1245,6 +1281,8 @@ followers_ids_recursive <- function(
 #' @param stringify_ids logical indicating whether to return user_ids as strings.
 #' @param tweet_mode character either 'extended' for full_text statuses or 'compat' for
 #' 140 character compatability. This parameter has no effect if no \code{data.connection} is provided.
+#' @param last.query.time POSIXct time of last query executed.  If not provided, a one minute delay will 
+#' be added before the first query to prevent exceeding the Twitter rate limit.
 #' @param ... other named parameters passed to \code{\link{insert_users}}.
 #'
 #' @return character collected \code{user_id} if \code{data.connection} is supplied, otherwise a character or numeric vector of user_ids.
@@ -1272,6 +1310,7 @@ friends_ids_recursive <- function(
   authentication.vector,
   stringify_ids = TRUE,
   tweet_mode = 'extended',
+  last.query.time = NULL,
   ...
 ){
   if(missing(authentication.vector)){
@@ -1281,7 +1320,9 @@ friends_ids_recursive <- function(
       authentication.vector <- auth.vector
     }
   }
-  last.query.time <- as.POSIXct(Sys.time())
+  if(is.null(last.query.time)){
+    last.query.time <- as.POSIXct(Sys.time())
+  }
   fails <- 0
   if(missing(data.connection)){
     users <- NULL
@@ -1294,6 +1335,11 @@ friends_ids_recursive <- function(
       authentication.vector = authentication.vector
     )
     user_id <- user.request$id_str
+  } else {
+    user.request <- user_show(
+      user_id = user_id,
+      authentication.vector = authentication.vector
+    )
   }
   if(!user.request$protected && (user.request$friends_count > 0)){
     repeat{
@@ -1335,7 +1381,7 @@ friends_ids_recursive <- function(
         } else {
           if(length(request.result$ids) > 0){
             user_lookup_recursive(
-              user_id = request.result$ids,
+              user_id = as.character(request.result$ids),
               data.connection = data.connection,
               authentication.vector = authentication.vector,
               tweet_mode = tweet_mode,
@@ -1357,19 +1403,19 @@ friends_ids_recursive <- function(
     if(missing(data.connection)){
       return(users)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   } else {
     if(user.request$protected){
       cat(sprintf("@%s account is protected.\n",user.request$screen_name))
     }
     if(user.request$friends_count==0){
-      cat(sprintf("@%s has no friends"))
+      cat(sprintf("@%s has no friends",user.request$screen_name))
     }
     if(missing(data.connection)){
       return(NULL)
     } else {
-      return(user_id)
+      return(last.query.time)
     }
   }
 }

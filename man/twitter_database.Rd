@@ -184,6 +184,16 @@ followers_collected \tab TINYINT \tab Indicates whether user's followers have be
 }
 }
 
+\section{\code{followers} table}{
+
+This table is created to capture virtual relationships in Twitter.
+\tabular{lll}{
+COLUMN \tab TYPE \tab DESCRIPTION \cr
+follower_id \tab TEXT \tab The user_id of the follower in the relationship \cr
+friend_id \tab TEXT \tab The user_id of the friend in the relationship.
+}
+}
+
 \section{\code{query_text} table}{
 
 This optional table allows analysts to categorize search queries for

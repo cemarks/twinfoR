@@ -527,6 +527,10 @@ update_search <- function(
 #' @param user_id character vector of Twitter user_ids.
 #' @param screen_name character vector of Twitter screen_names.  Ignored
 #' if \code{user_id} is supplied.
+#' @param last.query.time.id POSIXct time of last followers IDs API query.  See
+#' \code{\link{friends_ids_recursive}}.
+#' @param last.query.time.list POSIXct time of last friends IDs API query.  See
+#' \code{\link{friends_list_recursive}}.
 #' 
 #' @return \code{NULL} (Invisible).
 #'
@@ -554,7 +558,9 @@ update_search <- function(
 get_all_friends <- function(con,
   authentication.vector,
   user_id=NULL,
-  screen_name=NULL
+  screen_name=NULL,
+  last.query.time.id = NULL,
+  last.query.time.list = NULL
 ){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
@@ -617,7 +623,7 @@ get_all_friends <- function(con,
       user.df <- DBI::dbGetQuery(
         con,
         sprintf(
-          "SELECT query_users.id as row_id,user.id as user_id,user.screen_name,user.friends_count as friends_count, user.protected as protected FROM query_users JOIN user ON query_users.user_id=user.id WHERE user.user_id IN (%s);",
+          "SELECT query_users.id as row_id,user.id as user_id,user.screen_name,user.friends_count as friends_count, user.protected as protected FROM query_users JOIN user ON query_users.user_id=user.id WHERE user.id IN (%s);",
           paste(
             "'",
             user_id,
@@ -646,16 +652,17 @@ get_all_friends <- function(con,
   if(!is.null(nrow(user.df)) && nrow(user.df)> 0){
     for(i in 1:nrow(user.df)){
       query <- sprintf(
-        "UPDATE query_users SET friends_collected = 1 WHERE id = %i",
+        "UPDATE query_users SET friends_collected = 1 WHERE id = %i;",
         user.df$row_id[i]
       )
-      if(!as.logical(user.df$protected[i])){
+      if(!as.logical(user.df$protected[i]) && user.df$friends_count[i] > 0){
         if(user.df$friends_count[i] < 200){
           try({
-            uid <- friends_list_recursive(
+            last.query.time.list <- friends_list_recursive(
               user_id = user.df$user_id[i],
               data.connection = con,
-              authentication.vector = authentication.vector
+              authentication.vector = authentication.vector,
+              last.query.time = last.query.time.list
             )
             DBI::dbExecute(
               con,
@@ -664,30 +671,17 @@ get_all_friends <- function(con,
             })
         } else {
           try({
-            uid <- friends_ids_recursive(
+            last.query.time.id <- friends_ids_recursive(
               user_id = user.df$user_id[i],
               data.connection = con,
-              authentication.vector = authentication.vector
+              authentication.vector = authentication.vector,
+              last.query.time = last.query.time.id
             )
             DBI::dbExecute(
               con,
               query
             )
           })
-          user.ids <- DBI::dbGetQuery(
-            con,
-            sprintf(
-              "SELECT friend_id FROM followers WHERE follower_id = '%s';",
-              user.df$user_id[i]
-            )
-          )
-          if(length(user.ids$friend_id)>0){
-            user_lookup_recursive(
-              user_id = user.ids$friend_id,
-              data.connection = con,
-              authentication.vector = authentication.vector
-            )
-          }
         }
       } else {
         DBI::dbExecute(
@@ -727,6 +721,10 @@ get_all_friends <- function(con,
 #' @param user_id character vector of Twitter user_ids.
 #' @param screen_name character vector of Twitter screen_names.  Ignored
 #' if \code{user_id} is supplied.
+#' @param last.query.time.id POSIXct time of last followers IDs API query.  See
+#' \code{\link{followers_ids_recursive}}.
+#' @param last.query.time.list POSIXct time of last friends IDs API query.  See
+#' \code{\link{followers_list_recursive}}.
 #' 
 #' @return \code{NULL} (Invisible).
 #'
@@ -751,7 +749,14 @@ get_all_friends <- function(con,
 #' 
 #' DBI::dbDisonnect(con)
 #' }
-get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name=NULL){
+get_all_followers <- function(
+  con,
+  authentication.vector,
+  user_id=NULL,
+  screen_name=NULL,
+  last.query.time.id = NULL,
+  last.query.time.list = NULL
+){
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -774,9 +779,9 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
   n <- d$name
   if(is.null(user_id) && is.null(screen_name)){
     if('user_id' %in% n){
-      user.df <- DBI::dbGetQuery(con,"SELECT query_users.user_id as user_id,user.followers_count as followers_count,user.protected as protected FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.followers_collected = 0;")
+      user.df <- DBI::dbGetQuery(con,"SELECT query_users.id as row_id, query_users.user_id as user_id,user.followers_count as followers_count,user.protected as protected FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.followers_collected = 0;")
     } else {
-      user.df <- DBI::dbGetQuery(con,"SELECT user.id as user_id,user.followers_count as followers_count,user.protected as protected FROM query_users JOIN user ON query_users.screen_name = user.screen_name WHERE query_users.followers_collected = 0;")
+      user.df <- DBI::dbGetQuery(con,"SELECT query_users.id as row_id, user.id as user_id,user.followers_count as followers_count,user.protected as protected FROM query_users JOIN user ON query_users.screen_name = user.screen_name WHERE query_users.followers_collected = 0;")
     }
   } else if(is.null(user_id)){
     if('user_id' %in% n){
@@ -827,7 +832,7 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
       user.df <- DBI::dbGetQuery(
         con,
         sprintf(
-          "SELECT query_users.id as row_id,user.id as user_id,user.screen_name,user.followers_count as followers_count, user.protected as protected FROM query_users JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name) WHERE user.user_id IN (%s);",
+          "SELECT query_users.id as row_id,user.id as user_id,user.screen_name,user.followers_count as followers_count, user.protected as protected FROM query_users JOIN user ON LOWER(query_users.screen_name) = LOWER(user.screen_name) WHERE user.id IN (%s);",
           paste(
             "'",
             user_id,
@@ -842,10 +847,10 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
   if(!is.null(nrow(user.df)) && nrow(user.df)> 0){
     for(i in 1:nrow(user.df)){
       query <- sprintf(
-        "UPDATE query_users SET followers_collected = 1 WHERE id = %i",
+        "UPDATE query_users SET followers_collected = 1 WHERE id = %i;",
         user.df$row_id[i]
       )
-      if(as.logical(user.df$protected[i])){
+      if(as.logical(user.df$protected[i]) || (user.df$followers_count == 0)){
         DBI::dbExecute(
           con,
           query
@@ -853,10 +858,11 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
       } else {
         if(user.df$followers_count[i] < 200){
           try({
-            uid <- followers_list_recursive(
+            last.query.time.list <- followers_list_recursive(
               user_id = user.df$user_id[i],
               data.connection = con,
-              authentication.vector = authentication.vector
+              authentication.vector = authentication.vector,
+              last.query.time = last.query.time.list
             )
             DBI::dbExecute(
               con,
@@ -865,30 +871,17 @@ get_all_followers <- function(con,authentication.vector,user_id=NULL,screen_name
           })
         } else {
           try({
-            uid <- followers_ids_recursive(
+            last.query.time.id <- followers_ids_recursive(
               user_id = user.df$user_id[i],
               data.connection = con,
-              authentication.vector = authentication.vector
+              authentication.vector = authentication.vector,
+              last.query.time = last.query.time.id
             )
             DBI::dbExecute(
               con,
               query
             )
           })
-          user.ids <- DBI::dbGetQuery(
-            con,
-            sprintf(
-              "SELECT follower_id FROM followers WHERE friend_id = '%s';",
-              user.df$user_id[i]
-            )
-          )
-          if(length(user.ids$follower_id)>0){
-            user_lookup_recursive(
-              user_id = user.ids$follower_id,
-              data.connection = con,
-              authentication.vector = authentication.vector
-            )
-          }
         }
       }
     }

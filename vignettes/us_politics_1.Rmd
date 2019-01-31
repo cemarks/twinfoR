@@ -49,12 +49,12 @@ library(twinfoR)
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the politician database.
 
 ```{r echo=FALSE, results="hide"}
-file.remove("~/USPol/USPol.sqlite")
+file.remove("~/mnt/Chris/Projects/twinfoR-all/USPol/USPol.sqlite")
 ```
 
 ```{r}
-dir.create("~/USPol",showWarnings=FALSE)
-setwd("~/USPol")
+dir.create("~/mnt/Chris/Projects/twinfoR-all/USPol",showWarnings=FALSE)
+setwd("~/mnt/Chris/Projects/twinfoR-all/USPol")
 con <- twitter_database(
   "USPol.sqlite"
 )
@@ -81,7 +81,7 @@ save(auth.vector,file="auth_vector.RData")
 ```
 
 ```{r echo=FALSE}
-load("~/USPol/auth_vector.RData")
+load("~/mnt/Chris/Projects/twinfoR-all/USPol/auth_vector.RData")
 ```
 
 # Creation of User data.frame
@@ -325,7 +325,7 @@ To wrap up part I, we can view a summary of what is in our Twitter database.  No
 
 ```{r echo=FALSE}
 DBI::dbDisconnect(con)
-con <- DBI::dbConnect(RSQLite::SQLite(),"~/USPol/pol.sqlite")
+con <- DBI::dbConnect(RSQLite::SQLite(),"~/mnt/Chris/Projects/twinfoR-all/USPol/pol.sqlite")
 ```
 
 ```{r}

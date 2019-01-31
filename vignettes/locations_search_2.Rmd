@@ -28,7 +28,7 @@ This code assumes the `auth.vector` from Part I is saved.  If it isn't, reauthen
 
 ```{r eval = TRUE}
 library(twinfoR)
-setwd("~/twitter_locations")
+setwd("~/mnt/Chris/Projects/twinfoR-all/twitter_locations")
 con <- twitter_database("locations.sqlite")
 load("auth_vector.RData") 
 ```

@@ -1,6 +1,6 @@
 Package: twinfoR
 Title: Collect and Analyze Data From Twitter
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: person("Christopher", "Marks", email = "christopher.e.marks.mil@mail.mil", role = c("aut", "cre"))
 Description: Collect, store, and analyze data using the Twitter REST APIs.  .
 Depends: R (>= 3.5.1)

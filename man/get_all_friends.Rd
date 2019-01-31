@@ -5,7 +5,8 @@
 \title{Get users' friends}
 \usage{
 get_all_friends(con, authentication.vector, user_id = NULL,
-  screen_name = NULL)
+  screen_name = NULL, last.query.time.id = NULL,
+  last.query.time.list = NULL)
 }
 \arguments{
 \item{con}{Twitter database connection (see \code{\link{twitter_database}}).}
@@ -17,6 +18,12 @@ keys.  See \code{\link{authorize_IT}} or \code{\link{authorize_app}}.}
 
 \item{screen_name}{character vector of Twitter screen_names.  Ignored
 if \code{user_id} is supplied.}
+
+\item{last.query.time.id}{POSIXct time of last followers IDs API query.  See
+\code{\link{friends_ids_recursive}}.}
+
+\item{last.query.time.list}{POSIXct time of last friends IDs API query.  See
+\code{\link{friends_list_recursive}}.}
 }
 \value{
 \code{NULL} (Invisible).

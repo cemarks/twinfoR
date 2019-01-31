@@ -63,7 +63,7 @@ statuses <- user_timeline_recursive("nytimes")
 
 conn <- twitter_database("tweetanalysis.sqlite")
 
-insert_statuses(conn,user.objs)
+insert_statuses(conn,statuses)
 }
 }
 \seealso{

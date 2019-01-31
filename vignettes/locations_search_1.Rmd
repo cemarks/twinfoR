@@ -66,8 +66,8 @@ query.text.dataframe <- data.frame(
 We need to set a working directory to store the database and analysis products.  Once we set the directory, we'll change into it and initialize the location database with our `query.text.dataframe`.  Note that this vignette does not use the `query_users` table, but it could.  See the US Politics vignette and the `twitter_database` documentation for examples on how to include and use a `query_users` table.
 
 ```{r eval=FALSE}
-dir.create("~/twitter_locations",showWarnings=FALSE)
-setwd("~/twitter_locations")
+dir.create("~/mnt/Chris/Projects/twinfoR-all/twitter_locations",showWarnings=FALSE)
+setwd("~/mnt/Chris/Projects/twinfoR-all/twitter_locations")
 con <- twitter_database(
   "locations.sqlite",
   query.text.df = query.text.dataframe
@@ -106,7 +106,7 @@ save(auth.vector,file="auth_vector.RData")
 ```
 
 ```{r echo=FALSE}
-load("~/twitter_locations/auth_vector.RData")
+load("~/mnt/Chris/Projects/twinfoR-all/twitter_locations/auth_vector.RData")
 ```
 
 # Search

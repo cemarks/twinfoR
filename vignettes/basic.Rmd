@@ -50,15 +50,15 @@ This function attempts to browse to a web page that allows you to authorize the 
 It is important to name the result `auth.vector` as shown above, as the functions in the `twinfoR` package look for this global variable.  If you give this result a different name, you must manually supply it to the Twitter API methods.  Optionally, save this vector in order to skip the authentication process in the future.
 
 ```{r eval=FALSE}
-dir.create("~/twinfoR_basic",showWarnings=FALSE)
-setwd("~/twinfoR_basic")
+dir.create("~/mnt/Chris/Projects/twinfoR-all/twinfoR_basic",showWarnings=FALSE)
+setwd("~/mnt/Chris/Projects/twinfoR-all/twinfoR_basic")
 save(auth.vector,file="auth_vector.RData")
 ```
 
 ```{r echo=FALSE}
-dir.create("~/twinfoR_basic",showWarnings=FALSE)
-setwd("~/twinfoR_basic")
-load("~/USPol/auth_vector.RData")
+dir.create("~/mnt/Chris/Projects/twinfoR-all/twinfoR_basic",showWarnings=FALSE)
+setwd("~/mnt/Chris/Projects/twinfoR-all/twinfoR_basic")
+load("~/mnt/Chris/Projects/twinfoR-all/USPol/auth_vector.RData")
 ```
 
 # Twitter Search & Status Analyses

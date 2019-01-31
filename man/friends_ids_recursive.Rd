@@ -6,7 +6,7 @@
 \usage{
 friends_ids_recursive(screen_name, user_id, data.connection,
   authentication.vector, stringify_ids = TRUE, tweet_mode = "extended",
-  ...)
+  last.query.time = NULL, ...)
 }
 \arguments{
 \item{screen_name}{character single screen_name.  This is only used is \code{user_id} is missing.}
@@ -21,6 +21,9 @@ friends_ids_recursive(screen_name, user_id, data.connection,
 
 \item{tweet_mode}{character either 'extended' for full_text statuses or 'compat' for
 140 character compatability. This parameter has no effect if no \code{data.connection} is provided.}
+
+\item{last.query.time}{POSIXct time of last query executed.  If not provided, a one minute delay will 
+be added before the first query to prevent exceeding the Twitter rate limit.}
 
 \item{...}{other named parameters passed to \code{\link{insert_users}}.}
 }
