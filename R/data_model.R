@@ -180,8 +180,8 @@
 #' status_id \tab TEXT \tab The status_id that resulted from the query.
 #' }
 #'
-#' @param db.file character file name (including path, as required) to the
-#' SQLite database location.
+#' @param db.name character name of database.  If SQLite connection, this is the
+#' file name.
 #' @param query.users.df data.frame to be uploaded as the query.users table
 #' @param query.text.df data.frame to be uploaded as the query.text table
 #' @param query.tables.overwrite logical indicating whether the query.users
@@ -201,21 +201,50 @@
 #' }
 #'
 twitter_database <- function(
-  db.file,
-  query.users.df=NULL,
-  query.text.df=NULL,
+  db.name,
+  query.users.df = NULL,
+  query.text.df = NULL,
   query.tables.overwrite=FALSE,
   driver = RSQLite::SQLite(),
   ...
 ){
-  con <- DBI::dbConnect(driver,db.file)
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_image_url TEXT, profile_banner_url TEXT, profile_image_hash TEXT, profile_banner_hash TEXT, profile_image_b64 TEXT, profile_banner_b64 TEXT);")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id TEXT PRIMARY KEY, created_at DATETIME, user_id TEXT, screen_name TEXT, text TEXT, in_reply_to_status_id TEXT, in_reply_to_user_id TEXT, retweet_count INT, favorite_count INT, lang TEXT, geo_lat FLOAT, geo_long FLOAT, source TEXT, retweet TINYINT(1), retweet_status_id TEXT, sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT(1));")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id TEXT, user_mention_id TEXT, user_mention_screen_name TEXT, user_mention_name TEXT, PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashtag (status_id TEXT, hashtag_text TEXT, PRIMARY KEY (status_id,hashtag_text), FOREIGN KEY (status_id) REFERENCES status(id));")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id TEXT, url TEXT, extended_url TEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id TEXT, media_id TEXT, expanded_url TEXT, media_url TEXT, media_type TEXT, source_user_id TEXT, source_status_id TEXT, img_hash TEXT, img_b64 TEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
-  DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id TEXT, friend_id TEXT, UNIQUE(follower_id,friend_id));")
+  if(
+    (
+      class(driver) == 'function' &&
+      any(grepl("SQLite",as.character(body(driver))))
+    ) ||
+    (
+      grepl("SQLite",class(driver))
+    ) ||
+    (
+      class(driver) == 'character' &&
+      grepl("sqlite",tolower(driver))
+    )
+  ) {
+    con <- DBI::dbConnect(driver,db.name,...)
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id TEXT PRIMARY KEY, screen_name TEXT, name TEXT, location TEXT, description TEXT, url TEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT(1), verified TINYINT(1), lang TEXT, status_id TEXT, profile_image_url TEXT, profile_banner_url TEXT, profile_image_hash TEXT, profile_banner_hash TEXT, profile_image_b64 TEXT, profile_banner_b64 TEXT);")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id TEXT PRIMARY KEY, created_at DATETIME, user_id TEXT, screen_name TEXT, text TEXT, in_reply_to_status_id TEXT, in_reply_to_user_id TEXT, retweet_count INT, favorite_count INT, lang TEXT, geo_lat FLOAT, geo_long FLOAT, source TEXT, retweet TINYINT(1), retweet_status_id TEXT, sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT(1));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id TEXT, user_mention_id TEXT, user_mention_screen_name TEXT, user_mention_name TEXT, PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashtag (status_id TEXT, hashtag_text TEXT, PRIMARY KEY (status_id,hashtag_text), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id TEXT, url TEXT, extended_url TEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id TEXT, media_id TEXT, expanded_url TEXT, media_url TEXT, media_type TEXT, source_user_id TEXT, source_status_id TEXT, img_hash TEXT, img_b64 TEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id TEXT, friend_id TEXT, UNIQUE(follower_id,friend_id));")
+  } else {
+    con <- DBI::dbConnect(driver,...)
+    tabs <- DBI::dbGetQuery("SHOW DATABASES;")
+    if(db.name %in% tabs[,1]){
+      dbExecute(sprintf("USE %s",db.name))
+    } else {
+      dbExecute(sprintf("CREATE DATABASE %s;",db.name))
+    }
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id VARCHAR(40) PRIMARY KEY, screen_name VARCHAR(40), name VARCHAR(60), location TINYTEXT, description TINYTEXT, url TINYTEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT, verified TINYINT, lang VARCHAR(5), status_id VARCHAR(40), profile_image_url TINYTEXT, profile_banner_url TINYTEXT, profile_image_hash TINYTEXT, profile_banner_hash TINYTEXT, profile_image_b64 MEDIUMTEXT, profile_banner_b64 MEDIUMTEXT);")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id VARCHAR(40) PRIMARY KEY, created_at DATETIME, user_id VARCHAR(40), screen_name VARCHAR(40), text TEXT, in_reply_to_status_id VARCHAR(40), in_reply_to_user_id VARCHAR(40), retweet_count INT, favorite_count INT, lang VARCHAR(5), geo_lat FLOAT, geo_long FLOAT, source TINYTEXT, retweet TINYINT, retweet_status_id VARCHAR(40), sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT);")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id VARCHAR(40), user_mention_id VARCHAR(40), user_mention_screen_name VARCHAR(40), user_mention_name VARCHAR(60), PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashtag (status_id VARCHAR(40), hashtag_text VARCHAR(40), PRIMARY KEY (status_id,hashtag_text), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id VARCHAR(40), url TINYTEXT, extended_url TINYTEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id VARCHAR(40), media_id VARCHAR(40), expanded_url TINYTEXT, media_url TINYTEXT, media_type TINYTEXT, source_user_id VARCHAR(40), source_status_id VARCHAR(40), img_hash TINYTEXT, img_b64 MEDIUMTEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id VARCHAR(40), friend_id VARCHAR(40), UNIQUE(follower_id,friend_id));")
+  }
   if(!(is.null(query.users.df))){
     upload_query_users(con,query.users.df,query.tables.overwrite)
   }
@@ -267,8 +296,17 @@ twitter_database <- function(
 #' upload_query_users(conn,users)
 #' }
 upload_query_users <- function(con,query.users.df,overwrite = FALSE){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+  } else {
+    result <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% result[,1]){
+      count <- 1
+    } else {
+      count <- 0
+    }
+  } ##############
   if(count==1 && !overwrite){
     stop("Table query_users exists!  Use overwrite = TRUE to overwrite")
   }
