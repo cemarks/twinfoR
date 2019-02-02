@@ -4,12 +4,12 @@
 \alias{twitter_database}
 \title{Create Twitter SQLite Connection}
 \usage{
-twitter_database(db.file, query.users.df = NULL, query.text.df = NULL,
-  query.tables.overwrite = FALSE)
+twitter_database(db.name, query.users.df = NULL, query.text.df = NULL,
+  query.tables.overwrite = FALSE, driver = RSQLite::SQLite(), ...)
 }
 \arguments{
-\item{db.file}{character file name (including path, as required) to the
-SQLite database location.}
+\item{db.name}{character name of database.  If SQLite connection, this is the
+file name.}
 
 \item{query.users.df}{data.frame to be uploaded as the query.users table}
 
@@ -18,6 +18,11 @@ SQLite database location.}
 \item{query.tables.overwrite}{logical indicating whether the query.users
 and query.text tables should be overwritten with tables provided (does not
 apply if tables are not provided).}
+
+\item{driver}{DBI database driver object (experimental).  Default is RSQLite::SQLite().
+Other drivers are in development.}
+
+\item{...}{Other named arguments passed to the DBI::dbConnect function.}
 }
 \value{
 An S4 connection object that inherits from \code{DBI::DBIConnection} class.

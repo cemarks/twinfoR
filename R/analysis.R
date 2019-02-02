@@ -15,7 +15,7 @@
 #' 
 #' @return NULL (Invisible).
 #'
-#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}
+#' @seealso \code{\link{twitter_database}}, \code{\link{authorize_app}}, \code{\link{open_status}}
 #' @export
 #' @examples
 #'
@@ -50,6 +50,36 @@ open_user <- function(
     paste(
       "http://twitter.com/",
       screen_name,
+      sep=""
+    )
+  )
+}
+
+#' Open a Tweet
+#'
+#' View a Twitter status in a browser
+#'
+#' This function opens a browser window to the Tweet corresponding to the \code{status_id} provided.
+#' Authentication tokens are not required.
+#'
+#' @param status_id character Twitter status ID. 
+#' 
+#' @return NULL (Invisible).
+#'
+#' @seealso \code{\link{open_user}}
+#' @export
+#' @examples
+#'
+#'
+#' open_status("1009830068624019457")
+#'
+open_status <- function(
+  status_id
+){
+  utils::browseURL(
+    paste(
+      "http://twitter.com/i/status/",
+      as.character(status_id),
       sep=""
     )
   )
@@ -1231,9 +1261,9 @@ most_reach <- function(
     sep=""
   )
   query <- paste(
-    "SELECT status_id,SUM(followers_count) AS n FROM (",
+    "SELECT super.status_id,SUM(super.followers_count) AS n FROM (",
     sub.query,
-    ") WHERE status_id IS NOT NULL GROUP BY status_id ORDER BY n DESC LIMIT ",
+    ") as super WHERE super.status_id IS NOT NULL GROUP BY super.status_id ORDER BY n DESC LIMIT ",
     limit,
     ";",
     sep=""

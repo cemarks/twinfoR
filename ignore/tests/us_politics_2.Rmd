@@ -31,9 +31,15 @@ This code assumes the `auth.vector` from Part I is saved.  If it isn't, reauthen
 
 ```{r eval = TRUE}
 options(java.parameters = "-Xmx1024m")
-library(twinfoR)
-setwd("~/mnt/Chris/Projects/twinfoR-all/USPol")
-con <- twitter_database("pol.sqlite")
+devtools::load_all("/home/cemarks/mnt/Chris/Projects/twinfoR-all/twinfoR")
+setwd("/home/cemarks/mnt/Chris/Projects/twinfoR-all/twinfoR/ignore/tests")
+con <- twitter_database(
+  "twitter_USPol2",
+  driver=RMySQL::MySQL(),
+  user="modu",
+  password="!gO98aRMY&",
+  host="10.0.0.2"
+)
 load("auth_vector.RData") 
 ```
 
@@ -41,7 +47,7 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  Again, we divert output to the NULL device.
 
-```{r eval=TRUE, message=FALSE}
+```{r eval=FALSE, message=FALSE}
 # sink("/dev/null") # Recommended to suppress Rsentiment output, but
 ## might not work on all platforms.
 update_user_timelines(
@@ -719,7 +725,7 @@ plot(g,vertex.color=vertex_attr(g,"color"),vertex.size=4,vertex.label=NA)
 
 #### Interactive visualization with sigmajs
 
-```{r eval = FALSE, fig.width=7,fig.height=7}
+```{r eval = TRUE, fig.width=7,fig.height=7}
 # Not run
 library(sigmajs)
 
@@ -731,7 +737,7 @@ s
 
 #### Interactive visualization with visNetwork
 
-```{r eval = FALSE, fig.width=7,fig.height=7}
+```{r eval = TRUE, fig.width=7,fig.height=7}
 # Not Run
 library(visNetwork)
 v <- visIgraph(g)
@@ -849,7 +855,7 @@ if(nrow(usermentions.df) > 0){
 
 #### Interactive visualization with sigmajs
 
-```{r eval = FALSE, fig.width=7, fig.height=7}
+```{r eval = TRUE, fig.width=7, fig.height=7}
 # Not Run
 if(nrow(usermentions.df) > 0){
   s <- sigmajs(height="1024px")
@@ -860,7 +866,7 @@ if(nrow(usermentions.df) > 0){
 ```
 
 #### Interactive visualization with visNetwork
-```{r eval = FALSE, fig.width=7, fig.height=7}
+```{r eval = TRUE, fig.width=7, fig.height=7}
 # Not Run
 if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
@@ -971,7 +977,7 @@ if(nrow(retweets.df) > 0){
 
 #### Interactive visualization with sigmajs
 
-```{r eval = FALSE, fig.width=7, fig.height=7}
+```{r eval = TRUE, fig.width=7, fig.height=7}
 # Not Run
 if(nrow(retweets.df) > 0){
   s <- sigmajs()
@@ -982,7 +988,7 @@ if(nrow(retweets.df) > 0){
 ```
 
 #### Interactive visualization with visNetwork
-```{r eval = FALSE, fig.width=7, fig.height=7}
+```{r eval = TRUE, fig.width=7, fig.height=7}
 # Not Run
 if(nrow(retweets.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))

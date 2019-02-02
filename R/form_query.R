@@ -1,6 +1,16 @@
 join_table <- function(con){
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-  n <- d$name
+  if(grepl("SQLite",class(con))){
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- setdiff(d$name,c("id","query_users"))
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- setdiff(as.character(d[,1]),c("id","query_users"))
+    } else {
+      n <- NULL
+    }
+  } ##############
   if('user_id' %in% n){
     user.join <- 'user_id'
   } else {

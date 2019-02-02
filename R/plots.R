@@ -256,15 +256,16 @@ term_frequencies <- function (
   return(word.df)
 }
 
-
+### Might need fixing to include all dates.
 sentiment_barplot <- function(
   sentiment.data,
   file.name = NULL,
   subtitle = "",
   caption = ""
 ){
-  g <- ggplot2::ggplot(sentiment.data, ggplot2::aes(x = date)) +
-    ggplot2::geom_bar(stat="count", ggplot2::aes(fill=sent_label)) +
+  sdat <- sentiment.data[order(sentiment.data$date),]
+  g <- ggplot2::ggplot(sdat, ggplot2::aes(x = date)) +
+    ggplot2::geom_bar(stat="count", ggplot2::aes(fill=sent_label),width=0.9) +
     ggplot2::labs(
       title = "Daily Tweet Volume by Sentiment", 
       subtitle = subtitle,
@@ -302,10 +303,32 @@ sentiment_lineplot <- function(
 ){
   #png("sentiment_lineplot.png",height=600,width=800)  
   set.table <- table(sentiment.data$date,sentiment.data$sent_label)
-  set.table <- apply(set.table,1,function(x) return(x/sum(x)))
+  set.table <- apply(set.table,1,function(x) if(sum(x) > 0) return(x/sum(x)) else return(0))
   sent.df <- reshape::melt(100*set.table)
   names(sent.df) <- c("Sentiment","Date","Percentage")
-  g <- ggplot2::ggplot(sent.df, ggplot2::aes(x = Date, y = Percentage)) +
+  sent.df$Date <- as.Date(as.character(sent.df$Date))
+  d.min <- min(as.Date(sent.df$Date))
+  d.max <- max(as.Date(sent.df$Date))
+  total.days <- as.integer(difftime(d.max,d.min,units='days'))
+  if(total.days>2){
+    for(i in 1:(total.days-1)){
+      for(s in unique(sent.df$Sentiment)){
+        if(!any(sent.df$Sentiment == s & sent.df$Date==d.min+i)){
+          sent.df <- rbind(
+            sent.df,
+            data.frame(
+              Sentiment = s,
+              Date = d.min + i,
+              Percentage = 0,
+              stringsAsFactors = FALSE
+            )
+          )
+        }
+      }
+    }
+  }
+  sent.df <- sent.df[order(sent.df$Date),]
+  g <- ggplot2::ggplot(sent.df, ggplot2::aes(x = as.Date(Date), y = Percentage)) +
         ggplot2::geom_line(ggplot2::aes(col=Sentiment,group=Sentiment), size = 4) +
         ggplot2::labs(
           x = "Date", 
@@ -333,6 +356,7 @@ sentiment_lineplot <- function(
     print(g)
     grDevices::dev.off()
   }
+  return(sent.df)
 }
 
 #' Cummulative Tweet Time Plot

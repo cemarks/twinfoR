@@ -229,21 +229,24 @@ twitter_database <- function(
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id TEXT, url TEXT, extended_url TEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id TEXT, media_id TEXT, expanded_url TEXT, media_url TEXT, media_type TEXT, source_user_id TEXT, source_status_id TEXT, img_hash TEXT, img_b64 TEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id TEXT, friend_id TEXT, UNIQUE(follower_id,friend_id));")
+    DBI::dbCommit(con)
   } else {
     con <- DBI::dbConnect(driver,...)
-    tabs <- DBI::dbGetQuery("SHOW DATABASES;")
-    if(db.name %in% tabs[,1]){
-      dbExecute(sprintf("USE %s",db.name))
+    tabs <- DBI::dbGetQuery(con,"SHOW DATABASES;")
+    if(db.name %in% as.character(tabs[,1])){
+      DBI::dbExecute(con, sprintf("USE %s",db.name))
     } else {
-      dbExecute(sprintf("CREATE DATABASE %s;",db.name))
+      DBI::dbExecute(con, sprintf("CREATE DATABASE %s;",db.name))
+      DBI::dbExecute(con, sprintf("USE %s",db.name))
     }
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user (id VARCHAR(40) PRIMARY KEY, screen_name VARCHAR(40), name VARCHAR(60), location TINYTEXT, description TINYTEXT, url TINYTEXT, protected TINYINT(1), followers_count INT, friends_count INT, statuses_count INT, created_at DATETIME, favourites_count INT, geo_enabled TINYINT, verified TINYINT, lang VARCHAR(5), status_id VARCHAR(40), profile_image_url TINYTEXT, profile_banner_url TINYTEXT, profile_image_hash TINYTEXT, profile_banner_hash TINYTEXT, profile_image_b64 MEDIUMTEXT, profile_banner_b64 MEDIUMTEXT);")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS status (id VARCHAR(40) PRIMARY KEY, created_at DATETIME, user_id VARCHAR(40), screen_name VARCHAR(40), text TEXT, in_reply_to_status_id VARCHAR(40), in_reply_to_user_id VARCHAR(40), retweet_count INT, favorite_count INT, lang VARCHAR(5), geo_lat FLOAT, geo_long FLOAT, source TINYTEXT, retweet TINYINT, retweet_status_id VARCHAR(40), sentiment_score INT, nrc_sentiment_anger INT, nrc_sentiment_anticipation INT, nrc_sentiment_disgust INT, nrc_sentiment_fear INT, nrc_sentiment_joy INT, nrc_sentiment_sadness INT, nrc_sentiment_surprise INT, nrc_sentiment_trust INT, nrc_sentiment_negative INT, nrc_sentiment_positive INT, sentiment_collected TINYINT);")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS user_mention (status_id VARCHAR(40), user_mention_id VARCHAR(40), user_mention_screen_name VARCHAR(40), user_mention_name VARCHAR(60), PRIMARY KEY (status_id,user_mention_id), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS hashtag (status_id VARCHAR(40), hashtag_text VARCHAR(40), PRIMARY KEY (status_id,hashtag_text), FOREIGN KEY (status_id) REFERENCES status(id));")
-    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id VARCHAR(40), url TINYTEXT, extended_url TINYTEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
+    DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id VARCHAR(40), url varchar(100), extended_url TINYTEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id VARCHAR(40), media_id VARCHAR(40), expanded_url TINYTEXT, media_url TINYTEXT, media_type TINYTEXT, source_user_id VARCHAR(40), source_status_id VARCHAR(40), img_hash TINYTEXT, img_b64 MEDIUMTEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id VARCHAR(40), friend_id VARCHAR(40), UNIQUE(follower_id,friend_id));")
+    DBI::dbCommit(con)
   }
   if(!(is.null(query.users.df))){
     upload_query_users(con,query.users.df,query.tables.overwrite)
@@ -301,7 +304,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
     count <- count[1,1]
   } else {
     result <- DBI::dbGetQuery(con,"SHOW TABLES;")
-    if('query_users' %in% result[,1]){
+    if('query_users' %in% as.character(result[,1])){
       count <- 1
     } else {
       count <- 0
@@ -322,8 +325,13 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
   } else {
     RSQLite::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
   }
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-  n <- d$name
+  if(grepl("SQLite",class(con))){
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+  } else {
+    d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+    n <- as.character(d[,1])
+  } ##############
   DBI::dbExecute(con,"CREATE UNIQUE INDEX row_id_unique ON query_users(id);")
   if(!('since_id' %in% n)){
     DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id TEXT;")
@@ -337,6 +345,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
     DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN followers_collected TINYINT(1);")
     DBI::dbExecute(con,"UPDATE query_users SET followers_collected = 0;")
   }
+  DBI::dbCommit(con)
 }
 
 
@@ -379,8 +388,17 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
 #' upload_query_users(conn,users)
 #' }
 upload_query_text <- function(con,query.text.df,overwrite = FALSE){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
-  count <- count[1,1]
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+    count <- count[1,1]
+  } else {
+    result <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_text' %in% as.character(result[,1])){
+      count <- 1
+    } else {
+      count <- 0
+    }
+  } ##############
   if(count==1 && !overwrite){
     stop("Table query_text exists!  Use overwrite = TRUE to overwrite")
   }
@@ -396,13 +414,19 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
     RSQLite::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
     DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id TEXT, UNIQUE(query_id,status_id));")
   }
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
-  n <- d$name
+  if(grepl("SQLite",class(con))){
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
+    n <- d$name
+  } else {
+    d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
+    n <- as.character(d[,1])
+  } ##############
   DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
   if(!('since_id' %in% n)){
     DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
     DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
   }
+  DBI::dbCommit(con)
 }
 
 
@@ -479,6 +503,11 @@ insert_users <- function(
   if(profile.img.64bit){
     users.per.insert=1
   }
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+  } else {
+    ins.ig <- "INSERT IGNORE "
+  } ##############
   if('screen_name' %in% names(user.list)){
     u <- user.list
     if(('status' %in% names(u)) && insert.statuses){
@@ -495,12 +524,14 @@ insert_users <- function(
     }
     query.values <- user_values(u,profile.img.hash,profile.img.64bit)
     query <- paste(
-      "INSERT OR IGNORE INTO user VALUES ",
+      ins.ig,
+      "INTO user VALUES ",
       query.values,
       ";",
       sep=""
     )
     DBI::dbExecute(conn,query)
+    DBI::dbCommit(conn)
   } else {
     w <- which(sapply(user.list,function(x) return("status" %in% names(x))))
     if((length(w) > 0) && insert.statuses){
@@ -526,12 +557,14 @@ insert_users <- function(
         collapse=","
       )
       query <- paste(
-        "INSERT OR IGNORE INTO user VALUES ",
+        ins.ig,
+        "INTO user VALUES ",
         values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
       index <- new.index
     }
   }
@@ -597,6 +630,11 @@ insert_statuses <- function(
   statuses.per.insert = 50,
   insert.users = TRUE
 ){
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+  } else {
+    ins.ig <- "INSERT IGNORE "
+  } ##############
   if('id_str' %in% names(status.list)){
     if(('retweeted_status' %in% names(status.list)) && (!is.null(status.list$retweeted_status$id_str))){
       insert_statuses(
@@ -622,51 +660,61 @@ insert_statuses <- function(
     s <- status.list
     query.values <- status_values(s,calc.Rsentiment,calc.syu)
     query <- paste(
-      "INSERT OR IGNORE INTO status VALUES ",
+      ins.ig,
+      "INTO status VALUES ",
       query.values,
       ";",
       sep=""
     )
     DBI::dbExecute(conn,query)
+    DBI::dbCommit(conn)
     query.values <- usermention_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO user_mention VALUES ",
+        ins.ig,
+        "INTO user_mention VALUES ",
         query.values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
     }
     query.values <- hashtag_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO hashtag VALUES ",
+        ins.ig,
+        "INTO hashtag VALUES ",
         query.values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
     }
     query.values <- url_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO url VALUES ",
+        ins.ig,
+        "INTO url VALUES ",
         query.values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
     }
     query.values <- media_values(s,status.media.hash,status.media.64bit)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO media VALUES ",
+        ins.ig,
+        "INTO media VALUES ",
         query.values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
     }
   } else {
     w <- which(sapply(status.list,function(x) return(("retweeted_status" %in% names(x)) && ("id_str" %in% names(x$retweeted_status)))))
@@ -711,12 +759,14 @@ insert_statuses <- function(
         collapse=","
       )
       query <- paste(
-        "INSERT OR IGNORE INTO status VALUES ",
+        ins.ig,
+        "INTO status VALUES ",
         values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
       values <- paste(
         unlist(
           sapply(
@@ -728,12 +778,14 @@ insert_statuses <- function(
       )
       if((!is.null(values)) && (nchar(values) > 2)){
         query <- paste(
-          "INSERT OR IGNORE INTO user_mention VALUES ",
+          ins.ig,
+          "INTO user_mention VALUES ",
           values,
           ";",
           sep=""
         )
           DBI::dbExecute(conn,query)
+          DBI::dbCommit(conn)
       }
       values <- paste(
         unlist(
@@ -746,12 +798,14 @@ insert_statuses <- function(
       )
       if((!is.null(values)) && (nchar(values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO hashtag VALUES ",
+        ins.ig,
+        "INTO hashtag VALUES ",
         values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
       }
       values <- paste(
         unlist(
@@ -764,12 +818,14 @@ insert_statuses <- function(
       )
       if((!is.null(values)) && (nchar(values) > 2)){
       query <- paste(
-        "INSERT OR IGNORE INTO url VALUES ",
+        ins.ig,
+        "INTO url VALUES ",
         values,
         ";",
         sep=""
       )
       DBI::dbExecute(conn,query)
+      DBI::dbCommit(conn)
      }
       if(status.media.64bit){
         for(j in 1:length(s)){
@@ -777,12 +833,14 @@ insert_statuses <- function(
           query.values <- media_values(v,status.media.hash,status.media.64bit)
           if((!is.null(query.values)) && (nchar(query.values) > 2)){
             query <- paste(
-              "INSERT OR IGNORE INTO media VALUES ",
+              ins.ig,
+              "INTO media VALUES ",
               query.values,
               ";",
               sep=""
             )
             DBI::dbExecute(conn,query)
+            DBI::dbCommit(conn)
           }
         }
       } else {
@@ -797,12 +855,14 @@ insert_statuses <- function(
         )
         if((!is.null(values)) && (nchar(values) > 2)){
           query <- paste(
-            "INSERT OR IGNORE INTO media VALUES ",
+            ins.ig,
+            "INTO media VALUES ",
             values,
             ";",
             sep=""
           )
             DBI::dbExecute(conn,query)
+            DBI::dbCommit(conn)
         }
       }
       index <- new.index
@@ -856,6 +916,11 @@ insert_followers <- function(
   follower.ids,
   ids.per.insert = 1000
 ){
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+  } else {
+    ins.ig <- "INSERT IGNORE "
+  } ##############
   if(is.list(follower.ids)){
     follower.ids <- unlist(follower.ids)
   }
@@ -864,7 +929,8 @@ insert_followers <- function(
   while(index < n.followers){
     new.index <- min(c(index+ids.per.insert,n.followers))
     query <- paste(
-      "INSERT OR IGNORE INTO followers VALUES ",
+      ins.ig,
+      "INTO followers VALUES ",
       paste(
         "(",
         sapply(
@@ -881,6 +947,7 @@ insert_followers <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
+    DBI::dbCommit(conn)
     index <- new.index
   }
 }
@@ -932,6 +999,11 @@ insert_friends <- function(
   friend.ids,
   ids.per.insert = 1000
 ){
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+  } else {
+    ins.ig <- "INSERT IGNORE "
+  } ##############
   if(is.list(friend.ids)){
     friend.ids <- unlist(friend.ids)
   }
@@ -940,7 +1012,8 @@ insert_friends <- function(
   while(index < n.friends){
     new.index <- min(c(index+ids.per.insert,n.friends))
     query <- paste(
-      "INSERT OR IGNORE INTO followers VALUES ",
+      ins.ig,
+      "INTO followers VALUES ",
       paste(
         "(",
         write_text(follower.id),
@@ -957,6 +1030,7 @@ insert_friends <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
+    DBI::dbCommit(conn)
     index <- new.index
   }
 }
@@ -977,6 +1051,7 @@ write_text <- function(val){
   } else {
     output <- as.character(val)
     output <- gsub("'","''",output)
+    output <- gsub("\\","\\\\",output,fixed = TRUE)
     output <- paste("'",output,"'",sep="")
   }
   return(output)

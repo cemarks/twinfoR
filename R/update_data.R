@@ -53,6 +53,24 @@ update_users <- function(
   screen_name=NULL,
   ...
 ){
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+  } else {
+    ins.ig <- "INSERT IGNORE "
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- as.character(d[,1])
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -60,14 +78,10 @@ update_users <- function(
       authentication.vector <- auth.vector
     }
   }
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
   if(is.null(user_id) && is.null(screen_name)){
     if(count==0){
       stop("Table query_users does not exist, and no user_id or screen_name parameters supplied.")
     }
-    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-    n <- d$name
     if('user_id' %in% n){
       user.df <- DBI::dbGetQuery(con,"SELECT user_id FROM query_users;")
       already.collected <- DBI::dbGetQuery(
@@ -148,8 +162,6 @@ update_users <- function(
       )
     }
     if(count == 1){
-      d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-      n <- d$name
       if('user_id' %in% n){
         user.df.2 <- DBI::dbGetQuery(con,"SELECT id,user_id FROM query_users;")
         row.id <- max(user.df.2$id)+1
@@ -157,7 +169,8 @@ update_users <- function(
         for(i in which(!user.df$in_db)){
           if('screen_name' %in% n){
             query <- paste(
-              "INSERT OR IGNORE INTO query_users(id,user_id,screen_name,since_id) VALUES (",
+              ins.ig,
+              "INTO query_users(id,user_id,screen_name,since_id) VALUES (",
               write_int(row.id),
               ",",
               write_text(user.df$user_id[i]),
@@ -168,7 +181,8 @@ update_users <- function(
             )
           } else {
             query <- paste(
-              "INSERT OR IGNORE INTO query_users(id,user_id,since_id) VALUES (",
+              ins.ig,
+              "INTO query_users(id,user_id,since_id) VALUES (",
               write_int(row.id),
               ",",
               write_text(user.df$user_id[i]),
@@ -177,6 +191,7 @@ update_users <- function(
             )
           }
           DBI::dbExecute(con,query)
+          DBI::dbCommit(con)
           row.id <- row.id + 1
         }
       } else {
@@ -185,7 +200,8 @@ update_users <- function(
         user.df$in_db <- tolower(user.df$screen_name) %in% tolower(user.df.2$screen_name)
         for(i in which(!(user.df$in_db))){
           query <- paste(
-            "INSERT OR IGNORE INTO query_users(id,screen_name,since_id) VALUES (",
+            ins.ig,
+            "INTO query_users(id,screen_name,since_id) VALUES (",
             write_int(row.id),
             ",",
             write_text(user.df$screen_name[i]),
@@ -193,13 +209,14 @@ update_users <- function(
             sep=""
           )
           DBI::dbExecute(con,query)
+          DBI::dbCommit(con)
           row.id <- row.id + 1
         }
       }
     } else {
       if(!is.null(nrow(user.df)) && nrow(user.df) > 0){
-        d <- data.frame(id=1:nrow(user.df),user_id=user.df$user_id,screen_name=user.df$screen_name,since_id=rep(NA,nrow(user.df)),followers_collected=rep(0,nrow(user.df)),friends_collected=rep(0,nrow(user.df)),stringsAsFactors = FALSE)
-        upload_query_users(con,d)
+        new.df <- data.frame(id=1:nrow(user.df),user_id=user.df$user_id,screen_name=user.df$screen_name,since_id=rep(NA,nrow(user.df)),followers_collected=rep(0,nrow(user.df)),friends_collected=rep(0,nrow(user.df)),stringsAsFactors = FALSE)
+        upload_query_users(con,new.df)
       }
     }
   }
@@ -269,8 +286,24 @@ update_user_timelines <- function(
     user_id = user_id,
     screen_name=screen_name
   )
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-  n <- d$name
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+  } else {
+    ins.ig <- "INSERT IGNORE "
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- as.character(d[,1])
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
   if('user_id' %in% n){
     if(is.null(user_id) && is.null(screen_name)){
       query <- "SELECT query_users.id as row_id,query_users.user_id as user_id,query_users.since_id as since_id,user.protected as protected from query_users LEFT JOIN user ON query_users.user_id = user.id;"
@@ -347,6 +380,7 @@ update_user_timelines <- function(
           if(!is.na(s)){
             query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
             DBI::dbExecute(con,query)
+            DBI::dbCommit(con)
           }
         })
       } else {
@@ -370,6 +404,7 @@ update_user_timelines <- function(
           if(!is.na(s)){
             query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
             DBI::dbExecute(con,query)
+            DBI::dbCommit(con)
           }
         })
       }
@@ -427,6 +462,24 @@ update_search <- function(
   query.text=NULL,
   ...
 ){
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+    count <- count[1,1]
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
+    n <- d$name
+  } else {
+    ins.ig <- "INSERT IGNORE "
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_text' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
+      n <- as.character(d[,1])
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
   if(missing(authentication.vector)){
     if(!exists('auth.vector')){
       stop("No authentication tokens found!")
@@ -434,8 +487,6 @@ update_search <- function(
       authentication.vector <- auth.vector
     }
   }
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
-  count <- count[1,1]
   if(is.null(query.text) && count==0){
     stop("Table query_text does not exist, and no query.text parameter supplied.")
   } else if(count==0){
@@ -459,6 +510,7 @@ update_search <- function(
           query.text[i]
         )
         DBI::dbExecute(con,new.query)
+        DBI::dbCommit(con)
         row.ids[i] <- current.row.id
         current.row.id <- current.row.id + 1
       }
@@ -493,6 +545,7 @@ update_search <- function(
       if(!is.na(s)){
         query <- sprintf("UPDATE query_text SET since_id = '%s' WHERE id = '%s';",s,query.df$row_id[i])
         DBI::dbExecute(con,query)
+        DBI::dbCommit(con)
       }
     }
   }
@@ -569,8 +622,24 @@ get_all_friends <- function(con,
       authentication.vector <- auth.vector
     }
   }
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+  } else {
+    ins.ig <- "INSERT IGNORE "
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- as.character(d[,1])
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
   if(count == 0 && is.null(user_id) && is.null(screen_name)){
     stop("Table query_users does not exist, and no user_id or screen_name parameters supplied.")
   }
@@ -580,8 +649,6 @@ get_all_friends <- function(con,
     user_id=user_id,
     screen_name=screen_name
   )
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-  n <- d$name
   if(is.null(user_id) && is.null(screen_name)){
     if('user_id' %in% n){
       user.df <- DBI::dbGetQuery(con,"SELECT query_users.id as row_id, query_users.user_id as user_id,user.friends_count as friends_count,user.protected as protected FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.friends_collected = 0;")
@@ -669,6 +736,7 @@ get_all_friends <- function(con,
               query
               )
             })
+            DBI::dbCommit(con)
         } else {
           try({
             last.query.time.id <- friends_ids_recursive(
@@ -681,6 +749,7 @@ get_all_friends <- function(con,
               con,
               query
             )
+            DBI::dbCommit(con)
           })
         }
       } else {
@@ -688,6 +757,7 @@ get_all_friends <- function(con,
           con,
           query
         )
+        DBI::dbCommit(con)
       }
     }
   }
@@ -764,8 +834,24 @@ get_all_followers <- function(
       authentication.vector <- auth.vector
     }
   }
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
+  if(grepl("SQLite",class(con))){
+    ins.ig <- "INSERT OR IGNORE "
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+  } else {
+    ins.ig <- "INSERT IGNORE "
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- as.character(d[,1])
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
   if(count == 0 && is.null(user_id) && is.null(screen_name)){
     stop("Table query_users does not exist, and no user_id or screen_name parameters supplied.")
   }
@@ -775,8 +861,6 @@ get_all_followers <- function(
     user_id=user_id,
     screen_name=screen_name
   )
-  d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-  n <- d$name
   if(is.null(user_id) && is.null(screen_name)){
     if('user_id' %in% n){
       user.df <- DBI::dbGetQuery(con,"SELECT query_users.id as row_id, query_users.user_id as user_id,user.followers_count as followers_count,user.protected as protected FROM query_users JOIN user ON query_users.user_id = user.id WHERE query_users.followers_collected = 0;")
@@ -855,6 +939,7 @@ get_all_followers <- function(
           con,
           query
         )
+        DBI::dbCommit(con)
       } else {
         if(user.df$followers_count[i] < 200){
           try({
@@ -868,6 +953,7 @@ get_all_followers <- function(
               con,
               query
             )
+            DBI::dbCommit(con)
           })
         } else {
           try({
@@ -881,6 +967,7 @@ get_all_followers <- function(
               con,
               query
             )
+            DBI::dbCommit(con)
           })
         }
       }
@@ -938,18 +1025,39 @@ get_all_followers <- function(
 #' DBI::dbDisonnect(con)
 #' }
 summarize_database <- function(con){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
-  if(count == 1){
+  if(grepl("SQLite",class(con))){
+    count.qu <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count.qu <- count.qu[1,1]
+    count.qt <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+    count.qt <- count.qt[1,1]
+    filesize <- db_size_str(con)
+    if(is.na(filesize)){
+      filesize.str <- "Cannot get file size.  Did you change directory?\n"
+    } else {
+      filesize.str <- paste("Database file size: ",filesize,"\n",sep="")
+    }
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count.qu <- 1
+    } else {
+      count.qu <- 0
+    }
+    if('query_text' %in% as.character(tabs[,1])){
+      count.qt <- 1
+    } else {
+      count.qt <- 0
+    }
+    filesize.str <- "File size not available for database servers.\n"
+  } ##############
+  if(count.qu == 1){
     query.user.count <- DBI::dbGetQuery(con,"SELECT COUNT(1) as n FROM query_users;")
     cat("Query users: ",as.character(query.user.count$n),"\n",sep="")
     cat("User categories:\n",paste(get_query_user_categories(con),collapse = "\n"),"\n",sep="")
   } else {
     cat("No query user table.\n")
   }
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
-  count <- count[1,1]
-  if(count == 1){
+  if(count.qt == 1){
     query.text.count <- DBI::dbGetQuery(con,"SELECT COUNT(1) as n FROM query_text;")
     cat("Search queries: ",as.character(query.text.count$n),"\n",sep="")
     cat("Search categories:\n",paste(get_query_text_categories(con),collapse = "\n"),"\n",sep="")
@@ -968,12 +1076,7 @@ summarize_database <- function(con){
   cat("Total Images: ",as.character(media.count$total),"\n",sep="")
   cat("Unique Images: ",as.character(media.count$unique),"\n",sep="")
   cat("Total relationships: ",as.character(relationship_count(con)),"\n",sep="")
-  filesize.str <- db_size_str(con)
-  if(is.na(filesize.str)){
-    cat("Cannot get file size.  Did you change directory?\n")
-  } else {
-    cat("Database file size: ",filesize.str,"\n",sep="")
-  }
+  cat(filesize.str)
 }
 
 db_size_str <- function(con){
@@ -1027,7 +1130,17 @@ relationship_count <- function(con){
 }
 
 get_query_users <- function(con){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+    } else {
+      count <- 0
+    }
+  } ##############
   if(count == 1){
     return(DBI::dbGetQuery(con,"SELECT * FROM query_users;"))
   } else {
@@ -1035,7 +1148,17 @@ get_query_users <- function(con){
   }
 }
 get_query_text <- function(con){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+    count <- count[1,1]
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_text' %in% as.character(tabs[,1])){
+      count <- 1
+    } else {
+      count <- 0
+    }
+  } ##############
   if(count == 1){
     return(DBI::dbGetQuery(con,"SELECT * FROM query_text;"))
   } else {
@@ -1044,22 +1167,46 @@ get_query_text <- function(con){
 }
 
 get_query_user_categories <- function(con){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
-  count <- count[1,1]
-  if(count == 1){
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_users';")
+    count <- count[1,1]
     d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
     n <- setdiff(d$name,c("id","user_id","screen_name"))
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_users' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      n <- setdiff(as.character(d[,1]),c("id","user_id","screen_name"))
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
+  if(count == 1){
     return(n)
   } else {
     stop("No query user table exists in this database.")
   }
 }
 get_query_text_categories <- function(con){
-  count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
-  count <- count[1,1]
-  if(count == 1){
+  if(grepl("SQLite",class(con))){
+    count <- DBI::dbGetQuery(con,"SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name = 'query_text';")
+    count <- count[1,1]
     d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
     n <- setdiff(d$name,c("id","query_text"))
+  } else {
+    tabs <- DBI::dbGetQuery(con,"SHOW TABLES;")
+    if('query_text' %in% as.character(tabs[,1])){
+      count <- 1
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
+      n <- setdiff(as.character(d[,1]),c("id","query_text"))
+    } else {
+      count <- 0
+      n <- NULL
+    }
+  } ##############
+  if(count == 1){
     return(n)
   } else {
     stop("No query text table exists in this database.")

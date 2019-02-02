@@ -37,7 +37,7 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  
 
-```{r eval = FALSE}
+```{r eval = TRUE}
 update_search(
   con
 )

@@ -34,5 +34,5 @@ open_user(screen_name="realDonaldTrump")
 
 }
 \seealso{
-\code{\link{twitter_database}}, \code{\link{authorize_app}}
+\code{\link{twitter_database}}, \code{\link{authorize_app}}, \code{\link{open_status}}
 }

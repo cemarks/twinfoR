@@ -123,6 +123,7 @@ useful, basic analysis and plotting functions that have applicability in many
 use cases.  These functions include the following:
 
 * `open_user` (open a user profile in a browser)
+* `open_status` (open a tweet in a browser)
 * `status_media` (general function to manage images attached to Tweets)
 * `top_hashtags`
 * `top_usermentions`

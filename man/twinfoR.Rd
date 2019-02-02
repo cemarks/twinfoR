@@ -139,6 +139,7 @@ useful, basic analysis and plotting functions that have applicability in many
 use cases.  These functions include the following:
 \itemize{
     \item \code{\link{open_user}} (open a user profile in a browser)
+    \item \code{\link{open_status}} (open a tweet in a browser)
     \item \code{\link{status_media}} (general function to manage images attached to Tweets)
     \item \code{\link{top_hashtags}}
     \item \code{\link{top_usermentions}}
