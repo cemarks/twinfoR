@@ -191,7 +191,7 @@ update_users <- function(
             )
           }
           DBI::dbExecute(con,query)
-          DBI::dbCommit(con)
+          # DBI::dbCommit(con)
           row.id <- row.id + 1
         }
       } else {
@@ -209,7 +209,7 @@ update_users <- function(
             sep=""
           )
           DBI::dbExecute(con,query)
-          DBI::dbCommit(con)
+          # DBI::dbCommit(con)
           row.id <- row.id + 1
         }
       }
@@ -380,7 +380,7 @@ update_user_timelines <- function(
           if(!is.na(s)){
             query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
             DBI::dbExecute(con,query)
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
           }
         })
       } else {
@@ -404,7 +404,7 @@ update_user_timelines <- function(
           if(!is.na(s)){
             query <- sprintf("UPDATE query_users SET since_id = '%s' WHERE id = %i;",s,user.df$row_id[i])
             DBI::dbExecute(con,query)
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
           }
         })
       }
@@ -510,7 +510,7 @@ update_search <- function(
           query.text[i]
         )
         DBI::dbExecute(con,new.query)
-        DBI::dbCommit(con)
+        # DBI::dbCommit(con)
         row.ids[i] <- current.row.id
         current.row.id <- current.row.id + 1
       }
@@ -545,7 +545,7 @@ update_search <- function(
       if(!is.na(s)){
         query <- sprintf("UPDATE query_text SET since_id = '%s' WHERE id = '%s';",s,query.df$row_id[i])
         DBI::dbExecute(con,query)
-        DBI::dbCommit(con)
+        # DBI::dbCommit(con)
       }
     }
   }
@@ -736,7 +736,7 @@ get_all_friends <- function(con,
               query
               )
             })
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
         } else {
           try({
             last.query.time.id <- friends_ids_recursive(
@@ -749,7 +749,7 @@ get_all_friends <- function(con,
               con,
               query
             )
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
           })
         }
       } else {
@@ -757,7 +757,7 @@ get_all_friends <- function(con,
           con,
           query
         )
-        DBI::dbCommit(con)
+        # DBI::dbCommit(con)
       }
     }
   }
@@ -939,7 +939,7 @@ get_all_followers <- function(
           con,
           query
         )
-        DBI::dbCommit(con)
+        # DBI::dbCommit(con)
       } else {
         if(user.df$followers_count[i] < 200){
           try({
@@ -953,7 +953,7 @@ get_all_followers <- function(
               con,
               query
             )
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
           })
         } else {
           try({
@@ -967,7 +967,7 @@ get_all_followers <- function(
               con,
               query
             )
-            DBI::dbCommit(con)
+            # DBI::dbCommit(con)
           })
         }
       }

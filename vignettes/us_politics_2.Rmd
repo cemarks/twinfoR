@@ -41,7 +41,7 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  Again, we divert output to the NULL device.
 
-```{r eval=TRUE, message=FALSE}
+```{r eval=FALSE, message=FALSE}
 # sink("/dev/null") # Recommended to suppress Rsentiment output, but
 ## might not work on all platforms.
 update_user_timelines(
