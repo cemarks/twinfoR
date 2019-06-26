@@ -331,7 +331,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
       w <- which(d$Field == since_id)
       tp <- d$Type[w]
       if(tolower(tp) != "text"){
-        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
       }
     }
   }
@@ -344,7 +344,11 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
   } ##############
   DBI::dbExecute(con,"CREATE UNIQUE INDEX row_id_unique ON query_users(id);")
   if(!('since_id' %in% n)){
-    DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id TEXT;")
+    if(grepl("SQLite",class(con))){
+      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id TEXT;")
+    } else {
+      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id VARCHAR(40);")
+    }
     DBI::dbExecute(con,"UPDATE query_users SET since_id=NULL;")
   }
   if(!('friends_collected' %in% n)){
@@ -433,10 +437,26 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
     d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
     n <- as.character(d[,1])
     DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
+    w <- which(d$Field == since_id)
+    tp <- d$Type[w]
+    if(tolower(tp) != "text"){
+      DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+    }
   } ##############
   if(!('since_id' %in% n)){
-    DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
+    if(grepl("SQLite",class(con))){
+      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
+    } else {
+      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id VARCHAR(40);")
+    }
     DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
+  } else if(!grepl("SQLite",class(con))){
+    d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
+    w <- which(d$Field == since_id)
+    tp <- d$Type[w]
+    if(!grepl('varchar',tolower(tp))){
+      DBI::dbExecute("ALTER TABLE query_text MODIFY since_id VARCHAR(40);")
+    }
   }
   # DBI::dbCommit(con)
 }
