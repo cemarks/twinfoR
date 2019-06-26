@@ -229,7 +229,7 @@ twitter_database <- function(
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id TEXT, url TEXT, extended_url TEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id TEXT, media_id TEXT, expanded_url TEXT, media_url TEXT, media_type TEXT, source_user_id TEXT, source_status_id TEXT, img_hash TEXT, img_b64 TEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id TEXT, friend_id TEXT, UNIQUE(follower_id,friend_id));")
-    DBI::dbCommit(con)
+    # DBI::dbCommit(con)
   } else {
     con <- DBI::dbConnect(driver,...)
     tabs <- DBI::dbGetQuery(con,"SHOW DATABASES;")
@@ -246,7 +246,7 @@ twitter_database <- function(
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS url (status_id VARCHAR(40), url varchar(100), extended_url TINYTEXT, PRIMARY KEY (status_id,url), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS media (status_id VARCHAR(40), media_id VARCHAR(40), expanded_url TINYTEXT, media_url TINYTEXT, media_type TINYTEXT, source_user_id VARCHAR(40), source_status_id VARCHAR(40), img_hash TINYTEXT, img_b64 MEDIUMTEXT, PRIMARY KEY (status_id,media_id), FOREIGN KEY (status_id) REFERENCES status(id));")
     DBI::dbExecute(con, "CREATE TABLE IF NOT EXISTS followers (follower_id VARCHAR(40), friend_id VARCHAR(40), UNIQUE(follower_id,friend_id));")
-    DBI::dbCommit(con)
+    # DBI::dbCommit(con)
   }
   if(!(is.null(query.users.df))){
     upload_query_users(con,query.users.df,query.tables.overwrite)
@@ -323,7 +323,17 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
   if(!('user_id' %in% names(query.users.df)) && !('screen_name' %in% names(query.users.df))){
     stop("query.users.df dataframe does not contain a 'user_id' or 'screen_name' field.")
   } else {
-    RSQLite::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+    if(grepl("SQLite",class(con))){
+      RSQLite::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+    } else {
+      RMySQL::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+      w <- which(d$Field == since_id)
+      tp <- d$Type[w]
+      if(tolower(tp) != "text"){
+        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+      }
+    }
   }
   if(grepl("SQLite",class(con))){
     d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
@@ -345,7 +355,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
     DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN followers_collected TINYINT(1);")
     DBI::dbExecute(con,"UPDATE query_users SET followers_collected = 0;")
   }
-  DBI::dbCommit(con)
+  # DBI::dbCommit(con)
 }
 
 
@@ -428,7 +438,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
     DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
     DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
   }
-  DBI::dbCommit(con)
+  # DBI::dbCommit(con)
 }
 
 
@@ -533,7 +543,7 @@ insert_users <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
-    DBI::dbCommit(conn)
+    # DBI::dbCommit(conn)
   } else {
     w <- which(sapply(user.list,function(x) return("status" %in% names(x))))
     if((length(w) > 0) && insert.statuses){
@@ -566,7 +576,7 @@ insert_users <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
       index <- new.index
     }
   }
@@ -669,7 +679,7 @@ insert_statuses <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
-    DBI::dbCommit(conn)
+    # DBI::dbCommit(conn)
     query.values <- usermention_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
       query <- paste(
@@ -680,7 +690,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
     }
     query.values <- hashtag_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
@@ -692,7 +702,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
     }
     query.values <- url_values(s)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
@@ -704,7 +714,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
     }
     query.values <- media_values(s,status.media.hash,status.media.64bit)
     if((!is.null(query.values)) && (nchar(query.values) > 2)){
@@ -716,7 +726,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
     }
   } else {
     w <- which(sapply(status.list,function(x) return(("retweeted_status" %in% names(x)) && ("id_str" %in% names(x$retweeted_status)))))
@@ -768,7 +778,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
       values <- paste(
         unlist(
           sapply(
@@ -787,7 +797,7 @@ insert_statuses <- function(
           sep=""
         )
           DBI::dbExecute(conn,query)
-          DBI::dbCommit(conn)
+          # DBI::dbCommit(conn)
       }
       values <- paste(
         unlist(
@@ -807,7 +817,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
       }
       values <- paste(
         unlist(
@@ -827,7 +837,7 @@ insert_statuses <- function(
         sep=""
       )
       DBI::dbExecute(conn,query)
-      DBI::dbCommit(conn)
+      # DBI::dbCommit(conn)
      }
       if(status.media.64bit){
         for(j in 1:length(s)){
@@ -842,7 +852,7 @@ insert_statuses <- function(
               sep=""
             )
             DBI::dbExecute(conn,query)
-            DBI::dbCommit(conn)
+            # DBI::dbCommit(conn)
           }
         }
       } else {
@@ -864,7 +874,7 @@ insert_statuses <- function(
             sep=""
           )
             DBI::dbExecute(conn,query)
-            DBI::dbCommit(conn)
+            # DBI::dbCommit(conn)
         }
       }
       index <- new.index
@@ -949,7 +959,7 @@ insert_followers <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
-    DBI::dbCommit(conn)
+    # DBI::dbCommit(conn)
     index <- new.index
   }
 }
@@ -1032,7 +1042,7 @@ insert_friends <- function(
       sep=""
     )
     DBI::dbExecute(conn,query)
-    DBI::dbCommit(conn)
+    # DBI::dbCommit(conn)
     index <- new.index
   }
 }

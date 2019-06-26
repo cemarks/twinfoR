@@ -37,7 +37,7 @@ load("auth_vector.RData")
 
 This function should take considerably less time to run than the initial call, because it only collects new statuses.  
 
-```{r eval = TRUE}
+```{r eval = FALSE}
 update_search(
   con
 )
@@ -629,7 +629,10 @@ if(nrow(usermentions.df) > 0){
 
 #### Interactive Guatemala City User mention network visualization with sigmajs
 
-```{r eval = TRUE, fig.width=7, fig.height=7}
+(Not run to conserve space.)
+
+```{r eval = FALSE, fig.width=7, fig.height=7}
+# Not Run
 if(nrow(usermentions.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -639,7 +642,11 @@ if(nrow(usermentions.df) > 0){
 ```
 
 #### Interactive Guatemala City User mention network visualization with visNetwork
-```{r eval = TRUE, fig.width=7, fig.height=7}
+
+(Not run to conserve space.)
+
+```{r eval = FALSE, fig.width=7, fig.height=7}
+# Not Run
 if(nrow(usermentions.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"status_text"),sep=": "))
 
@@ -734,7 +741,9 @@ if(nrow(retweets.df) > 0){
 
 #### Interactive Guatemala City Retweet network visualization with sigmajs
 
-```{r eval = TRUE, fig.width=7, fig.height=7}
+(Not run to conserve space.)
+
+```{r eval = FALSE, fig.width=7, fig.height=7}
 if(nrow(retweets.df) > 0){
   s <- sigmajs()
   s <- sg_from_igraph(s,g)
@@ -744,6 +753,7 @@ if(nrow(retweets.df) > 0){
 ```
 
 #### Interactive Guatemala City Retweet network visualization with visNetwork
+
 ```{r eval = TRUE, fig.width=7, fig.height=7}
 if(nrow(retweets.df) > 0){
   g <- set_edge_attr(g,"title",E(g),paste(edge_attr(g,"created_at"),edge_attr(g,"retweet_text"),sep=": "))
