@@ -151,6 +151,11 @@ search_tweets_recursive <- function(
       if(missing(data.connection)){
         statuses <- c(statuses,request.result$statuses)
       } else {
+        if(grepl("SQLite",class(data.connection))){
+          qu.init <- "INSERT OR IGNORE "
+        } else {
+          qu.init <- "INSERT IGNORE "
+	}
         insert_statuses(
           data.connection,
           request.result$statuses,
@@ -159,9 +164,11 @@ search_tweets_recursive <- function(
         if(!is.null(query.row.id)){
           status.ids <- sapply(request.result$statuses,function(x) return(x$id_str))
           query <- paste(
-            "INSERT OR IGNORE INTO search_status VALUES ",
+            qu.init,
+            "INTO search_status VALUES ",
             paste("(",query.row.id,",'",status.ids,"')",sep="",collapse=","),
-            ";"
+            ";",
+	    sep = ""
           )
           DBI::dbExecute(data.connection,query)
         }
