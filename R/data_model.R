@@ -410,18 +410,20 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
   }
   if(!('query_text' %in% names(query.text.df))){
     stop("query.text.df dataframe does not contain a 'query_text' field.")
-  } else {
-    RSQLite::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
-    DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id TEXT, UNIQUE(query_id,status_id));")
   }
   if(grepl("SQLite",class(con))){
+    RSQLite::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
+    DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id TEXT, UNIQUE(query_id,status_id));")
     d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
     n <- d$name
+    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
   } else {
+    RMySQL::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
+    DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id VARCHAR(40), UNIQUE(query_id,status_id));")
     d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
     n <- as.character(d[,1])
+    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
   } ##############
-  DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
   if(!('since_id' %in% n)){
     DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
     DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
