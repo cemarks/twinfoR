@@ -322,35 +322,37 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
   names(query.users.df) <- gsub(".","_",names(query.users.df),fixed = TRUE)
   if(!('user_id' %in% names(query.users.df)) && !('screen_name' %in% names(query.users.df))){
     stop("query.users.df dataframe does not contain a 'user_id' or 'screen_name' field.")
-  } else {
-    if(grepl("SQLite",class(con))){
-      RSQLite::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+  } 
+  if(grepl("SQLite",class(con))){
+    RSQLite::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
+    n <- d$name
+    if(!('since_id' %in% n)){
+      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id TEXT;")
+      DBI::dbExecute(con,"UPDATE query_users SET since_id=NULL;")
     } else {
-      RMySQL::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
-      d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
-      w <- which(d$Field == since_id)
-      tp <- d$Type[w]
+      w <- which(d$name == "since_id")
+      tp <- d$type[w]
       if(tolower(tp) != "text"){
+        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+      }
+    }
+  } else {
+    RMySQL::dbWriteTable(con,"query_users",query.users.df,overwrite=overwrite)
+    d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
+    n <- as.character(d[,1])
+    if(!('since_id' %in% n)){
+      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id VARCHAR(40);")
+      DBI::dbExecute(con,"UPDATE query_users SET since_id=NULL;")
+    } else {
+      w <- which(d$Field == "since_id")
+      tp <- d$Type[w]
+      if(!grepl("varchar",tolower(tp))){
         DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
       }
     }
   }
-  if(grepl("SQLite",class(con))){
-    d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_users);")
-    n <- d$name
-  } else {
-    d <- DBI::dbGetQuery(con,"EXPLAIN query_users;")
-    n <- as.character(d[,1])
-  } ##############
   DBI::dbExecute(con,"CREATE UNIQUE INDEX row_id_unique ON query_users(id);")
-  if(!('since_id' %in% n)){
-    if(grepl("SQLite",class(con))){
-      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id TEXT;")
-    } else {
-      DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN since_id VARCHAR(40);")
-    }
-    DBI::dbExecute(con,"UPDATE query_users SET since_id=NULL;")
-  }
   if(!('friends_collected' %in% n)){
     DBI::dbExecute(con,"ALTER TABLE query_users ADD COLUMN friends_collected TINYINT(1);")
     DBI::dbExecute(con,"UPDATE query_users SET friends_collected = 0;")
@@ -428,36 +430,36 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
   if(grepl("SQLite",class(con))){
     RSQLite::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
     DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id TEXT, UNIQUE(query_id,status_id));")
+    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
     d <- DBI::dbGetQuery(con,"PRAGMA table_info(query_text);")
     n <- d$name
-    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
+    if(!('since_id' %in% n)){
+      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
+      DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
+    } else {
+      w <- which(d$name == "since_id")
+      tp <- d$type[w]
+      if(tolower(tp) != "text"){
+        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+      }
+    }
   } else {
     RMySQL::dbWriteTable(con,"query_text",query.text.df,overwrite=overwrite)
     DBI::dbExecute(con,"CREATE TABLE IF NOT EXISTS search_status (query_id INT,status_id VARCHAR(40), UNIQUE(query_id,status_id));")
+    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
     d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
     n <- as.character(d[,1])
-    DBI::dbExecute(con,"CREATE UNIQUE INDEX IF NOT EXISTS row_id_unique ON query_text(id);")
-    w <- which(d$Field == since_id)
-    tp <- d$Type[w]
-    if(tolower(tp) != "text"){
-      DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+    if(!('since_id' %in% n)){
+      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id VARCHAR(40);")
+      DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
+    } else {
+      w <- which(d$Field == "since_id")
+      tp <- d$Type[w]
+      if(!grepl("varchar",tolower(tp))){
+        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+      }
     }
   } ##############
-  if(!('since_id' %in% n)){
-    if(grepl("SQLite",class(con))){
-      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id TEXT;")
-    } else {
-      DBI::dbExecute(con,"ALTER TABLE query_text ADD COLUMN since_id VARCHAR(40);")
-    }
-    DBI::dbExecute(con,"UPDATE query_text SET since_id=NULL;")
-  } else if(!grepl("SQLite",class(con))){
-    d <- DBI::dbGetQuery(con,"EXPLAIN query_text;")
-    w <- which(d$Field == since_id)
-    tp <- d$Type[w]
-    if(!grepl('varchar',tolower(tp))){
-      DBI::dbExecute("ALTER TABLE query_text MODIFY since_id VARCHAR(40);")
-    }
-  }
   # DBI::dbCommit(con)
 }
 
