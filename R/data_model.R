@@ -334,7 +334,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
       w <- which(d$name == "since_id")
       tp <- d$type[w]
       if(tolower(tp) != "text"){
-        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id TEXT;")
       }
     }
   } else {
@@ -348,7 +348,7 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
       w <- which(d$Field == "since_id")
       tp <- d$Type[w]
       if(!grepl("varchar",tolower(tp))){
-        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
       }
     }
   }
@@ -440,7 +440,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
       w <- which(d$name == "since_id")
       tp <- d$type[w]
       if(tolower(tp) != "text"){
-        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id TEXT;")
+        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id TEXT;")
       }
     }
   } else {
@@ -456,7 +456,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
       w <- which(d$Field == "since_id")
       tp <- d$Type[w]
       if(!grepl("varchar",tolower(tp))){
-        DBI::dbExecute("ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
       }
     }
   } ##############
