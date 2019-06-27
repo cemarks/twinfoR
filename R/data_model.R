@@ -386,22 +386,14 @@ upload_query_users <- function(con,query.users.df,overwrite = FALSE){
 #' @export
 #' @examples
 #' \dontrun{
-#' users <- data.frame(
-#'   screen_name=c(
-#'     "nytimes",
-#'     "latimes",
-#'     "bostonglobe",
-#'     "realDonaldTrump"
-#'   ),
-#'   category = c(
-#'     "media",
-#'     "media",
-#'     "media",
-#'     "politician"
+#' query.txt <- data.frame(
+#'   query_text = c(
+#'     "#Boston",
+#'     "#LosAngeles"
 #'   )
 #' )
 #' conn <- twitter_database("tweetanalysis.sqlite")
-#' upload_query_users(conn,users)
+#' upload_query_text(conn,query.txt)
 #' }
 upload_query_text <- function(con,query.text.df,overwrite = FALSE){
   if(grepl("SQLite",class(con))){
@@ -440,7 +432,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
       w <- which(d$name == "since_id")
       tp <- d$type[w]
       if(tolower(tp) != "text"){
-        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id TEXT;")
+        DBI::dbExecute(con,"ALTER TABLE query_text MODIFY since_id TEXT;")
       }
     }
   } else {
@@ -456,7 +448,7 @@ upload_query_text <- function(con,query.text.df,overwrite = FALSE){
       w <- which(d$Field == "since_id")
       tp <- d$Type[w]
       if(!grepl("varchar",tolower(tp))){
-        DBI::dbExecute(con,"ALTER TABLE query_users MODIFY since_id VARCHAR(40);")
+        DBI::dbExecute(con,"ALTER TABLE query_text MODIFY since_id VARCHAR(40);")
       }
     }
   } ##############
