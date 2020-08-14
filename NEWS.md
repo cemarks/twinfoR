@@ -9,6 +9,7 @@
 * Fixed `since_id` column type in data_model.R `update_query_users` function.
 * Commented out commit statements in data_model.R and update_data.R
 * Commented out parts of vignettes for easier complilation.  **These should be uncommented to recompile the full package.**
+* Fixed `con` vs. `conn` errors in data_model.R
 
 # twinfoR 1.0.2
 

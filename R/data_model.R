@@ -529,7 +529,7 @@ insert_users <- function(
   if(profile.img.64bit){
     users.per.insert=1
   }
-  if(grepl("SQLite",class(con))){
+  if(grepl("SQLite",class(conn))){
     ins.ig <- "INSERT OR IGNORE "
   } else {
     ins.ig <- "INSERT IGNORE "
@@ -656,7 +656,7 @@ insert_statuses <- function(
   statuses.per.insert = 50,
   insert.users = TRUE
 ){
-  if(grepl("SQLite",class(con))){
+  if(grepl("SQLite",class(conn))){
     ins.ig <- "INSERT OR IGNORE "
   } else {
     ins.ig <- "INSERT IGNORE "
@@ -942,7 +942,7 @@ insert_followers <- function(
   follower.ids,
   ids.per.insert = 1000
 ){
-  if(grepl("SQLite",class(con))){
+  if(grepl("SQLite",class(conn))){
     ins.ig <- "INSERT OR IGNORE "
   } else {
     ins.ig <- "INSERT IGNORE "
@@ -1025,7 +1025,7 @@ insert_friends <- function(
   friend.ids,
   ids.per.insert = 1000
 ){
-  if(grepl("SQLite",class(con))){
+  if(grepl("SQLite",class(conn))){
     ins.ig <- "INSERT OR IGNORE "
   } else {
     ins.ig <- "INSERT IGNORE "
